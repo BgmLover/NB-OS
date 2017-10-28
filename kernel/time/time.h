@@ -4,7 +4,9 @@
 #include <zjunix/time.h>
 
 void get_time_string(unsigned int ticks_high, unsigned int ticks_low, char *buf);
-
+int flag=0;
+unsigned int second_set=0;
+unsigned int second_old=0;
 extern unsigned int month;
 extern unsigned int day;
 extern unsigned int year;

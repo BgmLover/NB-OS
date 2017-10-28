@@ -100,7 +100,22 @@ void parse_cmd() {
         }
         sd_write_sector_blocking(7, sd_buffer);
         kernel_puts("sdwz\n", 0xfff, 0);
-    } else {
+    }else if(kernel_strcmp(ps_buffer,"settime")==0) {   
+        unsigned int second=0;
+        int i;
+        char m,n;
+        for(i=0;i<3;i++)
+        {
+            m=*param++;
+            n=*param++;
+            if(i!=2)param++;
+            if(i==0) second+=36000*(m-'0')+3600*(n-'0');
+            else if(i==1) second+=600*(m-'0')+60*(n-'0');
+            else second+=10*(m-'0')+n-'0';
+        }
+        set_second(second);
+    } 
+    else {
         kernel_puts(ps_buffer, 0xfff, 0);
         kernel_puts(": command not found\n", 0xfff, 0);
     }

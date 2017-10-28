@@ -3,6 +3,7 @@
 #include <driver/vga.h>
 #include <intr.h>
 
+
 void get_time_string(unsigned int ticks_high, unsigned int ticks_low, char *buf) {
     // Divide by 256
     ticks_low = (ticks_low >> 8) | (ticks_high << 24);
@@ -13,7 +14,11 @@ void get_time_string(unsigned int ticks_high, unsigned int ticks_low, char *buf)
     second = (ticks_high % 390625);
     second = second * 10995 + (second * 45421) % 390625;
     second += ticks_low / 390625;
-
+    if(flag==1)
+    {
+        second+=second_set;
+        second-=second_old;
+    }
     unsigned int minute = second / 60;
     unsigned int hour = minute / 60;
     second %= 60;
@@ -28,7 +33,27 @@ void get_time_string(unsigned int ticks_high, unsigned int ticks_low, char *buf)
     buf[6] = second / 10 + '0';
     buf[7] = second % 10 + '0';
 }
-
+void set_second(unsigned int second)
+{   
+    int zero=0;
+    flag=1;
+    second_set=second;
+    unsigned int seconds;
+    unsigned int ticks_high, ticks_low;
+    asm volatile(
+        "mfc0 %0, $9, 6\n\t"
+        "mfc0 %1, $9, 7\n\t"
+        : "=r"(ticks_low), "=r"(ticks_high));
+        ticks_low = (ticks_low >> 8) | (ticks_high << 24);
+        ticks_high >>= 8;
+        // 2^32 / 390625: q = 10995, r = 45421, r^2 less than 32 bits.
+        //(A*2^32+B)/f = (A%f)*2^32/f + B/f = (A%f)*q+((A%f)*r)%f + B/f
+    
+    seconds = (ticks_high % 390625);
+    seconds = seconds * 10995 + (seconds * 45421) % 390625;
+    seconds += ticks_low / 390625;
+    second_old=seconds;
+}
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 
