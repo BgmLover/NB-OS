@@ -6,12 +6,17 @@
 extern int cursor_row;
 extern int cursor_col;
 extern int cursor_freq;
+extern int fs_global;
+extern int bg_global;
 
-#define VGA_RED   0x00f
-#define VGA_GREEN 0x0f0
-#define VGA_BLUE  0xf00
-#define VGA_BLACK 0x000
-#define VGA_WHITE 0xfff
+
+
+#define VGA_RED    0x00f
+#define VGA_GREEN  0x0f0
+#define VGA_BLUE   0xf00
+#define VGA_YELLOW 0x0ff
+#define VGA_BLACK  0x000
+#define VGA_WHITE  0xfff
 
 struct screen_color {
     int front;
@@ -28,5 +33,7 @@ int kernel_puts(const char* s, int fc, int bg);
 int kernel_putint(int i, int fc, int bg);
 int kernel_vprintf(const char *format, va_list ap);
 int kernel_printf(const char* format, ...);
+
+void kernel_snow();
 
 #endif // ! _DRIVER_VGA_H
