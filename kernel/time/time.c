@@ -61,7 +61,6 @@ void time_handler(unsigned int status, unsigned int cause, unsigned int *sp) {
     unsigned int ticks_high, ticks_low;
     int i;
     char buffer[8];
-    char *day = "2017/08/22 ";
     asm volatile(
         "mfc0 %0, $9, 6\n\t"
         "mfc0 %1, $9, 7\n\t"
@@ -69,7 +68,7 @@ void time_handler(unsigned int status, unsigned int cause, unsigned int *sp) {
     get_time_string(ticks_high, ticks_low, buffer);
 
     for (i = 0; i < 11; i++)
-        kernel_putchar_at(day[i], 0xfff, 0, 29, 61 + i);
+        kernel_putchar_at(date[i], 0xfff, 0, 29, 61 + i);
     for (i = 0; i < 8; i++)
         kernel_putchar_at(buffer[i], 0xfff, 0, 29, 72 + i);
 
@@ -94,6 +93,16 @@ void get_time(char *buf, int len) {
         : "=r"(ticks_low), "=r"(ticks_high));
     get_time_string(ticks_high, ticks_low, buf);
     buf[8] = 0;
+}
+
+void set_date(char *dat){
+    date=dat;
+    register_interrupt_handler(7, time_handler);
+
+    asm volatile(
+        "li $v0, 100000000\n\t"
+        "mtc0 $v0, $11\n\t"
+        "mtc0 $zero, $9");
 }
 
 #pragma GCC pop_options
