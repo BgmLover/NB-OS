@@ -5,13 +5,39 @@
 #include <zjunix/time.h>
 #include <zjunix/utils.h>
 
-char ps_buffer[64];
+char ps_buffer[5000];
 int ps_buffer_index;
+int fs_global=VGA_WHITE;//white initially
+int bg_global=VGA_BLACK;//black initially
 
 void test_syscall4() {
     asm volatile(
         "li $a0, 0x00ff\n\t"
         "li $v0, 4\n\t"
+        "syscall\n\t"
+        "nop\n\t");
+}
+
+void test_syscall10() {
+    asm volatile(
+ //       "li $a0, 0x00ff\n\t"
+        "li $v0, 10\n\t"
+        "syscall\n\t"
+        "nop\n\t");
+}
+
+void test_syscall11() {
+    asm volatile(
+ //       "li $a0, 0x00ff\n\t"
+        "li $v0, 11\n\t"
+        "syscall\n\t"
+        "nop\n\t");
+}
+
+void test_syscall12() {
+    asm volatile(
+ //       "li $a0, 0x00ff\n\t"
+        "li $v0, 12\n\t"
         "syscall\n\t"
         "nop\n\t");
 }
@@ -47,7 +73,7 @@ void ps() {
         } else {
             if (ps_buffer_index < 63) {
                 ps_buffer[ps_buffer_index++] = c;
-                kernel_putchar(c, 0xfff, 0);
+                kernel_putchar(c, fs_global, bg_global);
             }
         }
     }
@@ -83,6 +109,12 @@ void parse_cmd() {
         kernel_printf("%s\n", buf);
     } else if (kernel_strcmp(ps_buffer, "syscall4") == 0) {
         test_syscall4();
+    } else if (kernel_strcmp(ps_buffer, "syscall10") == 0){
+        test_syscall10();
+    } else if (kernel_strcmp(ps_buffer, "syscall11") == 0){
+        test_syscall11();
+    } else if (kernel_strcmp(ps_buffer, "syscall12") == 0){
+        test_syscall12();
     } else if (kernel_strcmp(ps_buffer, "sdwi") == 0) {
         for (i = 0; i < 512; i++)
             sd_buffer[i] = i;
