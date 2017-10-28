@@ -185,3 +185,17 @@ int kernel_printf(const char *format, ...) {
     va_end(ap);
     return cnt;
 }
+
+void kernel_snow(){
+    int snow_row = 0;
+    int snow_col = 0;
+    int i = 0;
+    for(i = 0; i<5000; i++){
+        if(snow_col>79){
+            snow_row++;
+            snow_col=0;
+        }
+        kernel_putchar_at(16, 0xfff, 0, snow_row, snow_col);
+        snow_col++;
+    }
+}
