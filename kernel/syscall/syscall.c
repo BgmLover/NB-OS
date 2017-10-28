@@ -1,6 +1,9 @@
 #include <exc.h>
 #include <zjunix/syscall.h>
 #include "syscall4.h"
+#include "syscall10.h"
+#include "syscall11.h"
+#include "syscall12.h"
 
 sys_fn syscalls[256];
 
@@ -9,6 +12,10 @@ void init_syscall() {
 
     // register all syscalls here
     register_syscall(4, syscall4);
+    register_syscall(10, syscall10);
+    register_syscall(11, syscall11);
+    register_syscall(12, syscall12);
+
 }
 
 void syscall(unsigned int status, unsigned int cause, unsigned int* sp) {
