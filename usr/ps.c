@@ -115,6 +115,8 @@ void parse_cmd() {
         test_syscall11();
     } else if (kernel_strcmp(ps_buffer, "syscall12") == 0){
         test_syscall12();
+    } else if(kernel_strcmp(ps_buffer,"setdate") == 0)  {
+        set_date(param);
     } else if (kernel_strcmp(ps_buffer, "sdwi") == 0) {
         for (i = 0; i < 512; i++)
             sd_buffer[i] = i;
