@@ -129,6 +129,7 @@ void parse_cmd() {
         }
         kernel_putchar('\n', 0xfff, 0);
     } else if (kernel_strcmp(ps_buffer, "sdwz") == 0) {
+}
         for (i = 0; i < 512; i++) {
             sd_buffer[i] = 0;
         }
@@ -143,9 +144,12 @@ void parse_cmd() {
             m=*param++;
             n=*param++;
             if(i!=2)param++;
-            if(i==0) second+=36000*(m-'0')+3600*(n-'0');
-            else if(i==1) second+=600*(m-'0')+60*(n-'0');
-            else second+=10*(m-'0')+n-'0';
+            if(i==0) 
+                second+=36000*(m-'0')+3600*(n-'0');
+            else if(i==1) 
+                second+=600*(m-'0')+60*(n-'0');
+            else 
+                second+=10*(m-'0')+n-'0';
         }
         set_second(second);
     } 
