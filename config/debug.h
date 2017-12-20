@@ -26,9 +26,11 @@
 // #define EXEC_DEBUG
 
 //init task
-#define TASK_DEBUG_INIT
+//#define TASK_DEBUG_INIT
 
 //do_fork
 #define DO_FORK_DEBUG
+//copy pagetables
+#define COPY_PAGE_DEBUG
 //list_pcb
-#define LIST_PCB_DEBUG
+//#define LIST_PCB_DEBUG
