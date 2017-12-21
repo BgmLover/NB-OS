@@ -6,6 +6,7 @@
 #include <zjunix/slab.h>
 #include <zjunix/list_pcb.h>
 #include <zjunix/buddy.h>
+#include <zjunix/bootmm.h>
 #include <debug.h>
 #include <page.h>
 extern struct page *pages;
@@ -23,11 +24,21 @@ void task_test()
     do_fork(t,pcbs.next->pcb);
     list_pcb *pos;
     for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-        kernel_printf("pid:%x,name:%s\n",pos->pcb->asid,pos->pcb->name);
+        kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
+    del_task(0);
+    for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
+        kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
+    // task_union *t[10];
+    // int i;
+    // for(i=0;i<10;i++)
+    // {
+    //     t[i]=(task_union *)umalloc(PAGE_SIZE);
+    //     kernel_printf("t[%x]:%x\n",i,t[i]);
+    // }
 }
 void init_task()
 {
-
+    int i=0;
     INIT_LIST_PCB(&pcbs,NULL);  
     
     kernel_memset(idmap,0,16*sizeof(unsigned char));//初始化进程位图
@@ -63,8 +74,14 @@ void init_task()
         kernel_printf("failed to kmalloc space for pgd\n");
         return;
     }
+    //初始化pgd每一项
+    for(i=0;i<PAGE_SIZE>>2;i++)
+    {
+        (init->pcb.pgd)[i]=0;
+    }
+    
     //设置pgd属性为默认属性——可写
-    set_pgd_attr(init->pcb.pgd,Default_attr);
+    //set_pgd_attr(init->pcb.pgd,Default_attr);
     #ifdef TASK_DEBUG_INIT
     kernel_printf("pgd address:%x\n",init->pcb.pgd);
     #endif
@@ -161,7 +178,7 @@ unsigned char get_emptypid()
 
 void add_task(list_pcb* process)
 {
-    list_pcb_add(process,&pcbs);
+    list_pcb_add_tail(process,&pcbs);
 }
 //把一个进程从进程队列中删去
 unsigned int del_task(unsigned int pid)
@@ -205,14 +222,14 @@ unsigned int do_fork(context* args,PCB*parent)
     #endif
     //复制页表
     new->pcb.pgd=copy_pagetables(parent);
-    #ifdef DO_FORK_DEBUG
-    kernel_printf("copy pagetables over\n");
-    #endif
     if(new->pcb.pgd==NULL)
     {
         kernel_printf("error : failed to copy pages\n");
         goto error2;
     }
+    #ifdef DO_FORK_DEBUG
+    kernel_printf("copy pagetables over\n");
+    #endif
     //复制或是设置新的PCB信息
     kernel_memcpy(new->pcb.name,parent->name,sizeof(char)*32);
     new->pcb.asid=get_emptypid();
@@ -243,8 +260,8 @@ unsigned int do_fork(context* args,PCB*parent)
     加入调度队列
     */
     #ifdef DO_FORK_DEBUG
-    kernel_printf("child 's name:%s",new->pcb.asid);
-    kernel_printf("child 's pid : %x",new->pcb.asid);
+    kernel_printf("child 's name:%s\n",new->pcb.name);
+    kernel_printf("child 's pid : %x\n",new->pcb.asid);
     #endif
     return 0;
     
@@ -315,14 +332,23 @@ pgd_term *copy_pagetables(PCB* parent)
                 kernel_printf("copy_pagetables failed : failed to malloc for pgte\n");
                 goto error2;
             }
+    #ifdef COPY_PAGE_DEBUG
+    kernel_printf("new_pte_addr=%x\n",temp_pte);
+    #endif
             count++;
     #ifdef COPY_PAGE_DEBUG
     kernel_printf("count:%x\n",count);
+    kernel_printf("old_pgd[%x]=%x\n",index,old_pgd[index]);
     #endif
             //将新的pgd的每一项pte设置为新分配的pte页地址
             new_pgd[index] &= OFFSET_MASK;
+    #ifdef COPY_PAGE_DEBUG
+    kernel_printf("after &=mask: new_pgd[%x]=%x\n",index,new_pgd[index]);
+    #endif
             new_pgd[index] |= (unsigned int)temp_pte;
-          
+    #ifdef COPY_PAGE_DEBUG
+    kernel_printf("new_pgd[%x]=%x\n",index,new_pgd[index]);
+    #endif
             old_pte=(pte_term*) (old_pgd[index]&(~OFFSET_MASK));
             kernel_memcpy(temp_pte,old_pte,PAGE_SIZE);
             for(ip=0;ip<(PAGE_SIZE>>2);ip++)

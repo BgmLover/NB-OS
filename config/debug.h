@@ -31,6 +31,6 @@
 //do_fork
 #define DO_FORK_DEBUG
 //copy pagetables
-#define COPY_PAGE_DEBUG
+//#define COPY_PAGE_DEBUG
 //list_pcb
 //#define LIST_PCB_DEBUG

@@ -48,6 +48,8 @@ struct kmem_cache {
 // extern struct kmem_cache kmalloc_caches[PAGE_SHIFT];
 extern void init_slab();
 extern void *kmalloc(unsigned int size);
+extern void *umalloc(unsigned int size);
 extern void kfree(void *obj);
+extern void ufree(void *obj);
 
 #endif
