@@ -1,7 +1,61 @@
 #ifndef _ZJUNIX_SCHE_H
 #define _ZJUNIX_SCHE_H
 
+<<<<<<< HEAD
 #include<zjunix/task.h>
 PCB *current;
 PCB* get_current_pcb(){return current;}
+=======
+#include <zjunix/list.h>
+#include <zjunix/task.h>
+
+//前后台时间片
+#define FOREGROUNG_TIMESLICES 8000
+#define BACKGROUND_TIMESLICES 2000
+//不同队列的时间片
+#define BACKGROUND_PER_TIMESLICES 4
+#define HIGH_TIMESLICES 2
+#define ABOVE_NORMAL_TIMESLICES 4
+#define NORMAL_TIMESLICES 8
+#define BELOW_NORMAL_TIMESLICES 12
+#define IDLE_TIMESLICES 16
+
+typedef struct list_head list_head;
+
+//初始化调度系统
+void init_sched();
+
+//计时器
+unsigned int sched_timer();
+
+unsigned int list_is_empty(list_pcb *list);
+
+//进程调度操作，选取下一个进程，切换上下文
+unsigned int sched();
+
+//将进程添加到后台就绪队列
+void add_to_backgraound_list(list_pcb *task);
+
+//将进程添加到前台优先级最高的队列
+void add_to_foreground_list(list_pcb *task);
+
+//取就绪队列中的第一个进程
+list_pcb *get_first_task(list_pcb *task);
+
+//取出后台队列的第一个进程
+unsigned int background_sched();
+
+//取出前台队列中优先级最高队列的第一个进程
+unsigned int foreground_sched();
+
+void init_pcb_list(list_pcb *list);
+
+//将进程加到就绪队列队尾
+void insert_tail(list_pcb *task,list_pcb *head);
+
+//调度函数
+void pc_schedule(unsigned int status, unsigned int cause, context* pt_context);
+
+
+>>>>>>> 90a69d4a58591e29860ee39da0f28803baf2b5e1
 #endif
