@@ -4,6 +4,7 @@
 .extern kernel_sp
 .extern exception_handler
 .extern interrupt_handler
+.extern tlb_refill
 
 .set noreorder
 .set noat
@@ -11,17 +12,7 @@
 
 exception:
 	#TLB refill
- 	mfc0 $k0, $4
- 	lw $k1, 0($k0)
- 	mtc0 $k1, $2
- 	lw $k1, 4($k0)
- 	mtc0 $k1, $3
- 	lw $k1, 8($k0)
- 	mtc0 $k1, $10
- 	lw $k1, 12($k0)
- 	mtc0 $k1, $5
- 	nop #	CP0 hazard
- 	nop #  	CP0 hazard
+	jal tlb_refill
  	tlbwr
  	eret
 

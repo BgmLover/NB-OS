@@ -79,7 +79,6 @@ void init_task()
     {
         (init->pcb.pgd)[i]=0;
     }
-    
     //设置pgd属性为默认属性——可写
     //set_pgd_attr(init->pcb.pgd,Default_attr);
     #ifdef TASK_DEBUG_INIT
@@ -115,6 +114,7 @@ void init_task()
     kernel_printf("Address: %x\n",init);
     #endif
 }
+
 static void copy_context(context* src, context* dest) 
 {
    
@@ -151,6 +151,7 @@ static void copy_context(context* src, context* dest)
     dest->fp = src->fp;
     dest->ra = src->ra;
 }
+
 unsigned char get_emptypid()
 {
     unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
@@ -180,6 +181,7 @@ void add_task(list_pcb* process)
 {
     list_pcb_add_tail(process,&pcbs);
 }
+
 //把一个进程从进程队列中删去
 unsigned int del_task(unsigned int pid)
 {
@@ -196,9 +198,9 @@ unsigned int del_task(unsigned int pid)
     kernel_printf("process not found,pid %d",pid);
     return 1;
 }
+
 unsigned int do_fork(context* args,PCB*parent)
 {
-    
     #ifdef DO_FORK_DEBUG
     kernel_printf("begin to fork\n");
     #endif
@@ -300,6 +302,7 @@ void dec_refrence_by_pte(unsigned int *pte)
 		}
 	}
 }
+
 pgd_term *copy_pagetables(PCB* parent)
 {
     pgd_term* old_pgd;
@@ -416,10 +419,12 @@ void delete_pages(PCB *task)
 		}
 	}
 }
+
 void delete_pagetables(PCB *task)
 {
 	delete_pages(task);
 	free_pages(task->pgd, 0);
 }
+
 
 
