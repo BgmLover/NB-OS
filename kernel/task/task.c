@@ -56,8 +56,8 @@ void init_task()
     #endif
 
     //初始化上下文
-    init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
-    
+    //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
+    init->pcb.context=(context*)(init+sizeof(PCB));
     //init->pcb.context->at=15;
     //init分配进程号为0
     init->pcb.asid=get_emptypid();
@@ -115,7 +115,7 @@ void init_task()
     #endif
 }
 
-static void copy_context(context* src, context* dest) 
+void copy_context(context* src, context* dest) 
 {
    
     dest->epc = src->epc;
@@ -362,8 +362,13 @@ pgd_term *copy_pagetables(PCB* parent)
                 if(temp_pte[ip])
                 {
                     //新老页表现在都不能往这个地址上写
+                    clean_W(&(old_pte[ip]));
                     clean_W(&(temp_pte[ip]));
-                    clean_W(&(temp_pte[ip]));
+                    // asm volatile(
+                    // "mtc0 %0, $2\n\t" 
+                    // "mtc0 $zero,$3\n\t"
+                    // : "=r"(*entry0)
+                    // );
                 }
             }
         }

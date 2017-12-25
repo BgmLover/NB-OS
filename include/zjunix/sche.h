@@ -1,11 +1,6 @@
 #ifndef _ZJUNIX_SCHE_H
 #define _ZJUNIX_SCHE_H
 
-<<<<<<< HEAD
-#include<zjunix/task.h>
-PCB *current;
-PCB* get_current_pcb(){return current;}
-=======
 #include <zjunix/list.h>
 #include <zjunix/task.h>
 
@@ -21,7 +16,9 @@ PCB* get_current_pcb(){return current;}
 #define IDLE_TIMESLICES 16
 
 typedef struct list_head list_head;
+extern list_pcb *current;
 
+PCB* get_current_pcb();
 //初始化调度系统
 void init_sched();
 
@@ -57,5 +54,4 @@ void insert_tail(list_pcb *task,list_pcb *head);
 void pc_schedule(unsigned int status, unsigned int cause, context* pt_context);
 
 
->>>>>>> 90a69d4a58591e29860ee39da0f28803baf2b5e1
 #endif

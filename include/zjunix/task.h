@@ -92,7 +92,7 @@ typedef union{
 
 list_pcb pcbs;//进程队列
 unsigned char idmap[32];//设置256个进程id
-
+void copy_context(context* src, context* dest); 
 void task_test();
 //init进程设置以及相关中断、系统调用注册
 void init_task();
