@@ -16,22 +16,35 @@ extern struct page *pages;
 void task_test()
 {
     kernel_printf("begin to test\n");
-    context *t;
-    kernel_printf("%s\n",pcbs.next->pcb->name);
-    kernel_printf("%x\n",pcbs.next->pcb);
-    kernel_printf("%x\n",pcbs.next->pcb->context);
-    t=(pcbs.next->pcb->context);
+    unsigned int entry0,entry1,entryhi,index;
+    asm volatile(
+        "mfc0 %0, $2\n\t"
+        "mfc0 %1, $3\n\t"
+        "mfc0 %2, $10\n\t"
+        "mfc0 %3, $0\n\t"
+        "nop\n\t"
+        "nop\n\t"
+        :"=r"(entry0),"=r"(entry1),"=r"(entryhi),"=r"(index));
+    kernel_printf("entry0:%x\n",entry0);
+    kernel_printf("entry1:%x\n",entry1);
+    kernel_printf("entryhi:%x\n",entryhi);
+    kernel_printf("index:%x\n",index);
+    // context *t;
+    // kernel_printf("%s\n",pcbs.next->pcb->name);
+    // kernel_printf("%x\n",pcbs.next->pcb);
+    // kernel_printf("%x\n",pcbs.next->pcb->context);
+    // t=(pcbs.next->pcb->context);
     
-    t->at=123;
-    kernel_printf("%d\n",t->at);
-    do_fork(t,pcbs.next->pcb);
-    kernel_printf("%x\n",pcbs.next->next->pcb->context->at);
-    list_pcb *pos;
-    for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-        kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
-    del_task(0);
-    for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-        kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
+    // t->at=123;
+    // kernel_printf("%d\n",t->at);
+    // do_fork(t,pcbs.next->pcb);
+    // kernel_printf("%x\n",pcbs.next->next->pcb->context->at);
+    // list_pcb *pos;
+    // for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
+    //     kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
+    // del_task(0);
+    // for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
+    //     kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
     // task_union *t[10];
     // int i;
     // for(i=0;i<10;i++)
@@ -62,9 +75,9 @@ void init_task()
     //初始化上下文
     //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
     init->pcb.context=(context*)((unsigned int)init+sizeof(PCB));
-    kernel_printf("address of init:%x\n",init);
-    kernel_printf("size of PCB:%x\n",sizeof(PCB));
-    kernel_printf("address of context:%x\n",init->pcb.context);
+    // kernel_printf("address of init:%x\n",init);
+    // kernel_printf("size of PCB:%x\n",sizeof(PCB));
+    // kernel_printf("address of context:%x\n",init->pcb.context);
     //init->pcb.context->at=15;
     //init分配进程号为0
     init->pcb.asid=get_emptypid();
@@ -232,7 +245,7 @@ unsigned int do_fork(context* args,PCB*parent)
     kernel_printf("copy context over\n");
     #endif
     //复制页表
-    new->pcb.pgd=copy_pagetables(parent);
+    new->pcb.pgd=copy_pagetables(&(new->pcb),parent);
     if(new->pcb.pgd==NULL)
     {
         kernel_printf("error : failed to copy pages\n");
@@ -312,7 +325,7 @@ void dec_refrence_by_pte(unsigned int *pte)
 	}
 }
 
-pgd_term *copy_pagetables(PCB* parent)
+pgd_term *copy_pagetables(PCB* child,PCB* parent)
 {
     pgd_term* old_pgd;
     pgd_term* new_pgd=NULL;
@@ -370,14 +383,16 @@ pgd_term *copy_pagetables(PCB* parent)
     #endif
                 if(temp_pte[ip])
                 {
+                    unsigned int va;
+                    va=index<<PGD_SHIFT;
+                    va|=(ip<<PTE_SHIFT);
                     //新老页表现在都不能往这个地址上写
                     clean_W(&(old_pte[ip]));
                     clean_W(&(temp_pte[ip]));
-                    // asm volatile(
-                    // "mtc0 %0, $2\n\t" 
-                    // "mtc0 $zero,$3\n\t"
-                    // : "=r"(*entry0)
-                    // );
+                    tlbp(va,parent->asid);
+                    unsigned int tlb_index=get_tlb_index();
+                    if(tlb_index&(1<<31)==0)//在TLB里存在这项内容，需要将其修改
+                    tlbwi(va,parent->asid,old_pte[ip],tlb_index);
                 }
             }
         }

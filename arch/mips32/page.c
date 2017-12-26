@@ -65,5 +65,70 @@ void init_pgtable() {
         "tlbwi\n\t"
         "nop");
 }
-
+void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index)
+{
+    EntryHi entryhi;
+    EntryLo L0;
+    entryhi.VPN2=virtual_addr>>13;
+    entryhi.ASID=asid;
+    L0.PFN=pte_con>>PAGE_SHIFT;
+    L0.G=is_G(&pte_con);
+    L0.V=is_V(&pte_con);
+    L0.D=is_W(&pte_con);
+    L0.C=0;
+    unsigned int hi,en0;
+    hi=*((unsigned*)&entryhi);
+    en0=*((unsigned*)&L0);
+    asm volatile(
+        "mtc0 %0, $2\n\t" 
+        "mtc0 %1, $10\n\t"
+        "mtc0 %2, $0\n\t"
+        "mtc0 $zero,$3\n\t"
+        "tlbwi\n\t"
+        : "=r"(en0),"=r"(hi),"=r"(index)
+    );
+}
+void tlbwr(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con)
+{
+    EntryHi entryhi;
+    EntryLo L0;
+    entryhi.VPN2=virtual_addr>>13;
+    entryhi.ASID=asid;
+    L0.PFN=pte_con>>PAGE_SHIFT;
+    L0.G=is_G(&pte_con);
+    L0.V=is_V(&pte_con);
+    L0.D=is_W(&pte_con);
+    L0.C=0;
+    unsigned int hi,en0;
+    hi=*((unsigned*)&entryhi);
+    en0=*((unsigned*)&L0);
+    asm volatile(
+        "mtc0 %0, $2\n\t" 
+        "mtc0 %1, $10\n\t"
+        "mtc0 $zero,$3\n\t"
+        "tlbwr\n\t"
+        : "=r"(en0),"=r"(hi)
+    );
+}
+void tlbp(unsigned int virtual_addr,unsigned int asid)
+{
+    EntryHi entryhi;
+    entryhi.VPN2=virtual_addr>>13;
+    entryhi.ASID=asid;
+    unsigned int hi;
+    hi=*((unsigned*)&entryhi);
+    asm volatile(
+        "mtc0 %0, $10\n\t"
+        "tlbp\n\t"
+        : "=r"(hi)
+    );
+}
+unsigned int get_tlb_index(){
+    unsigned int index;
+    asm volatile(
+        "mfc0 %0, $0\n\t" 
+        : "=r"(index)
+    );
+    return index;
+}
 #pragma GCC pop_options

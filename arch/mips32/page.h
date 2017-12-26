@@ -70,6 +70,10 @@ void set_pgd_attr(pgd_term *pgd,unsigned int attr);
 void set_pte_attr(pte_term *pte,unsigned int attr);
 //分配一张页的空间，并把物理页与虚拟页做一次映射
 unsigned int do_one_mapping(pgd_term*pgd,unsigned int va,unsigned int pa,unsigned int attr);
+void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index);
+void tlbwr(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con);
+void tlbp(unsigned int virtual_addr,unsigned int asid );
+unsigned int get_tlb_index();
 
 
 

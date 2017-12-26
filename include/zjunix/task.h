@@ -108,6 +108,6 @@ unsigned int  del_task(unsigned int asid);
 
 unsigned int do_fork(context* args,PCB*parent);
 
-pgd_term *copy_pagetables(PCB * parent);
+pgd_term *copy_pagetables(PCB* child,PCB* parent);
 
 #endif
