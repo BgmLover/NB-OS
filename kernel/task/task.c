@@ -18,10 +18,14 @@ void task_test()
     kernel_printf("begin to test\n");
     context *t;
     kernel_printf("%s\n",pcbs.next->pcb->name);
-    
+    kernel_printf("%x\n",pcbs.next->pcb);
+    kernel_printf("%x\n",pcbs.next->pcb->context);
     t=(pcbs.next->pcb->context);
+    
+    t->at=123;
     kernel_printf("%d\n",t->at);
     do_fork(t,pcbs.next->pcb);
+    kernel_printf("%x\n",pcbs.next->next->pcb->context->at);
     list_pcb *pos;
     for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
         kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
@@ -57,7 +61,10 @@ void init_task()
 
     //初始化上下文
     //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
-    init->pcb.context=(context*)(init+sizeof(PCB));
+    init->pcb.context=(context*)((unsigned int)init+sizeof(PCB));
+    kernel_printf("address of init:%x\n",init);
+    kernel_printf("size of PCB:%x\n",sizeof(PCB));
+    kernel_printf("address of context:%x\n",init->pcb.context);
     //init->pcb.context->at=15;
     //init分配进程号为0
     init->pcb.asid=get_emptypid();
@@ -216,10 +223,12 @@ unsigned int do_fork(context* args,PCB*parent)
     kernel_printf("address of new task_union %x\n",new);
     #endif
     //复制上下文
-    new->pcb.context=(context*)(new+PAGE_SIZE-(sizeof(context)));
+    new->pcb.context=(context*)((unsigned int)new+sizeof(PCB));
     copy_context(args,new->pcb.context);
-
+    
     #ifdef DO_FORK_DEBUG
+    kernel_printf("old context->at=%x\n",args->at);
+    kernel_printf("new context->at=%x\n",new->pcb.context->at);
     kernel_printf("copy context over\n");
     #endif
     //复制页表
