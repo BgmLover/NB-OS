@@ -20,9 +20,10 @@ void slub_init_kmem_cpu(struct kmem_cache_cpu* kcpu){
 void slub_init_each_slub(struct kmem_cache* cache, unsigned int size){
     cache->objsize = size;
     cache->objsize += (SIZE_INT - 1); // align by 0x100
-    cache->objsize &= -(SIZE_INT - 1);
-    cache->offset = cache->objsize;
+    cache->objsize &= ~(SIZE_INT - 1);
+    
     cache->size = cache->objsize + sizeof(void*);
+    cache->offset = cache->size;
     slub_init_kmem_cpu(&(cache->cpu));
     slub_init_kmem_node(&(cache->node));
 }
@@ -31,11 +32,11 @@ void slub_init_each_slub(struct kmem_cache* cache, unsigned int size){
 void slub_init(){
     unsigned int order;
     // init caches
-    slub_init_each_slub(&(kmalloc_caches[1]), 96);
+    slub_init_each_slub(&(kmalloc_caches[0]), 96);
     slub_init_each_slub(&(kmalloc_caches[1]), 192);
 
-    for(order=3; order<=11; ++order){
-        slub_init_each_slub(&kmalloc_caches[order], 1<<order);
+    for(order=2; order<=11; order++){
+        slub_init_each_slub(&kmalloc_caches[order], size_kmem_cache[order]);
     }
 
     // output information
@@ -48,12 +49,13 @@ void slub_init(){
 }
 
 void slub_format_slubpage(struct kmem_cache* cache, struct page* page){
-    unsigned char* m = (unsigned char*)((page-pages)<<PAGE_SHIFT); // physical addr
+    unsigned char* m = (unsigned char*)(((page-pages)<<PAGE_SHIFT)|0x80000000); // physical addr
     struct slub_head *s_head = (struct slub_head*)m;
     unsigned int remaining = 1<<PAGE_SHIFT;
     unsigned int *ptr;
 
-    set_flag(page, _PAGE_SLUB);
+    // set_flag(page, _PAGE_SLUB);
+    page->flag = _PAGE_SLUB;
     s_head->nr_objs = 0;
     do{
         ptr = (unsigned int*)(m+cache->offset);
@@ -85,6 +87,7 @@ check:
             list_add_tail(&(cache->cpu.page->list), &(cache->node.full));
         }
         if(list_empty(&(cache->node.partial))) goto new_slub;// find a new slub
+        
         cache->cpu.page = container_of(cache->node.partial.next, struct page, list);
         list_del(cache->node.partial.next);
         object = (void*)(cache->cpu.page->private);
@@ -94,7 +97,7 @@ check:
 
     cache->cpu.freeobj = (void**)((unsigned char*)object + cache->offset);
     cache->cpu.page->private = (unsigned int)(*(cache->cpu.freeobj));
-    s_head = (struct slub_head*)((cache->cpu.page - pages)<<PAGE_SHIFT);
+    s_head = (struct slub_head*)(((cache->cpu.page - pages)<<PAGE_SHIFT)|0x80000000);
     ++(s_head->nr_objs);
 
     if(is_bound(cache->cpu.page->private, 1<<PAGE_SHIFT)){
@@ -107,9 +110,11 @@ new_slub:
     new = buddy_alloc_pages(0);
     if(!new){
         kernel_printf("ERROR: slub_alloc error!\n");
-        while(1){}
+        while(1){
+            // kernel_printf("1");
+        }
     }
-    kernel_printf("\n *** %x\n", new-pages);
+    // kernel_printf("\n *** %x\n", new-pages);
 
     slub_format_slubpage(cache, new);
     object = *(cache->cpu.freeobj);
@@ -135,6 +140,7 @@ struct kmem_cache* slub_get_slub(unsigned int size) {
 void* kmalloc(unsigned int size){
     struct kmem_cache* cache;
     struct page* page;
+    void* slub_addr;
 
     if(!size) return 0;
 
@@ -144,7 +150,7 @@ void* kmalloc(unsigned int size){
         size += ((1<<PAGE_SHIFT)-1);
         size &= ~((1<<PAGE_SHIFT)-1);
         page = buddy_alloc_pages(size>>PAGE_SHIFT);
-        return ;
+        return (void*)(KERNEL_ENTRY|(unsigned int)((page-pages)<<PAGE_SHIFT));
     }
 
     cache = slub_get_slub(size);
@@ -152,29 +158,43 @@ void* kmalloc(unsigned int size){
         kernel_printf("ERROR:kmalloc error!\n");
         while(1){}
     }
-    return slub_alloc(cache);
+    // kernel_printf("yes");
+    slub_addr=slub_alloc(cache);
+    // kernel_printf("%xaaa", (unsigned int)slub_addr);
+    return (void*)(KERNEL_ENTRY|(unsigned int)slub_addr);
 }
 
 void slub_free(struct kmem_cache* cache, void* obj){
     struct page* page = pages + ((unsigned int)obj >> PAGE_SHIFT);
-    struct slub_head* s_head = (struct slub_head*)((page - pages)<<PAGE_SHIFT);
+    struct slub_head* s_head = (struct slub_head*)(((page - pages)<<PAGE_SHIFT)|0x80000000);
 
     unsigned int* ptr;
 
+// kernel_printf("%x\n", (unsigned int )cache);
     // check if s_head has objects
     if(!(s_head->nr_objs)){
         kernel_printf("ERROR:slub_free error!\n");
         while(1){}
     }
+    
 
     ptr = (unsigned int*)((unsigned char*)obj+cache->offset);
+    
     *ptr = *((unsigned int*)(s_head->end_ptr));
+    kernel_printf("11");
     *((unsigned int*)(s_head->end_ptr)) = (unsigned int)obj;
+    
     --(s_head->nr_objs);
 
-    if(list_empty(&(page->list))) return;
+
+
+    if(list_empty(&(page->list))){
+        kernel_printf("return");
+        return;
+    } 
 
     if(!(s_head->nr_objs)){
+        kernel_printf("here");
         buddy_free_pages(page, 0);
         return;
     }
@@ -186,17 +206,21 @@ void slub_free(struct kmem_cache* cache, void* obj){
 
 void kfree(void* obj){
     struct page* page;
+    
+    obj = (void *)((unsigned int)obj & (~KERNEL_ENTRY));
 
     page = pages + ((unsigned int)obj >> PAGE_SHIFT);
-    if(!has_flag(page, _PAGE_SLUB)){
+
+    // kernel_printf("flag %x\n", (unsigned int)page->flag);
+    // kernel_printf("page %x\n", _PAGE_SLUB);
+    if(!(page->flag == _PAGE_SLUB)){
         return buddy_free_pages(page, page->bplevel);
     }
+     // kernel_printf("yes\n");
     return slub_free(page->virtual, obj);
 }
-
 /*
-// syscall kmalloc
-// parameter a0=size, return v0 = start addr
+// a0=size, return v0 = start addr
 void syscall20(unsigned int status, unsigned int cause, context* pt_context){
     unsigned int size;
     void* addr;
@@ -205,13 +229,4 @@ void syscall20(unsigned int status, unsigned int cause, context* pt_context){
     addr = kmalloc(size);
     pt_context->v0 = addr;
 
-}
-
-// syscall kree
-// parameter a0=start
-void syscall21(unsigned int status, unsigned int cause, context* pt_context){
-    void* obj;
-    obj=pt_context->a0;
-    kfree(obj);
-}
-*/
+}*/

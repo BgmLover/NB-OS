@@ -4,7 +4,7 @@
 
 #include<zjunix/fs/fat.h>
 #include<page.h>
-#include <zjunix/shm.h>
+
 
 
 //进程状态定义
@@ -22,7 +22,13 @@
 
 
 
-
+struct shared_memory
+{
+	unsigned int allocated; // 0->free
+	unsigned int signal; // only 1 process can access
+	// struct page shm_page;
+	char page[4096];
+};
 typedef struct list_pcb list_pcb;
 typedef struct task_struct PCB;
 typedef struct {
