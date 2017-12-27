@@ -11,6 +11,7 @@
 #include <page.h>
 extern struct page *pages;
 list_pcb pcbs;//进程队列
+
 unsigned char idmap[32];//设置256个进程id
 unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 
