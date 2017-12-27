@@ -2,7 +2,7 @@
 #include <zjunix/utils.h>
 #include "arch.h"
 #include <driver/vga.h>
-#include <zjunix/slab.h>
+#include <zjunix/slub.h>
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 

@@ -4,13 +4,13 @@
 #include <exc.h>
 #include <intr.h>
 #include <page.h>
-#include <zjunix/bootmm.h>
+#include <zjunix/bootmem.h>
 #include <zjunix/buddy.h>
 #include <zjunix/fs/fat.h>
 #include <zjunix/log.h>
 //#include <zjunix/pc.h>
 #include <zjunix/task.h>
-#include <zjunix/slab.h>
+#include <zjunix/slub.h>
 #include <zjunix/syscall.h>
 #include <zjunix/time.h>
 #include "../usr/ps.h"
@@ -51,11 +51,11 @@ void init_kernel() {
     init_ps2();
     // Memory management
     log(LOG_START, "Memory Modules.");
-    init_bootmm();
+    bootmem_init();
     log(LOG_OK, "Bootmem.");
-    init_buddy();
+    buddy_init_buddy();
     log(LOG_OK, "Buddy.");
-    init_slab();
+    slub_init();
     log(LOG_OK, "Slab.");
     log(LOG_END, "Memory Modules.");
     // File system

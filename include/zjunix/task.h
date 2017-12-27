@@ -4,6 +4,7 @@
 
 #include<zjunix/fs/fat.h>
 #include<page.h>
+#include <zjunix/shm.h>
 
 
 //进程状态定义
@@ -71,6 +72,7 @@ struct task_struct{
     unsigned int  num_thread;//线程数量  
     
     FILE * file;//文件信息
+    struct shared_memory* shm;
 
     // struct list_head stack_vma_head;//用户栈表头
     // struct list_head code_vma_head;//代码区表头

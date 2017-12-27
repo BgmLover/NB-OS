@@ -3,10 +3,10 @@
 #include <arch.h>
 #include <driver/vga.h>
 #include <zjunix/time.h>
-#include <zjunix/slab.h>
+#include <zjunix/slub.h>
 #include <zjunix/list_pcb.h>
 #include <zjunix/buddy.h>
-#include <zjunix/bootmm.h>
+#include <zjunix/bootmem.h>
 #include <debug.h>
 #include <page.h>
 extern struct page *pages;

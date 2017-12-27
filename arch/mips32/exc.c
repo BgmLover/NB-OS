@@ -4,7 +4,7 @@
 #include <zjunix/task.h>
 #include <zjunix/sche.h>
 #include <zjunix/buddy.h>
-#include <zjunix/slab.h>
+#include <zjunix/slub.h>
 #include <page.h>
 #pragma GCC push_options
 #pragma GCC optimize("O0")
