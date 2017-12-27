@@ -13,6 +13,7 @@
 #include <zjunix/slub.h>
 #include <zjunix/syscall.h>
 #include <zjunix/time.h>
+#include <zjunix/shm.h>
 #include "../usr/ps.h"
 
 void machine_info() {
@@ -57,6 +58,9 @@ void init_kernel() {
     log(LOG_OK, "Buddy.");
     slub_init();
     log(LOG_OK, "Slab.");
+
+    shm_init();
+    log(LOG_OK, "Shm.");
     log(LOG_END, "Memory Modules.");
     // File system
     log(LOG_START, "File System.");
