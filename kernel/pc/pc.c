@@ -7,7 +7,7 @@
 
 task_struct pcb[8];
 int curr_proc;
-
+void m(while (1);)
 static void copy_context(context* src, context* dest) 
 {
     dest->epc = src->epc;
