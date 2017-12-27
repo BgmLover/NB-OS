@@ -113,6 +113,7 @@ void init_task()
     init->pcb.state=STATE_WAITTING;
     init->pcb.priority=IDLE_PRIORITY;//设置优先级为最低优先级
     init->pcb.policy=0;//暂未定义调度算法
+    init->pcb.shm=NULL; //shared memory
 
     INIT_LIST_PCB(&init->pcb.sched,&(init->pcb));
     INIT_LIST_PCB(&init->pcb.process,&(init->pcb));
@@ -265,6 +266,7 @@ unsigned int do_fork(context* args,PCB*parent)
 
     new->pcb.thread_head=NULL;
     new->pcb.num_thread=0;
+    new->pcb.shm=NULL; // shared memory
 
     new->pcb.file=parent->file;
 
