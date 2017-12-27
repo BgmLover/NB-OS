@@ -10,8 +10,9 @@
 #include <debug.h>
 #include <page.h>
 extern struct page *pages;
-//list_pcb *pcbs;//进程队列
-//unsigned char idmap[32];//设置256个进程id
+list_pcb pcbs;//进程队列
+unsigned char idmap[32];//设置256个进程id
+unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 
 void task_test()
 {
@@ -174,7 +175,6 @@ void copy_context(context* src, context* dest)
 
 unsigned char get_emptypid()
 {
-    unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
     unsigned char number=0;
     unsigned char temp;
     unsigned int index,bits;
@@ -196,28 +196,19 @@ unsigned char get_emptypid()
 
     return number;
 }
-
+void free_pid(unsigned int pid)
+{
+    unsigned int index=pid/8;
+    unsigned int bit_index=pid%8;
+    idmap[index]&=(~bits_map[bit_index]);
+}
+//把一个进程加到进程队列末尾
 void add_task(list_pcb* process)
 {
-    list_pcb_add_tail(process,&pcbs);
+    list_pcb_add(process,&pcbs);
 }
 
-//把一个进程从进程队列中删去
-unsigned int del_task(unsigned int pid)
-{
-    int index=0;
-    list_pcb *pos;
-    for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-    {
-        if(pos->pcb->asid==pid)
-        {
-            list_pcb_del_init(pos);
-            return 0;
-        }
-    }
-    kernel_printf("process not found,pid %d",pid);
-    return 1;
-}
+
 
 unsigned int do_fork(context* args,PCB*parent)
 {
@@ -319,7 +310,14 @@ void dec_refrence_by_pte(unsigned int *pte)
 	unsigned int index;
 	for (index = 0; index < (PAGE_SIZE >> 2); ++index) {
 		if (pte[index]) {
-			free_pages((void *)(pte[index] & (~OFFSET_MASK)), 0);
+            //物理页地址
+            unsigned int phy_addr=pte[index]&(~OFFSET_MASK);
+            struct page *phy_page=pages+(phy_addr>>PAGE_SHIFT);
+            //引用次数--
+            dec_ref(phy_page,1);
+            //如果引用次数为0，则将该页free掉
+            if(phy_page->reference==0)
+                kfree((void*)phy_addr);
 			pte[index] = 0;
 		}
 	}
@@ -421,14 +419,14 @@ pgd_term *copy_pagetables(PCB* child,PCB* parent)
                     old_pte= (pte_term*) ((old_pgd[index]&(~OFFSET_MASK)));
                     
                     if(old_pte==temp_pte){
-                        free_pages(temp_pte,0);
+                        kfree(temp_pte);
                         count--;
                     }
                 }
             }     
         }
     error1:
-        free_pages(new_pgd,0);
+        kfree(new_pgd);
         return NULL;
 }
 
@@ -443,7 +441,7 @@ void delete_pages(PCB *task)
 		if (pgd[index]) {
 			pte =(pte_term*) (pgd[index] & (~OFFSET_MASK));
 			dec_refrence_by_pte(pte);
-			free_pages(pte, 0);
+			kfree(pte);
 			pgd[index] = 0;
 		}
 	}
@@ -452,8 +450,30 @@ void delete_pages(PCB *task)
 void delete_pagetables(PCB *task)
 {
 	delete_pages(task);
-	free_pages(task->pgd, 0);
+	kfree(task->pgd);
 }
-
+//把一个进程从进程队列中删去
+unsigned int del_task(unsigned int pid)
+{
+    int index=0;
+    list_pcb *pos;
+    for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
+    {
+        if(pos->pcb->asid==pid)
+        {
+            PCB * task_to_del=pos->pcb;
+            kfree(task_to_del->context);//删去上下文
+            delete_pages(task_to_del);  //删去页表
+            //delete task file待续      //删去文件信息
+            free_pid(task_to_del->asid);      //释放进程号
+            kfree((task_union*)task_to_del);//删去整个task_union
+            list_pcb_del_init(pos);
+            //在调度队列中删去它
+            return 0;
+        }
+    }
+    kernel_printf("process not found,pid %d",pid);
+    return 1;
+}
 
 
