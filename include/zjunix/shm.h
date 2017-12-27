@@ -7,13 +7,7 @@
 
 #define MAX_SHM 256
 
-struct shared_memory
-{
-	unsigned int allocated; // 0->free
-	unsigned int signal; // only 1 process can access
-	// struct page shm_page;
-	char page[4096];
-};
+
 
 // extern unsigned int shm_map[MAX_SHM];
 extern struct shared_memory shm[MAX_SHM];
