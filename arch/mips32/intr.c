@@ -1,5 +1,6 @@
 #include "intr.h"
 #include "arch.h"
+#include <driver/vga.h>
 
 #pragma GCC push_options
 #pragma GCC optimize("O0")
@@ -43,6 +44,7 @@ int disable_interrupts() {
 
 void do_interrupts(unsigned int status, unsigned int cause, context* pt_context) {
     int i;
+    kernel_printf("do interrupts!\n");
     int index = cause >> 8;
     for (i = 0; i < 8; i++) {
         if ((index & 1) && interrupts[i] != 0) {

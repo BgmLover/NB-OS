@@ -5,8 +5,8 @@
 #include <zjunix/task.h>
 
 //前后台时间片
-#define FOREGROUNG_TIMESLICES 8000
-#define BACKGROUND_TIMESLICES 2000
+#define FOREGROUNG_TIMESLICES 8
+#define BACKGROUND_TIMESLICES 2
 //不同队列的时间片
 #define BACKGROUND_PER_TIMESLICES 4
 #define HIGH_TIMESLICES 2
@@ -17,6 +17,8 @@
 
 typedef struct list_head list_head;
 extern list_pcb *current;
+
+void test_sched();
 
 PCB* get_current_pcb();
 //初始化调度系统

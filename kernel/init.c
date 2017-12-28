@@ -10,6 +10,7 @@
 #include <zjunix/log.h>
 //#include <zjunix/pc.h>
 #include <zjunix/task.h>
+#include <zjunix/sche.h>
 #include <zjunix/slub.h>
 #include <zjunix/syscall.h>
 #include <zjunix/time.h>
@@ -87,15 +88,23 @@ addr=kmalloc(4096);
     init_task();
     //create_startup_process();
     task_test();
-    log(LOG_END, "Process Control Module.");
+    log(LOG_END, "Process Control Module.");\
+    //shced
+    //log(LOG_START, "Sched.");
+    //init_sched();
+    //log(LOG_END, "Sched.");
     // Interrupts
     log(LOG_START, "Enable Interrupts.");
     init_interrupts();
     log(LOG_END, "Enable Interrupts.");
     // Init finished
     machine_info();
+
+
     *GPIO_SEG = 0x78778245;
     // Enter shell
+    int flag=0;
     while (1)
+
         ;
 }
