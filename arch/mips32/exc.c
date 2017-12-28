@@ -12,6 +12,7 @@
 
 exc_fn exceptions[32];
 
+
 void do_exceptions(unsigned int status, unsigned int cause, context* pt_context) {
     int index = cause >> 2;
     index &= 0x1f;
@@ -32,6 +33,7 @@ void do_exceptions(unsigned int status, unsigned int cause, context* pt_context)
 }
 
 void die(){while(1);}
+
 void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_context)
 {
     EntryLo L0;
@@ -207,6 +209,7 @@ void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_
 
 
 
+
 void tlb_refill(){
     pgd_term *pgd;
     pte_term *pte;
@@ -250,6 +253,7 @@ void init_exception() {
     // status 0000 0000 0000 0000 0000 0000 0000 0000
     // cause 0000 0000 1000 0000 0000 0000 0000 0000
     asm volatile(
+<<<<<<< HEAD
         
         "mtc0 $zero, $12\n\t"
         "li $t0, 0x800000\n\t"

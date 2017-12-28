@@ -3,7 +3,8 @@
 #include <driver/ps2.h>
 #include <driver/vga.h>
 #include <zjunix/fs/fat.h>
-#include <zjunix/pc.h>
+//#include <zjunix/pc.h>
+#include<zjunix/task.h>
 #include <zjunix/slub.h>
 #include <zjunix/utils.h>
 
@@ -13,6 +14,10 @@ FILE file;
 const unsigned int CACHE_BLOCK_SIZE = 64;
 
 int exec(char* filename) {
+    #ifdef EXEC_DEBUG
+    kernel_printf("begin to exec\n");
+    kernel_printf("filename:%s\n",filename);
+    #endif
     unsigned char buffer[512];
     int result = fs_open(&file, filename);
     if (result != 0) {

@@ -17,9 +17,9 @@ unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 
 void task_test()
 {
-/*test shared memory
+/*test shared memory*/
     struct shared_memory* shm;
-    unsigned char p;
+    unsigned int p;
      task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
      task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 	
@@ -55,6 +55,7 @@ void task_test()
     kernel_printf("entryhi:%x\n",entryhi);
     kernel_printf("index:%x\n",index);
     
+    
     // context *t;
     // kernel_printf("%s\n",pcbs.next->pcb->name);
     // kernel_printf("%x\n",pcbs.next->pcb);
@@ -79,13 +80,6 @@ void task_test()
     //     kernel_printf("t[%x]:%x\n",i,t[i]);
     // }
 }
-void init_proc()
-{
-    while(1)
-    {
-        kernel_printf("I'm init process\n");
-    }
-}
 void init_task()
 {
     int i=0;
@@ -108,8 +102,6 @@ void init_task()
     //初始化上下文
     //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
     init->pcb.context=(context*)((unsigned int)init+sizeof(PCB));
-    clean_context(init->pcb.context);
-    init->pcb.context->epc=(unsigned int)(&init_proc);
     // kernel_printf("address of init:%x\n",init);
     // kernel_printf("size of PCB:%x\n",sizeof(PCB));
     // kernel_printf("address of context:%x\n",init->pcb.context);
@@ -130,10 +122,9 @@ void init_task()
         return;
     }
     //初始化pgd每一项
-    for(i=0;i<PAGE_SIZE>>2;i++)
-    {
-        (init->pcb.pgd)[i]=0;
-    }
+    clean_page(init->pcb.pgd);
+
+
     //设置pgd属性为默认属性——可写
     //set_pgd_attr(init->pcb.pgd,Default_attr);
     #ifdef TASK_DEBUG_INIT
@@ -173,7 +164,6 @@ void init_task()
 
 void copy_context(context* src, context* dest) 
 {
-   
     dest->epc = src->epc;
     dest->at = src->at;
     dest->v0 = src->v0;
@@ -242,6 +232,7 @@ void clean_context(context* dest)
     dest->fp = 0;
     dest->ra = 0;
 }
+
 unsigned char get_emptypid()
 {
     unsigned char number=0;
@@ -546,6 +537,29 @@ unsigned int del_task(unsigned int pid)
     return 1;
 }
 
-void exec(PCB *task,char* filename){
-
-}
+// void exec(PCB *task,char* filename){
+    
+//     clean_context(task->context);
+//     delete_pagetables(task);
+//     task->pgd=(pgd_term*)kmalloc(PAGE_SIZE);
+//     pgd_term*pgd=task->pgd;
+//     clean_page(task->pgd);
+//     set_V(&pgd[0]);
+//     set_W(&pgd[0]);
+//     pte_term*pte=(pte_term*)kmalloc(PAGE_SIZE);
+//     pgd[0]|=(unsigned int)pte;
+//     unsigned int phy_addr;
+//     task->file=NULL;
+//     int result = fs_open(task->file, filename);
+//     if (result != 0) {
+//         kernel_printf("File %s not exist\n", filename);
+//         return;
+//     }
+//     phy_addr=read_file_to_page(task->file,0);
+//     set_V(&phy_addr);
+//     set_W(&phy_addr);
+//     pte[0]=phy_addr;
+//     #ifdef EXEC_DEBUG
+//     kernel_printf("Exec load at: 0x%x\n", phy_addr);
+//     #endif  // ! EXEC_DEBUG
+// }
