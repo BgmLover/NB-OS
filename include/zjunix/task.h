@@ -101,11 +101,10 @@ typedef union{
 extern list_pcb pcbs;//进程队列
 extern unsigned char idmap[32];//设置256个进程id
 void copy_context(context* src, context* dest); 
-void clean_context(context* dest);
 void task_test();
 //init进程设置以及相关中断、系统调用注册
 void init_task();
-void exec(PCB *task,char* filename);
+
 //分配一个进程号
 unsigned char get_emptypid();
 
