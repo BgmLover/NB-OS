@@ -105,9 +105,17 @@ addr=kmalloc(4096);
     //create_startup_process();
     init_sched();
     task_test();
+<<<<<<< HEAD
+    log(LOG_END, "Process Control Module.");\
+    //shced
+    //log(LOG_START, "Sched.");
+    //init_sched();
+    //log(LOG_END, "Sched.");
+=======
     kernel_printf("ready to exec\n");
     //exec("/s/seg.bin");
     log(LOG_END, "Process Control Module.");
+>>>>>>> bc207f82139b422832eb46ab658517d412f5405b
     // Interrupts
     log(LOG_START, "Enable Interrupts.");
     init_interrupts();
@@ -115,8 +123,18 @@ addr=kmalloc(4096);
     log(LOG_END, "Enable Interrupts.");
     // Init finished
     machine_info();
+
+
     *GPIO_SEG = 0x78778245;
     int flag=0;
     // Enter shell
+<<<<<<< HEAD
+    int flag=0;
+    while (1)
+
+        ;
+}
+=======
     while (1);
 }
+>>>>>>> bc207f82139b422832eb46ab658517d412f5405b
