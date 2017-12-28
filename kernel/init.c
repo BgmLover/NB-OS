@@ -42,6 +42,8 @@ void machine_info() {
 #pragma GCC pop_options
 
 void init_kernel() {
+    void* addr;
+
     kernel_clear_screen(31);
     // Exception
     init_exception();
@@ -59,6 +61,15 @@ void init_kernel() {
     slub_init();
     log(LOG_OK, "Slab.");
 
+/*test memory*/
+    addr=kmalloc(4096);
+    kernel_printf("%x\n", (unsigned int)addr);
+addr=kmalloc(4096);
+    kernel_printf("%x\n", (unsigned int)addr);
+
+
+    /*end test memory*/
+
     shm_init();
     log(LOG_OK, "Shm.");
     log(LOG_END, "Memory Modules.");
@@ -75,7 +86,7 @@ void init_kernel() {
     //init_pc();
     init_task();
     //create_startup_process();
-    task_test();
+    // task_test();
     log(LOG_END, "Process Control Module.");
     // Interrupts
     log(LOG_START, "Enable Interrupts.");
