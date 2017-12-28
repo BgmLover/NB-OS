@@ -17,7 +17,7 @@ unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 
 void task_test()
 {
-/*test shared memory*/
+/*test shared memory
     struct shared_memory* shm;
     unsigned char p;
      task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);

@@ -82,7 +82,8 @@ void buddy_free_pages(struct page* page, unsigned int order){
     unsigned int combined_idx;
     struct page* buddy_page;
 
-    clean_flag(page, -1);
+    // clean_flag(page, -1);
+    page->flag = 0;
 
     lockup(&buddy.lock);
 
