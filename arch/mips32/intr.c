@@ -1,10 +1,6 @@
 #include "intr.h"
 #include "arch.h"
 #include <driver/vga.h>
-<<<<<<< HEAD
-
-=======
->>>>>>> bc207f82139b422832eb46ab658517d412f5405b
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 

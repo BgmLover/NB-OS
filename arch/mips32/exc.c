@@ -253,8 +253,6 @@ void init_exception() {
     // status 0000 0000 0000 0000 0000 0000 0000 0000
     // cause 0000 0000 1000 0000 0000 0000 0000 0000
     asm volatile(
-<<<<<<< HEAD
-        
         "mtc0 $zero, $12\n\t"
         "li $t0, 0x800000\n\t"
         "mtc0 $t0, $13\n\t");
