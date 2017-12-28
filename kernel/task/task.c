@@ -23,19 +23,6 @@ void task_test()
      task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
      task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 	
-<<<<<<< HEAD
-    proc1->pcb.asid = (unsigned char)66;
-    proc2->pcb.asid = (unsigned char)77;
-    proc1->pcb.shm=NULL;
-    proc2->pcb.shm=NULL;
-    // shm_init();
-    shm=shm_get(4096);
-    shm_mount(&proc1->pcb, shm);
-    shm_mount(&proc2->pcb, shm);
-    shm_write(&proc1->pcb, 0, 0x12345678);
-    p = shm_read(&proc2->pcb, 0);
-    kernel_printf("shm:%x\n", p);
-=======
 //     proc1->pcb.asid = (unsigned char)66;
 //     proc2->pcb.asid = (unsigned char)77;
 //     proc1->pcb.shm=NULL;
@@ -47,7 +34,6 @@ void task_test()
 //     shm_write(&proc1->pcb, 0, 'f');
 //     p = shm_read(&proc2->pcb, 0);
 //     kernel_printf("shm:%c\n", p);
->>>>>>> 206c129c1f7e84146f2176723d3f45fab900c5c1
 
 // add_task(&proc1->pcb.process);
 // add_task(&proc2->pcb.process);
@@ -211,7 +197,6 @@ void copy_context(context* src, context* dest)
     dest->fp = src->fp;
     dest->ra = src->ra;
 }
-<<<<<<< HEAD
 void clean_context(context* dest)
 {
     dest->epc = 0;
@@ -247,8 +232,6 @@ void clean_context(context* dest)
     dest->fp = 0;
     dest->ra = 0;
 }
-=======
->>>>>>> 010d33362424dcf079b7ea294e814d2fdf22c585
 
 unsigned char get_emptypid()
 {
@@ -554,7 +537,6 @@ unsigned int del_task(unsigned int pid)
     return 1;
 }
 
-<<<<<<< HEAD
 // void exec(PCB *task,char* filename){
     
 //     clean_context(task->context);
@@ -581,6 +563,3 @@ unsigned int del_task(unsigned int pid)
 //     kernel_printf("Exec load at: 0x%x\n", phy_addr);
 //     #endif  // ! EXEC_DEBUG
 // }
-=======
-
->>>>>>> 010d33362424dcf079b7ea294e814d2fdf22c585

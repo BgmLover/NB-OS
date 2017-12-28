@@ -3,6 +3,7 @@
 #include "arch.h"
 #include <driver/vga.h>
 #include <zjunix/slub.h>
+
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 
@@ -64,7 +65,6 @@ void init_pgtable() {
         "bne $v0, $v1, init_pgtable_L1\n\t"
         "tlbwi\n\t"
         "nop");
-<<<<<<< HEAD
     }
     
 unsigned int read_file_to_page(FILE*file,unsigned int start){
@@ -95,8 +95,6 @@ void clean_page(unsigned int *page)
     int i;
     for(i=0;i<PAGE_SIZE>>2;i++)
         page[i]=0;
-=======
->>>>>>> 010d33362424dcf079b7ea294e814d2fdf22c585
 }
 void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index)
 {

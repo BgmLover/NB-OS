@@ -104,11 +104,7 @@ void copy_context(context* src, context* dest);
 void task_test();
 //init进程设置以及相关中断、系统调用注册
 void init_task();
-<<<<<<< HEAD
 //void exec(PCB *task,char* filename);
-=======
-
->>>>>>> 010d33362424dcf079b7ea294e814d2fdf22c585
 //分配一个进程号
 unsigned char get_emptypid();
 
