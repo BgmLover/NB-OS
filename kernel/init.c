@@ -86,7 +86,7 @@ addr=kmalloc(4096);
     //init_pc();
     init_task();
     //create_startup_process();
-    // task_test();
+    task_test();
     log(LOG_END, "Process Control Module.");
     // Interrupts
     log(LOG_START, "Enable Interrupts.");

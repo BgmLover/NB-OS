@@ -17,19 +17,11 @@ unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 
 void task_test()
 {
-<<<<<<< HEAD
-/*test shared memory*/
-//     struct shared_memory* shm;
-//     unsigned char p;
-//      task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
-//      task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
-=======
 /*test shared memory
     struct shared_memory* shm;
     unsigned char p;
      task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
      task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
->>>>>>> c7831a572691ef2fa47d01f6e742b2614408b2bc
 	
 //     proc1->pcb.asid = (unsigned char)66;
 //     proc2->pcb.asid = (unsigned char)77;
@@ -96,7 +88,6 @@ void init_proc()
 }
 void init_task()
 {
-    kernel_printf("init begin\n");
     int i=0;
     INIT_LIST_PCB(&pcbs,NULL);  
     
