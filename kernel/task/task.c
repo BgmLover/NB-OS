@@ -78,6 +78,13 @@ add_task(&proc2->pcb.process);
     //     kernel_printf("t[%x]:%x\n",i,t[i]);
     // }
 }
+void init_proc()
+{
+    while(1)
+    {
+        kernel_printf("I'm init process\n");
+    }
+}
 void init_task()
 {
     int i=0;
@@ -100,6 +107,8 @@ void init_task()
     //初始化上下文
     //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
     init->pcb.context=(context*)((unsigned int)init+sizeof(PCB));
+    clean_context(init->pcb.context);
+    init->pcb.context->epc=(unsigned int)(&init_proc);
     // kernel_printf("address of init:%x\n",init);
     // kernel_printf("size of PCB:%x\n",sizeof(PCB));
     // kernel_printf("address of context:%x\n",init->pcb.context);
@@ -197,7 +206,41 @@ void copy_context(context* src, context* dest)
     dest->fp = src->fp;
     dest->ra = src->ra;
 }
-
+void clean_context(context* dest)
+{
+    dest->epc = 0;
+    dest->at = 0;
+    dest->v0 = 0;
+    dest->v1 = 0;
+    dest->a0 = 0;
+    dest->a1 = 0;
+    dest->a2 = 0;
+    dest->a3 = 0;
+    dest->t0 = 0;
+    dest->t1 = 0;
+    dest->t2 = 0;
+    dest->t3 = 0;
+    dest->t4 = 0;
+    dest->t5 = 0;
+    dest->t6 = 0;
+    dest->t7 = 0;
+    dest->s0 = 0;
+    dest->s1 = 0;
+    dest->s2 = 0;
+    dest->s3 = 0;
+    dest->s4 = 0;
+    dest->s5 = 0;
+    dest->s6 = 0;
+    dest->s7 = 0;
+    dest->t8 = 0;
+    dest->t9 = 0;
+    dest->hi = 0;
+    dest->lo = 0;
+    dest->gp = 0;
+    dest->sp = 0;
+    dest->fp = 0;
+    dest->ra = 0;
+}
 unsigned char get_emptypid()
 {
     unsigned char number=0;
@@ -502,4 +545,6 @@ unsigned int del_task(unsigned int pid)
     return 1;
 }
 
+void exec(PCB *task,char* filename){
 
+}
