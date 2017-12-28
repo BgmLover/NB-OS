@@ -86,11 +86,15 @@ unsigned int read_file_to_page(FILE*file,unsigned int start){
         if((j+1)==PAGE_SIZE/CACHE_BLOCK_SIZE){
             break;//已经读满了一个页的内容
         }
-    return new;
     }
-
-
+    return new;
 }  
+void clean_page(unsigned int *page)
+{
+    int i;
+    for(i=0;i<PAGE_SIZE>>2;i++)
+        page[i]=0;
+}
 void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index)
 {
     EntryHi entryhi;

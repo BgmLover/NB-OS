@@ -15,6 +15,7 @@
 #include <zjunix/time.h>
 #include <zjunix/shm.h>
 #include "../usr/ps.h"
+#include "../usr/exec.h"
 
 void machine_info() {
     int row;
@@ -41,12 +42,24 @@ void machine_info() {
 }*/
 #pragma GCC pop_options
 
+void show_status()
+{
+    unsigned int status,cause;
+        asm volatile(
+            "mfc0 %0,$12\n\t"
+            "mfc0 %1,$13\n\t"
+            :"=r"(status),"=r"(cause)
+        );
+        kernel_printf("status:%x\n",status);
+        kernel_printf("cause:%x\n",cause);
+}
 void init_kernel() {
     void* addr;
 
     kernel_clear_screen(31);
     // Exception
     init_exception();
+    show_status();
     // Page table
     init_pgtable();
     // Drivers
@@ -87,15 +100,18 @@ addr=kmalloc(4096);
     init_task();
     //create_startup_process();
     task_test();
+    kernel_printf("ready to exec\n");
+    //exec("/s/seg.bin");
     log(LOG_END, "Process Control Module.");
     // Interrupts
     log(LOG_START, "Enable Interrupts.");
     init_interrupts();
+    show_status();
     log(LOG_END, "Enable Interrupts.");
     // Init finished
     machine_info();
     *GPIO_SEG = 0x78778245;
+    int flag=0;
     // Enter shell
-    while (1)
-        ;
+    while (1);
 }

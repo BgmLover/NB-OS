@@ -77,7 +77,7 @@ void tlbp(unsigned int virtual_addr,unsigned int asid );
 unsigned int get_tlb_index();
 //申请一个物理页的空间，从指定位置从文件读取连续内容，直到满一个页大小，返回页地址
 unsigned int read_file_to_page(FILE*file,unsigned int start);
-
+void clean_page(unsigned int *page);
 
 //About TLB
 typedef struct {
