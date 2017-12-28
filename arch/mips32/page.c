@@ -64,7 +64,33 @@ void init_pgtable() {
         "bne $v0, $v1, init_pgtable_L1\n\t"
         "tlbwi\n\t"
         "nop");
-}
+    }
+    
+unsigned int read_file_to_page(FILE*file,unsigned int start){
+    unsigned char buffer[512];
+    const unsigned int CACHE_BLOCK_SIZE = 64;
+    unsigned int j;
+    unsigned int new=(unsigned int )kmalloc(PAGE_SIZE);
+    if(!new){
+        kernel_printf("read_file_to_page error: failed to malloc for a page\n");
+        return 0;
+    }
+
+    unsigned int size = get_entry_filesize(file->entry.data);
+    unsigned int n = size / CACHE_BLOCK_SIZE + 1;
+    fs_lseek(file,start);
+    for (j = 0; j < n; j++) {
+        fs_read(file, buffer, CACHE_BLOCK_SIZE);
+        kernel_memcpy((void*)(new + j * CACHE_BLOCK_SIZE), buffer, CACHE_BLOCK_SIZE);
+        kernel_cache(new + j * CACHE_BLOCK_SIZE);
+        if((j+1)==PAGE_SIZE/CACHE_BLOCK_SIZE){
+            break;//已经读满了一个页的内容
+        }
+    return new;
+    }
+
+
+}  
 void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index)
 {
     EntryHi entryhi;
