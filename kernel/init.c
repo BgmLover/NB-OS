@@ -10,6 +10,7 @@
 #include <zjunix/log.h>
 //#include <zjunix/pc.h>
 #include <zjunix/task.h>
+#include <zjunix/sche.h>
 #include <zjunix/slub.h>
 #include <zjunix/syscall.h>
 #include <zjunix/time.h>
@@ -102,6 +103,7 @@ addr=kmalloc(4096);
     //init_pc();
     init_task();
     //create_startup_process();
+    init_sched();
     task_test();
     kernel_printf("ready to exec\n");
     //exec("/s/seg.bin");
