@@ -6,6 +6,7 @@
 #include <zjunix/buddy.h>
 #include <zjunix/slub.h>
 #include <page.h>
+#include <debug.h>
 #pragma GCC push_options
 #pragma GCC optimize("O0")
 
@@ -30,7 +31,7 @@ void do_exceptions(unsigned int status, unsigned int cause, context* pt_context)
     // }
 }
 
-
+void die(){while(1);}
 void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_context)
 {
     EntryLo L0;
@@ -48,16 +49,28 @@ void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_
     if(!pgd[pgd_index])
     {
         kernel_printf("tlb_modified error: The pte equals to 0\n");
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_modified\n");
+        die();
+        #endif
         goto kill;
     }
     else if(!is_V(&pgd[pgd_index]))
     {
         kernel_printf("tlb_modified error: The pte is invalid\n");
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_modified\n");
+        die();
+        #endif
         goto kill;
     }
     else if(!is_W(&pgd[pgd_index]))
     {
         kernel_printf("tlb_modified error: The pte can't be written\n");
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_modified\n");
+        die();
+        #endif
         goto kill;
     }
     //读取二级页表项中的对应index的内容
@@ -65,11 +78,19 @@ void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_
     if(!pte[pte_index])
     {
         kernel_printf("tlb_modified error: The phy_addr equals to 0\n");
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_modified\n");
+        die();
+        #endif
         goto kill;
     }
     else if(!is_V(&pte[pte_index]))
     {
         kernel_printf("tlb_modified error: The phy_addr is invalid\n");
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_modified\n");
+        die();
+        #endif
         goto kill;
     }
     pte_term phy_addr=pte[pte_index];
@@ -86,6 +107,10 @@ void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_
         unsigned int *new=kmalloc(PAGE_SIZE);
         if(!new){
             kernel_printf("tlb_modified error : failed to malloc for a new page\n");
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_modified\n");
+        die();
+        #endif            
             goto kill;
         }
         dec_ref(old,1);
@@ -98,6 +123,10 @@ void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_
 
     kill:
         //kill current pc
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_invalid\n");
+        die();
+        #endif
         del_task(current->asid);
         return ;
     ok:
@@ -169,6 +198,10 @@ void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_
         : "=r"(new_phy_addr));
     }
     kill:
+        #ifdef EXCEPTION_DEBUG
+        kernel_printf("die in the tlb_invalid\n");
+        die();
+        #endif
         del_task(current->asid);
 }
 
@@ -220,8 +253,8 @@ void init_exception() {
         "mtc0 $t0, $13\n\t"
         "mtc0 $zero, $12\n\t"
         "li $t0, 0x800000\n\t");
-    register_exception_handler(1,tlb_modified_exception);
-    register_exception_handler(2,tlb_invalid_exception);
-    register_exception_handler(3,tlb_invalid_exception);
+    // register_exception_handler(1,tlb_modified_exception);
+    // register_exception_handler(2,tlb_invalid_exception);
+    // register_exception_handler(3,tlb_invalid_exception);
 }
 #pragma GCC pop_options

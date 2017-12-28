@@ -18,25 +18,25 @@ unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 void task_test()
 {
 /*test shared memory*/
-    struct shared_memory* shm;
-    unsigned char p;
-     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
-     task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
+//     struct shared_memory* shm;
+//     unsigned char p;
+//      task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
+//      task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 	
-    proc1->pcb.asid = (unsigned char)66;
-    proc2->pcb.asid = (unsigned char)77;
-    proc1->pcb.shm=NULL;
-    proc2->pcb.shm=NULL;
-    // shm_init();
-    shm=shm_get(4096);
-    shm_mount(&proc1->pcb, shm);
-    shm_mount(&proc2->pcb, shm);
-    shm_write(&proc1->pcb, 0, 'f');
-    p = shm_read(&proc2->pcb, 0);
-    kernel_printf("shm:%c\n", p);
+//     proc1->pcb.asid = (unsigned char)66;
+//     proc2->pcb.asid = (unsigned char)77;
+//     proc1->pcb.shm=NULL;
+//     proc2->pcb.shm=NULL;
+//     // shm_init();
+//     shm=shm_get(4096);
+//     shm_mount(&proc1->pcb, shm);
+//     shm_mount(&proc2->pcb, shm);
+//     shm_write(&proc1->pcb, 0, 'f');
+//     p = shm_read(&proc2->pcb, 0);
+//     kernel_printf("shm:%c\n", p);
 
-add_task(&proc1->pcb.process);
-add_task(&proc2->pcb.process);
+// add_task(&proc1->pcb.process);
+// add_task(&proc2->pcb.process);
 /*end test shared memory*/
 
 
@@ -54,6 +54,7 @@ add_task(&proc2->pcb.process);
     kernel_printf("entry1:%x\n",entry1);
     kernel_printf("entryhi:%x\n",entryhi);
     kernel_printf("index:%x\n",index);
+    
     // context *t;
     // kernel_printf("%s\n",pcbs.next->pcb->name);
     // kernel_printf("%x\n",pcbs.next->pcb);
@@ -87,6 +88,7 @@ void init_proc()
 }
 void init_task()
 {
+    kernel_printf("init begin\n");
     int i=0;
     INIT_LIST_PCB(&pcbs,NULL);  
     
