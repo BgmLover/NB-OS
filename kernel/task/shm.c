@@ -79,8 +79,10 @@ void shm_write(struct task_struct* task, unsigned int offset, unsigned char p){
 
 	}
 	shm->signal = 0;
+	kernel_printf("process%d:lock write\n", (unsigned int)task->asid);
 	task->shm->page[offset]=p;
 	shm->signal = 1;
+	kernel_printf("process%d:unlock write\n", (unsigned int)task->asid);
 	return;
 }
 
@@ -90,8 +92,10 @@ unsigned char shm_read(struct task_struct* task, unsigned int offset){
 
 	}
 	shm->signal = 0;
+	kernel_printf("process%d:lock read\n", (unsigned int)task->asid);
 	res = task->shm->page[offset];
 	shm->signal = 1;
+	kernel_printf("process%d:unlock read\n", (unsigned int)task->asid);
 	return res;
 	
 }
