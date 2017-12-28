@@ -258,6 +258,11 @@ void init_exception() {
         "mtc0 $zero, $12\n\t"
         "li $t0, 0x800000\n\t"
         "mtc0 $t0, $13\n\t");
+=======
+    "mtc0 $zero, $12\n\t"
+    "li $t0, 0x800000\n\t"
+    "mtc0 $t0, $13\n\t");
+>>>>>>> bc207f82139b422832eb46ab658517d412f5405b
     // register_exception_handler(1,tlb_modified_exception);
     // register_exception_handler(2,tlb_invalid_exception);
     // register_exception_handler(3,tlb_invalid_exception);
