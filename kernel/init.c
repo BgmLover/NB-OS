@@ -77,7 +77,10 @@ void init_kernel() {
 /*test memory*/
     addr=kmalloc(4096);
     kernel_printf("%x\n", (unsigned int)addr);
+    kfree(addr);
 addr=kmalloc(4096);
+    kernel_printf("%x\n", (unsigned int)addr);
+    addr=kmalloc(4096);
     kernel_printf("%x\n", (unsigned int)addr);
 
 

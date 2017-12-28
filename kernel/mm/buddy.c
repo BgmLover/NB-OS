@@ -91,7 +91,7 @@ void buddy_free_pages(struct page* page, unsigned int order){
     while(order<MAX_BUDDY_ORDER){
         buddy_idx = page_idx^(1<<order); // the index of its buddy
         buddy_page = page + (buddy_idx - page_idx); // get the buddy page
-        if(!_is_same_bplevel(buddy_page, order)) break; //not same order, stop
+        if(/*!_is_same_bplevel(buddy_page, order)*/buddy_page->bplevel != order) break; //not same order, stop
         list_del_init(&buddy_page->list);
         --buddy.freelist[order].nr_free;
         set_bplevel(buddy_page, -1);
@@ -100,7 +100,8 @@ void buddy_free_pages(struct page* page, unsigned int order){
         page_idx = combined_idx;
         ++order;
     }
-    set_bplevel(page, order);
+    // set_bplevel(page, order);
+    page->bplevel = order;
     list_add(&(page->list), &(buddy.freelist[order].free_head)); //add to the head of list
     ++buddy.freelist[order].nr_free;
     unlock(&buddy.lock);

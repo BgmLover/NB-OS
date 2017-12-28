@@ -123,12 +123,16 @@ void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_
     }
 
     kill:
+<<<<<<< HEAD
+        //kill current pcb
+=======
         //kill current pc
         #ifdef EXCEPTION_DEBUG
         kernel_printf("die in the tlb_invalid\n");
         die();
         #endif
         del_task(current->asid);
+>>>>>>> 206c129c1f7e84146f2176723d3f45fab900c5c1
         return ;
     ok:
         
@@ -152,58 +156,39 @@ void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_
 /*  
     if addr>=8000,0000   error   kernel addr can't cause page fault
     if addr<8000,0000    load from file
-*/  pgd_term *pgd;
-    pte_term *pte;
-    unsigned int badVaddr,phy_addr;
-    unsigned int pgd_index,pte_index;
+*/
+    unsigned int badVaddr;
     asm volatile("mfc0 %0, $8\n\t" : "=r"(badVaddr));
     PCB * current =get_current_pcb();
-    pgd=current->pgd;
-    pgd_index=badVaddr>>PGD_SHIFT;
-    pgd_index&=INDEX_MASK;
-    pte_index=badVaddr>>PTE_SHIFT;
-    pte_index&=INDEX_MASK;
     if(badVaddr>=0x80000000)
     {
         kernel_printf("error: task %x  access to address:%x",current->asid,badVaddr);
-        goto kill;
+        //kill current
     }
     else{
         /*
         1.swap
+        2.read file and fill the page table
         */
-        if(current->file==NULL)
-        {
-            kernel_printf("tlb invalid error: the task has no file information\n");
-            goto kill;
-        }
-        //start的值为该虚拟地址所在的页的基地址
-        unsigned int start=badVaddr&(~OFFSET_MASK);
-        unsigned int new_phy_addr;
-        //从文件里读取内容到新的一张物理页中
-        new_phy_addr=read_file_to_page(current->file,start);
-        if(new_phy_addr==0){
-            kernel_printf("tlb invalid error: failed to read info to page from file\n");
-            goto kill;
-        }
-        //填充页表对应项，并设置为有效，可写
-        pte=(pte_term*) (pgd[pgd_index]&(~OFFSET_MASK));
-        set_V(&new_phy_addr);
-        set_W(&new_phy_addr);
-        pte[pte_index]=new_phy_addr;
+        unsigned int entry0;
+        asm volatile("mfc0 %0, $2\n\t" : "=r"(entry0));
+        set_V(&entry0);
         asm volatile(
         "mtc0 %0, $2\n\t"
         "nop\n\t"
         "nop\n\t"
         "tlbwi\n\t"
-        : "=r"(new_phy_addr));
+        : "=r"(entry0));
     }
+<<<<<<< HEAD
+=======
     kill:
         #ifdef EXCEPTION_DEBUG
         kernel_printf("die in the tlb_invalid\n");
         die();
         #endif
         del_task(current->asid);
+>>>>>>> 206c129c1f7e84146f2176723d3f45fab900c5c1
 }
 
 
