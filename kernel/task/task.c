@@ -155,6 +155,7 @@ void init_task()
     add_task(&(init->pcb.process));//添加到pcb链表中
     /*
     注册中断和系统调用
+    register_syscall
     */
     init->pcb.state=STATE_RUNNING;
     #ifdef TASK_DEBUG_INIT
@@ -276,7 +277,7 @@ PCB *get_pcb_by_pid(unsigned int pid){
             return task;
         }
     }
-    return 0;
+    return NULL;
 }
 //把一个进程加到进程队列末尾
 void add_task(list_pcb* process)
@@ -321,6 +322,7 @@ int do_fork(context* args,PCB*parent)
     #ifdef DO_FORK_DEBUG
     kernel_printf("copy pagetables over\n");
     #endif
+
     //复制或是设置新的PCB信息
     kernel_memcpy(new->pcb.name,parent->name,sizeof(char)*32);
     new->pcb.asid=get_emptypid();
@@ -328,6 +330,17 @@ int do_fork(context* args,PCB*parent)
     {
         kernel_printf("error : no more pid to allocate\n");
         goto error3;
+    }
+    //复制文件信息
+    if(parent->file==NULL)
+        new->pcb.file=NULL;
+    else{
+        new->pcb.file=(FILE*)kmalloc(sizeof(FILE));
+        if(new==NULL){
+            kernel_printf("error in do_fork:failed to malloc for FILE\n");
+            goto error4;
+        }
+        kernel_memcpy(new->pcb.file,parent->file,sizeof(FILE));
     }
     new->pcb.parent=parent->asid;
     new->pcb.uid=parent->uid;
@@ -368,6 +381,11 @@ int do_fork(context* args,PCB*parent)
         kfree(new->pcb.pgd);
         kfree(new);
         return -3;
+    error4:
+        kfree(new->pcb.pgd);
+        kfree(new);
+        free_pid(new->pcb.asid);
+        return -4;
 }
  
 
@@ -627,8 +645,12 @@ int exec2(PCB *task,char* filename){
     pgd[0]|=(unsigned int)pte;
 
     //申请 文件控制块的大小
-    task->file=NULL;
-    task->file=(FILE*)kmalloc(5*PAGE_SIZE);//此处还有bug
+    if(task->file==NULL)
+        task->file=(FILE*)kmalloc(5*PAGE_SIZE);//此处还有bug
+    else{
+        kfree(task->file);
+        task->file=(FILE*)kmalloc(5*PAGE_SIZE);
+    }
     #ifdef EXEC_DEBUG
     kernel_printf("address of task:%x\n",task);
     kernel_printf("size of FILE:%x\n",sizeof(FILE));
@@ -717,3 +739,47 @@ int exec(char *filename,char* taskname)
     kernel_memcpy(child->name,taskname,sizeof(char)*32);
     return 0;
 }
+
+void print_tasks(){
+    int i=0;
+    while(1)
+    {
+        PCB* task=get_pcb_by_pid(i);
+        if(task==NULL)
+            break;
+        else{
+            kernel_printf("pid: %d  ",task->asid);
+            kernel_printf("task name: %s  ",task->name);
+            kernel_printf("priority: %d  ",task->priority);
+            kernel_printf("state: %d",task->state);
+
+            kernel_printf("\n");
+        }
+    }
+}
+void syscall_fork_31(unsigned int status, unsigned int cause, context* pt_context)
+{
+    context*args=(context*)(pt_context->a0);
+    PCB*parent=(PCB*)(pt_context->a1);
+    do_fork(args,parent);
+}
+void syscall_exec_32(unsigned int status, unsigned int cause, context* pt_context)
+{
+    char*filename=(char*)(pt_context->a0);
+    char*taskname=(char*)(pt_context->a1);
+    exec(filename,taskname);
+}
+void syscall_kill_33(unsigned int status, unsigned int cause, context* pt_context)
+{
+    unsigned int asid=pt_context->a0;
+    del_task(asid);
+}
+void syscall_exit_34(unsigned int status, unsigned int cause, context* pt_context)
+{
+
+}
+void syscall_print_tasks_35(unsigned int status, unsigned int cause, context* pt_context)
+{
+    print_tasks();
+}
+
