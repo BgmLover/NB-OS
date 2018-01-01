@@ -585,7 +585,8 @@ int exec1(char* filename) {
         "nop\n\t"
         "nop\n\t"
         "tlbwi"
-        : "=r"(cp0EntryLo0));
+        :
+        : "r"(cp0EntryLo0));
     int (*f)() = (int (*)())(0);
 #ifdef EXEC_DEBUG
     kernel_printf("Exec load at: 0x%x\n", ENTRY);
