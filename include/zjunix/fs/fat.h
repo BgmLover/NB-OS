@@ -138,6 +138,8 @@ unsigned long fs_read_dir(FS_FAT_DIR *dir, unsigned char *buf);
 
 unsigned long fs_cat(unsigned char * path);
 
+int ls(char *para);
+
 void get_filename(unsigned char *entry, unsigned char *buf);
 
 u32 read_block(u8 *buf, u32 addr, u32 count);
@@ -147,5 +149,6 @@ u32 write_block(u8 *buf, u32 addr, u32 count);
 u32 get_entry_filesize(u8 *entry);
 
 u32 get_entry_attr(u8 *entry);
+
 
 #endif  // !_ZJUNIX_FS_FAT_H

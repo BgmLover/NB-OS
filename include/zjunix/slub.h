@@ -3,6 +3,7 @@
 
 #include <zjunix/list.h>
 #include <zjunix/buddy.h>
+#include <zjunix/task.h>
 
 #define SIZE_INT 4
 #define SLAB_AVAILABLE 0x0
@@ -47,9 +48,13 @@ extern struct kmem_cache* slub_get_slub(unsigned int size);
 extern void* kmalloc(unsigned int size);
 extern void slub_free(struct kmem_cache* cache, void* obj);
 extern void kfree(void* obj);
+
+/* syscall*/
+void syscall_kmalloc_21(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_kfree_22(unsigned int status, unsigned int cause, context* pt_context);
 /*
-extern void syscall20(unsigned int status, unsigned int cause, context* pt_context);
-extern void syscall21(unsigned int status, unsigned int cause, context* pt_context);
+void* malloc(unsigned int size);
+void free(void* obj);
 */
 
 #endif 
