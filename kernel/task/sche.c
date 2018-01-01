@@ -121,11 +121,11 @@ void test_sched()
     //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
-    proc1->pcb.context->epc=(unsigned int)(print_0_fun);init->context->sp=(unsigned int)init+PAGE_SIZE;
-    proc1->context->sp=(unsigned int)proc1+PAGE_SIZE;
+    proc1->pcb.context->epc=(unsigned int)(print_0_fun);
+    proc1->pcb.context->sp=(unsigned int)proc1+PAGE_SIZE;
     unsigned int init_gp;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    proc1->context->gp=init_gp;
+    proc1->pcb.context->gp=init_gp;
     proc1->pcb.asid=get_emptypid();
     if(proc1->pcb.asid<0){
         kernel_printf("failed to get right asid\n");   

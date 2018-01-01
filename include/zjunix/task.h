@@ -5,8 +5,6 @@
 #include<zjunix/fs/fat.h>
 #include<page.h>
 
-
-
 //进程状态定义
 #define STATE_WAITTING 0
 #define STATE_READY    1
@@ -58,7 +56,6 @@ struct list_pcb{
 };
 struct task_struct{
     context *context;//上下文
-
     char name[32];
     unsigned char asid;//address space id   pid
     unsigned int parent;//父进程id
@@ -72,7 +69,6 @@ struct task_struct{
 
     list_pcb sched;//就绪队列
     list_pcb process;//pcb链表
-
 
     struct TCB *thread_head;//指向进程中的第一个线程
     unsigned int  num_thread;//线程数量  
@@ -101,21 +97,23 @@ typedef union{
 extern list_pcb pcbs;//进程队列
 extern unsigned char idmap[32];//设置256个进程id
 void copy_context(context* src, context* dest); 
+void clean_context(context* dest);
 void task_test();
 //init进程设置以及相关中断、系统调用注册
 void init_task();
-void exec2(PCB *task,char* filename);
+int exec2(PCB *task,char* filename);
 int exec1(char* filename);
+int exec(char *filename,char* taskname);
 //分配一个进程号
 unsigned char get_emptypid();
-
+PCB *get_pcb_by_pid(unsigned int pid);
 //把一个进程pcb添加到链表末尾
 void add_task(list_pcb* process);
 
 //删除进程
 unsigned int  del_task(unsigned int asid);
 
-unsigned int do_fork(context* args,PCB*parent);
+int do_fork(context* args,PCB*parent);
 
 pgd_term *copy_pagetables(PCB* child,PCB* parent);
 

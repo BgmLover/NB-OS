@@ -36,8 +36,7 @@ void die(){while(1);}
 
 void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_context)
 {
-    EntryLo L0;
-    unsigned int *entry0;
+    unsigned int entry0=0;
     unsigned int badVaddr;
     asm volatile("mfc0 %0, $8\n\t" : "=r"(badVaddr));
 
@@ -132,20 +131,14 @@ void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_
         del_task(current->asid);
         return ;
     ok:
-        
-        L0.PFN=phy_addr>>12;
-        L0.G=is_G(&phy_addr);
-        L0.V=is_V(&phy_addr);
-        L0.D=is_W(&phy_addr);
-        L0.C=0;
-    //传入对应内容
-        entry0=(unsigned int*)(&L0);
+        entry0=pt2pfn(pte[pte_index]);
         asm volatile(
         "mtc0 %0, $2\n\t"
         "nop\n\t"
         "nop\n\t"
         "tlbwi\n\t"
-        : "=r"(entry0));
+        :
+        : "r"(entry0));
 }
 //page fault
 void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_context)
@@ -192,12 +185,14 @@ void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_
         set_V(&new_phy_addr);
         set_W(&new_phy_addr);
         pte[pte_index]=new_phy_addr;
+        unsigned int entry0=pt2pfn(pte[pte_index]);
         asm volatile(
         "mtc0 %0, $2\n\t"
         "nop\n\t"
         "nop\n\t"
         "tlbwi\n\t"
-        : "=r"(new_phy_addr));
+        :
+        : "r"(entry0));
     }
     kill:
         #ifdef EXCEPTION_DEBUG
@@ -214,10 +209,8 @@ void tlb_refill(){
     pgd_term *pgd;
     pte_term *pte;
     unsigned int badVaddr,phy_addr;
-    unsigned int pgd_index,pte_index,*entry0;
-    asm volatile(
-        "mfc0 %0, $8\n\t" : "=r"(badVaddr)
-    );
+    unsigned int pgd_index,pte_index;
+    asm volatile("mfc0 %0, $8\n\t" : "=r"(badVaddr));
     PCB *current=get_current_pcb();
     pgd=current->pgd;
     pgd_index=badVaddr>>PGD_SHIFT;
@@ -226,21 +219,18 @@ void tlb_refill(){
     pte_index&=INDEX_MASK;
     //读取二级页表项中的对应index的内容
     pte=(pte_term*) (pgd[pgd_index]&(~OFFSET_MASK));
-    phy_addr=pte[pte_index];
     //设置EntryLo0的内容
-    EntryLo L0;
-    L0.PFN=phy_addr>>12;
-    L0.G=is_G(&phy_addr);
-    L0.V=is_V(&phy_addr);
-    L0.D=is_W(&phy_addr);
-    L0.C=0;
     //传入对应内容
-    entry0=(unsigned int*)(&L0);
+    unsigned int entry0=pt2pfn(pte[pte_index]);
     //填入EntryLo0的值即可
     asm volatile(
         "mtc0 %0, $2\n\t" 
         "mtc0 $zero,$3\n\t"
-        : "=r"(*entry0)
+        "nop\n\t"
+        "nop\n\t"
+        "tlbwr"
+        :
+        : "r"(entry0)
     );
 }
 

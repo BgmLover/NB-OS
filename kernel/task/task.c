@@ -1,5 +1,7 @@
 #include "task.h"
 #include <zjunix/utils.h>
+#include <zjunix/sche.h>
+#include <zjunix/shm.h>
 #include <arch.h>
 #include <driver/vga.h>
 #include <zjunix/time.h>
@@ -9,7 +11,7 @@
 #include <zjunix/bootmem.h>
 #include <debug.h>
 #include <page.h>
-#include <zjunix/shm.h>
+
 extern struct page *pages;
 list_pcb pcbs;//进程队列
 unsigned char idmap[32];//设置256个进程id
@@ -263,6 +265,19 @@ void free_pid(unsigned int pid)
     unsigned int bit_index=pid%8;
     idmap[index]&=(~bits_map[bit_index]);
 }
+PCB *get_pcb_by_pid(unsigned int pid){
+    int index=0;
+    list_pcb *pos;
+    for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
+    {
+        if(pos->pcb->asid==pid)
+        {
+            PCB * task=pos->pcb;
+            return task;
+        }
+    }
+    return 0;
+}
 //把一个进程加到进程队列末尾
 void add_task(list_pcb* process)
 {
@@ -271,7 +286,7 @@ void add_task(list_pcb* process)
 
 
 
-unsigned int do_fork(context* args,PCB*parent)
+int do_fork(context* args,PCB*parent)
 {
     #ifdef DO_FORK_DEBUG
     kernel_printf("begin to fork\n");
@@ -340,18 +355,19 @@ unsigned int do_fork(context* args,PCB*parent)
     kernel_printf("child 's name:%s\n",new->pcb.name);
     kernel_printf("child 's pid : %x\n",new->pcb.asid);
     #endif
-    return 0;
+    //返回新进程的进程号
+    return new->pcb.asid;
     
 
     error1:
-        return 1;
+        return -1;
     error2:
         kfree(new);
-        return 2;
+        return -2;
     error3:
         kfree(new->pcb.pgd);
         kfree(new);
-        return 3;
+        return -3;
 }
  
 
@@ -519,23 +535,20 @@ unsigned int del_task(unsigned int pid)
 {
     int index=0;
     list_pcb *pos;
-    for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-    {
-        if(pos->pcb->asid==pid)
-        {
-            PCB * task_to_del=pos->pcb;
-            kfree(task_to_del->context);//删去上下文
-            delete_pages(task_to_del);  //删去页表
-            //delete task file待续      //删去文件信息
-            free_pid(task_to_del->asid);      //释放进程号
-            kfree((task_union*)task_to_del);//删去整个task_union
-            list_pcb_del_init(pos);
-            //在调度队列中删去它
-            return 0;
-        }
+    PCB * task_to_del=get_pcb_by_pid(pid);
+    if(task_to_del==0){
+        kernel_printf("process not found,pid %d",pid);
+        return 1;
     }
-    kernel_printf("process not found,pid %d",pid);
-    return 1;
+    kfree(task_to_del->context);//删去上下文
+    delete_pagetables(task_to_del);  //删去页表
+    kfree(task_to_del->file);      //删去文件信息
+    free_pid(task_to_del->asid);      //释放进程号
+    kfree((task_union*)task_to_del);//删去整个task_union
+    list_pcb_del_init(pos);
+    //在调度队列中删去它
+    return 0;
+    
 }
 int exec1(char* filename) {
     FILE file;
@@ -586,7 +599,8 @@ int exec1(char* filename) {
     kfree((void*)ENTRY);
     return r;
 }
-void exec2(PCB *task,char* filename){
+
+int exec2(PCB *task,char* filename){
     #ifdef EXEC_DEBUG
     kernel_printf("begin to exec\n");
     kernel_printf("task name:%s\n",task->name);
@@ -611,7 +625,7 @@ void exec2(PCB *task,char* filename){
     pte_term*pte=(pte_term*)kmalloc(PAGE_SIZE);
     pgd[0]|=(unsigned int)pte;
 
-    //申请  文件控制块的大小
+    //申请 文件控制块的大小
     task->file=NULL;
     task->file=(FILE*)kmalloc(5*PAGE_SIZE);//此处还有bug
     #ifdef EXEC_DEBUG
@@ -623,8 +637,11 @@ void exec2(PCB *task,char* filename){
     // fopen操作
     int result = fs_open(task->file, filename);
     if (result != 0) {
+        kfree(task->file);
+        delete_pagetables(task);
+        clean_context(task->context);
         kernel_printf("File %s not exist\n", filename);
-        return;
+        return -1;
     }
     #ifdef EXEC_DEBUG
     kernel_printf("fopen over\n");
@@ -632,32 +649,37 @@ void exec2(PCB *task,char* filename){
     //把文件的第一张页大小的内容读取到内存的一张页中
     unsigned int phy_addr;
     phy_addr=read_file_to_page(task->file,0);
+    if(phy_addr==0){
+        kfree(task->file);
+        delete_pagetables(task);
+        clean_context(task->context);
+        return -1;
+    }
     #ifdef EXEC_DEBUG
     kernel_printf("read file over\n");
     #endif
+
     //物理地址转化为EntryLo0的值
     unsigned int cp0EntryLo0=va2pfn(phy_addr);
     unsigned int asid=task->asid;
+
     //TLB中随机写入这一项
     asm volatile(
-        "move $t0,%0\n\t"
-        "mtc0 $t0, $10\n\t"
+        "mtc0 %0, $10\n\t"
         "mtc0 $zero, $5\n\t"
-        "move $t1, %1\n\t"
-        "mtc0 $t1, $2\n\t"
+        "mtc0 %1, $2\n\t"
         "mtc0 $zero, $3\n\t"
         "mtc0 $zero, $0\n\t"
         "nop\n\t"
         "nop\n\t"
-        "tlbwr"
-        : "=r"(asid),"=r"(cp0EntryLo0));
+        "tlbwi"
+        :
+        : "r"(asid),"r"(cp0EntryLo0));
     
-    
-
 #ifdef EXEC_DEBUG
     kernel_printf("Exec load at: 0x%x\n", phy_addr);
     unsigned int hi,e0;
-     asm volatile(
+    asm volatile(
          "mfc0 %0,$10\n\t"
          "mfc0 %1,$2\n\t"
          "nop\n\t"
@@ -669,7 +691,28 @@ void exec2(PCB *task,char* filename){
     kernel_printf("s1=%x\n",s1);
     int (*f)() = (int (*)())(0);
     int r = f();
+    while(1);
 #endif  // ! EXEC_DEBUG
 
-    while(1);
+
+    return 0;
+}
+
+int exec(char *filename,char* taskname)
+{
+    PCB *current=get_current_pcb();
+    //do fork
+    unsigned int child_pid=do_fork(current->context,current);
+    if(child_pid<0){
+        kernel_printf("error! failed to do_fork\n");
+        return -1;
+    }
+    PCB *child=get_pcb_by_pid(child_pid);
+    //从文件中读取数据并替换
+    if(exec2(child,filename)!=0){
+        kernel_printf("error! failed to exec\n");
+        return -1;
+    }
+    kernel_memcpy(child->name,taskname,sizeof(char)*32);
+    return 0;
 }

@@ -77,9 +77,10 @@ typedef struct {
     PageMask PageMask;//页大小为4KB，因此PageMask的值为0
 } PageTableEntry;
 
-void set_default_attr(EntryLo *entry);
-
+void set_default_attr(EntryLo *entry);//有效，可写
+//把一个虚拟地址转化为EntryLo寄存器的内容，并设置为默认属性
 unsigned int va2pfn(unsigned int vaddr);
+//把页表中的一项转化为EntryLo寄存器的内容
 unsigned int pt2pfn(pte_term pt);
 /*
 typedef struct{

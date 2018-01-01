@@ -13,7 +13,8 @@
 exception:
 	#TLB refill
 	jal tlb_refill
- 	tlbwr
+	nop
+	nop
  	eret
 
 .org 0x0180
