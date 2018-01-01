@@ -20,6 +20,12 @@ void syscall_printf_3(unsigned int status, unsigned int cause, context* pt_conte
 // void printf(const char *format, ...);
 void syscall_puts_4(unsigned int status, unsigned int cause, context* pt_context);
 // void puts(const char *s, int fc, int bg);
+void syscall_fork_31(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_exec_32(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_kill_33(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_exit_34(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_print_tasks_35(unsigned int status, unsigned int cause, context* pt_context);
+
 
 void syscall_fopen_51(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_fclose_52(unsigned int status, unsigned int cause, context* pt_context);

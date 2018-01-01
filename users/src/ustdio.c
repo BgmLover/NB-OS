@@ -1,12 +1,4 @@
-#include <exc.h>
-#include <arch.h>
-#include <zjunix/syscall.h>
-#include <zjunix/slub.h>
-#include <driver/vga.h>
-#include <zjunix/utils.h>
-#include <users/ustdio.h>
-
-
+#include"ustdio.h"
 void putchar(int ch, int fc, int bg){
     unsigned int a0 = (unsigned int)ch;
     unsigned int a1 = (unsigned int)fc;

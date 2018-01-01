@@ -17,6 +17,8 @@ list_pcb pcbs;//进程队列
 unsigned char idmap[32];//设置256个进程id
 unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 
+
+
 void task_test()
 {
    
@@ -155,8 +157,10 @@ void init_task()
     add_task(&(init->pcb.process));//添加到pcb链表中
     /*
     注册中断和系统调用
-    register_syscall
+    
     */
+   
+
     init->pcb.state=STATE_RUNNING;
     #ifdef TASK_DEBUG_INIT
     kernel_printf("init_proc created successfully\n");
@@ -757,29 +761,5 @@ void print_tasks(){
         }
     }
 }
-void syscall_fork_31(unsigned int status, unsigned int cause, context* pt_context)
-{
-    context*args=(context*)(pt_context->a0);
-    PCB*parent=(PCB*)(pt_context->a1);
-    do_fork(args,parent);
-}
-void syscall_exec_32(unsigned int status, unsigned int cause, context* pt_context)
-{
-    char*filename=(char*)(pt_context->a0);
-    char*taskname=(char*)(pt_context->a1);
-    exec(filename,taskname);
-}
-void syscall_kill_33(unsigned int status, unsigned int cause, context* pt_context)
-{
-    unsigned int asid=pt_context->a0;
-    del_task(asid);
-}
-void syscall_exit_34(unsigned int status, unsigned int cause, context* pt_context)
-{
 
-}
-void syscall_print_tasks_35(unsigned int status, unsigned int cause, context* pt_context)
-{
-    print_tasks();
-}
 

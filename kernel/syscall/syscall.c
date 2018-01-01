@@ -1,5 +1,6 @@
 #include <exc.h>
 #include <arch.h>
+#include <zjunix/fs/fat.h>
 #include <zjunix/syscall.h>
 #include <zjunix/slub.h>
 #include <driver/vga.h>
@@ -21,7 +22,13 @@ void init_syscall() {
     register_syscall(4, syscall_puts_4);
     register_syscall(21, syscall_kmalloc_21);
     register_syscall(22, syscall_kfree_22);
-	
+    
+    register_syscall(31,syscall_fork_31);
+    register_syscall(32,syscall_exec_32);
+    register_syscall(33,syscall_kill_33);
+    register_syscall(34,syscall_exit_34);
+    register_syscall(35,syscall_print_tasks_35);
+
 	register_syscall(51,syscall_fopen_51);
     register_syscall(52,syscall_fclose_52);
     register_syscall(53,syscall_fread_53);
@@ -231,4 +238,30 @@ void syscall_myvi_57(unsigned int status, unsigned int cause, context* pt_contex
     //a0存放要编辑的文件名(char*)
     char *filename=(char*)pt_context->a0;
     myvi(filename);
+}
+
+void syscall_fork_31(unsigned int status, unsigned int cause, context* pt_context)
+{
+    context*args=(context*)(pt_context->a0);
+    PCB*parent=(PCB*)(pt_context->a1);
+    do_fork(args,parent);
+}
+void syscall_exec_32(unsigned int status, unsigned int cause, context* pt_context)
+{
+    char*filename=(char*)(pt_context->a0);
+    char*taskname=(char*)(pt_context->a1);
+    exec(filename,taskname);
+}
+void syscall_kill_33(unsigned int status, unsigned int cause, context* pt_context)
+{
+    unsigned int asid=pt_context->a0;
+    del_task(asid);
+}
+void syscall_exit_34(unsigned int status, unsigned int cause, context* pt_context)
+{
+
+}
+void syscall_print_tasks_35(unsigned int status, unsigned int cause, context* pt_context)
+{
+    print_tasks();
 }
