@@ -5,6 +5,7 @@
 #include <driver/vga.h>
 #include <zjunix/utils.h>
 #include <users/ustdio.h>
+#include <zjunix/fs/myvi.h>
 
 
 void putchar(int ch, int fc, int bg){
