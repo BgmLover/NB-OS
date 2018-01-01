@@ -23,7 +23,7 @@
 // #define FS_DEBUG
 
 // exec
- #define EXEC_DEBUG
+#define EXEC_DEBUG
 
 //init task
 #define TASK_DEBUG_INIT
@@ -31,6 +31,8 @@
 //do_fork
 #define DO_FORK_DEBUG
 #define EXCEPTION_DEBUG
+//#define INTR_DEBUG
+//#define pc_test
 //copy pagetables
 //#define COPY_PAGE_DEBUG
 //list_pcb

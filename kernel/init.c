@@ -16,7 +16,7 @@
 #include <zjunix/time.h>
 #include <zjunix/shm.h>
 #include "../usr/ps.h"
-#include "../usr/exec.h"
+//#include "../usr/exec.h"
 
 void machine_info() {
     int row;
@@ -104,10 +104,12 @@ addr=kmalloc(4096);
     init_task();
     //create_startup_process();
     task_test();
+    exec2(pcbs.next->pcb,"/seg.bin");
+    //exec1("/seg.bin");
     log(LOG_END, "Process Control Module.");\
     //shced
     //log(LOG_START, "Sched.");
-    init_sched();
+    //init_sched();
     //log(LOG_END, "Sched.");
     // Interrupts
     log(LOG_START, "Enable Interrupts.");

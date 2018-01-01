@@ -17,11 +17,12 @@ unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 
 void task_test()
 {
+   
 /*test shared memory*/
-    struct shared_memory* shm;
-    unsigned int p;
-     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
-     task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
+    // struct shared_memory* shm;
+    // unsigned int p;
+    //  task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
+    //  task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 	
 //     proc1->pcb.asid = (unsigned char)66;
 //     proc2->pcb.asid = (unsigned char)77;
@@ -40,20 +41,20 @@ void task_test()
 /*end test shared memory*/
 
 
-    kernel_printf("begin to test\n");
-    unsigned int entry0,entry1,entryhi,index;
-    asm volatile(
-        "mfc0 %0, $2\n\t"
-        "mfc0 %1, $3\n\t"
-        "mfc0 %2, $10\n\t"
-        "mfc0 %3, $0\n\t"
-        "nop\n\t"
-        "nop\n\t"
-        :"=r"(entry0),"=r"(entry1),"=r"(entryhi),"=r"(index));
-    kernel_printf("entry0:%x\n",entry0);
-    kernel_printf("entry1:%x\n",entry1);
-    kernel_printf("entryhi:%x\n",entryhi);
-    kernel_printf("index:%x\n",index);
+    // kernel_printf("begin to test\n");
+    // unsigned int entry0,entry1,entryhi,index;
+    // asm volatile(
+    //     "mfc0 %0, $2\n\t"
+    //     "mfc0 %1, $3\n\t"
+    //     "mfc0 %2, $10\n\t"
+    //     "mfc0 %3, $0\n\t"
+    //     "nop\n\t"
+    //     "nop\n\t"
+    //     :"=r"(entry0),"=r"(entry1),"=r"(entryhi),"=r"(index));
+    // kernel_printf("entry0:%x\n",entry0);
+    // kernel_printf("entry1:%x\n",entry1);
+    // kernel_printf("entryhi:%x\n",entryhi);
+    // kernel_printf("index:%x\n",index);
     
     
     // context *t;
@@ -536,30 +537,139 @@ unsigned int del_task(unsigned int pid)
     kernel_printf("process not found,pid %d",pid);
     return 1;
 }
+int exec1(char* filename) {
+    FILE file;
+    const unsigned int CACHE_BLOCK_SIZE = 64;
+    #ifdef EXEC_DEBUG
+    kernel_printf("begin to exec\n");
+    kernel_printf("filename:%s\n",filename);
+    #endif
+    unsigned char buffer[512];
+    int result = fs_open(&file, filename);
+    if (result != 0) {
+        kernel_printf("File %s not exist\n", filename);
+        return 1;
+    }
+    unsigned int size = get_entry_filesize(file.entry.data);
+    unsigned int n = size / CACHE_BLOCK_SIZE + 1;
+    unsigned int i = 0;
+    unsigned int j = 0;
+    unsigned int ENTRY = (unsigned int)kmalloc(4096);
+    for (j = 0; j < n; j++) {
+        fs_read(&file, buffer, CACHE_BLOCK_SIZE);
+        kernel_memcpy((void*)(ENTRY + j * CACHE_BLOCK_SIZE), buffer, CACHE_BLOCK_SIZE);
+        kernel_cache(ENTRY + j * CACHE_BLOCK_SIZE);
+    }
+    unsigned int cp0EntryLo0 = ((ENTRY >> 6) & 0x01ffffc0) | 0x1e;
+    asm volatile(
+        "li $t0, 1\n\t"
+        "mtc0 $t0, $10\n\t"
+        "mtc0 $zero, $5\n\t"
+        "move $t0, %0\n\t"
+        "mtc0 $t0, $2\n\t"
+        "mtc0 $zero, $3\n\t"
+        "mtc0 $zero, $0\n\t"
+        "nop\n\t"
+        "nop\n\t"
+        "tlbwi"
+        : "=r"(cp0EntryLo0));
+    int (*f)() = (int (*)())(0);
+#ifdef EXEC_DEBUG
+    kernel_printf("Exec load at: 0x%x\n", ENTRY);
+#endif  // ! EXEC_DEBUG
+    unsigned int s1=*(unsigned int*)0;
+    //unsigned int s2=*(unsigned int*);
+    kernel_printf("s1=%x\n",s1);
+    //kernel_printf("s2=%x\n",s2);
+    int r = f();
+    kernel_printf("run the program over\n");
+    kfree((void*)ENTRY);
+    return r;
+}
+void exec2(PCB *task,char* filename){
+    #ifdef EXEC_DEBUG
+    kernel_printf("begin to exec\n");
+    kernel_printf("task name:%s\n",task->name);
+    kernel_printf("task pid:%x\n",task->asid);
+    #endif
+    //清除PCB的上下文并重新设置
+    clean_context(task->context);
+    task->context->epc=0;
+    task->context->sp=(unsigned int)task+PAGE_SIZE;
+    unsigned int init_gp;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    task->context->gp=init_gp;
 
-// void exec(PCB *task,char* filename){
+    //清除PCB的页表并分配第一张页
+    delete_pagetables(task);
+    task->pgd=(pgd_term*)kmalloc(PAGE_SIZE);
+    pgd_term*pgd=task->pgd;
+    clean_page(task->pgd);
+    //设置第一张页目录的属性和pte的值
+    set_V(&pgd[0]);
+    set_W(&pgd[0]);
+    pte_term*pte=(pte_term*)kmalloc(PAGE_SIZE);
+    pgd[0]|=(unsigned int)pte;
+
+    //申请  文件控制块的大小
+    task->file=NULL;
+    task->file=(FILE*)kmalloc(5*PAGE_SIZE);//此处还有bug
+    #ifdef EXEC_DEBUG
+    kernel_printf("address of task:%x\n",task);
+    kernel_printf("size of FILE:%x\n",sizeof(FILE));
+    kernel_printf("address of task_file:%x\n",task->file);
+    #endif
     
-//     clean_context(task->context);
-//     delete_pagetables(task);
-//     task->pgd=(pgd_term*)kmalloc(PAGE_SIZE);
-//     pgd_term*pgd=task->pgd;
-//     clean_page(task->pgd);
-//     set_V(&pgd[0]);
-//     set_W(&pgd[0]);
-//     pte_term*pte=(pte_term*)kmalloc(PAGE_SIZE);
-//     pgd[0]|=(unsigned int)pte;
-//     unsigned int phy_addr;
-//     task->file=NULL;
-//     int result = fs_open(task->file, filename);
-//     if (result != 0) {
-//         kernel_printf("File %s not exist\n", filename);
-//         return;
-//     }
-//     phy_addr=read_file_to_page(task->file,0);
-//     set_V(&phy_addr);
-//     set_W(&phy_addr);
-//     pte[0]=phy_addr;
-//     #ifdef EXEC_DEBUG
-//     kernel_printf("Exec load at: 0x%x\n", phy_addr);
-//     #endif  // ! EXEC_DEBUG
-// }
+    // fopen操作
+    int result = fs_open(task->file, filename);
+    if (result != 0) {
+        kernel_printf("File %s not exist\n", filename);
+        return;
+    }
+    #ifdef EXEC_DEBUG
+    kernel_printf("fopen over\n");
+    #endif
+    //把文件的第一张页大小的内容读取到内存的一张页中
+    unsigned int phy_addr;
+    phy_addr=read_file_to_page(task->file,0);
+    #ifdef EXEC_DEBUG
+    kernel_printf("read file over\n");
+    #endif
+    //物理地址转化为EntryLo0的值
+    unsigned int cp0EntryLo0=va2pfn(phy_addr);
+    unsigned int asid=task->asid;
+    //TLB中随机写入这一项
+    asm volatile(
+        "move $t0,%0\n\t"
+        "mtc0 $t0, $10\n\t"
+        "mtc0 $zero, $5\n\t"
+        "move $t1, %1\n\t"
+        "mtc0 $t1, $2\n\t"
+        "mtc0 $zero, $3\n\t"
+        "mtc0 $zero, $0\n\t"
+        "nop\n\t"
+        "nop\n\t"
+        "tlbwr"
+        : "=r"(asid),"=r"(cp0EntryLo0));
+    
+    
+
+#ifdef EXEC_DEBUG
+    kernel_printf("Exec load at: 0x%x\n", phy_addr);
+    unsigned int hi,e0;
+     asm volatile(
+         "mfc0 %0,$10\n\t"
+         "mfc0 %1,$2\n\t"
+         "nop\n\t"
+         "nop\n\t"
+         :"=r"(hi),"=r"(e0));
+    kernel_printf("entryhi=%x\n",hi);
+    kernel_printf("entry0=%x\n",e0);
+    unsigned int s1=*(unsigned int*)0;
+    kernel_printf("s1=%x\n",s1);
+    int (*f)() = (int (*)())(0);
+    int r = f();
+#endif  // ! EXEC_DEBUG
+
+    while(1);
+}

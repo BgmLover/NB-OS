@@ -21,6 +21,7 @@
 #define INDEX_MASK 0x3ff  //10 bit 1
 #define OFFSET_MASK 0xfff //12 bit 1
 #define ATTR_MASK 0x1f
+
 #define NULL (void *)0
 
 #define Default_attr 0x4//可写
@@ -45,6 +46,41 @@ typedef unsigned int pte_term;
 #define set_A(addr) ((*addr)|=0x00000010)
 #define clean_A(addr) ((*addr)&=0xffffffef)
 #define is_A(addr) ((*addr)&0x00000010)
+
+#define get_pfn(vaddr) ((vaddr>>PAGE_SHIFT)&0x7ffff)
+//About TLB
+typedef struct {
+    unsigned int reserved1 : 12;
+    unsigned int Mask : 16;
+    unsigned int reserved0 : 4;
+} PageMask;
+
+typedef struct {
+    unsigned int ASID : 8;
+    unsigned int reserved : 5;
+    unsigned int VPN2 : 19;
+} EntryHi;
+
+typedef struct {
+    unsigned int G : 1;
+    unsigned int V : 1;
+    unsigned int D : 1;
+    unsigned int C : 3;
+    unsigned int PFN : 24;
+    unsigned int reserved : 2;
+} EntryLo;
+
+typedef struct {
+    EntryLo EntryLo0;
+    EntryLo EntryLo1;
+    EntryHi EntryHi;
+    PageMask PageMask;//页大小为4KB，因此PageMask的值为0
+} PageTableEntry;
+
+void set_default_attr(EntryLo *entry);
+
+unsigned int va2pfn(unsigned int vaddr);
+unsigned int pt2pfn(pte_term pt);
 /*
 typedef struct{
     unsigned int G : 1;     //全局位
@@ -79,34 +115,7 @@ unsigned int get_tlb_index();
 unsigned int read_file_to_page(FILE*file,unsigned int start);
 void clean_page(unsigned int *page);
 
-//About TLB
-typedef struct {
-    unsigned int reserved1 : 12;
-    unsigned int Mask : 16;
-    unsigned int reserved0 : 4;
-} PageMask;
 
-typedef struct {
-    unsigned int ASID : 8;
-    unsigned int reserved : 5;
-    unsigned int VPN2 : 19;
-} EntryHi;
-
-typedef struct {
-    unsigned int G : 1;
-    unsigned int V : 1;
-    unsigned int D : 1;
-    unsigned int C : 3;
-    unsigned int PFN : 24;
-    unsigned int reserved : 2;
-} EntryLo;
-
-typedef struct {
-    EntryLo EntryLo0;
-    EntryLo EntryLo1;
-    EntryHi EntryHi;
-    PageMask PageMask;//页大小为4KB，因此PageMask的值为0
-} PageTableEntry;
 
 
 #endif

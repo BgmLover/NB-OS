@@ -108,8 +108,8 @@ void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsi
     L0.D=is_W(&pte_con);
     L0.C=0;
     unsigned int hi,en0;
-    hi=*((unsigned*)&entryhi);
-    en0=*((unsigned*)&L0);
+    hi=*((unsigned int *)&entryhi);
+    en0=*((unsigned int *)&L0);
     asm volatile(
         "mtc0 %0, $2\n\t" 
         "mtc0 %1, $10\n\t"
@@ -161,5 +161,32 @@ unsigned int get_tlb_index(){
         : "=r"(index)
     );
     return index;
+}
+void set_default_attr(EntryLo *entry)
+{
+    entry->G=0;
+    entry->V=1;
+    entry->D=1;
+    entry->C=3;
+}
+unsigned int va2pfn(unsigned int vaddr)
+{
+    EntryLo entry;
+    set_default_attr(&entry);
+    entry.PFN=get_pfn(vaddr);
+    unsigned int res;
+    res=*((unsigned int *)&entry);
+    return res;
+}
+unsigned int pt2pfn(pte_term pt){
+    EntryLo entry;
+    entry.G=is_G(&pt);
+    entry.V=is_V(&pt);
+    entry.C=3;
+    entry.D=is_W(&pt);
+    entry.PFN=get_pfn(pt);
+    unsigned int res;
+    res=*((unsigned int *)&entry);
+    return res;
 }
 #pragma GCC pop_options
