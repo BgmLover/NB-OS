@@ -9,5 +9,12 @@ void puts(const char *s, int fc, int bg);
 void* malloc(unsigned int size);
 void free(void* obj);
 
+void fopen(FILE *file,unsigned char *filename);
+void fclose(FILE *file);
+void fread(FILE *file,unsigned char *buffer,unsigned long count);
+void fwrite(FILE *file,unsigned char *buffer,unsigned long count);
+void cat(unsigned char *path);
+void listfile(char *para);
+void vi(char *filename);
 
 #endif
