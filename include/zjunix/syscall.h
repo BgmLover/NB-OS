@@ -21,6 +21,14 @@ void syscall_printf_3(unsigned int status, unsigned int cause, context* pt_conte
 void syscall_puts_4(unsigned int status, unsigned int cause, context* pt_context);
 // void puts(const char *s, int fc, int bg);
 
+void syscall_fopen_51(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_fclose_52(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_fread_53(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_fwrite_54(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_cat_55(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_ls_56(unsigned int status, unsigned int cause, context* pt_context);
+ void syscall_myvi_57(unsigned int status, unsigned int cause, context* pt_context);
+
 
 
 #endif // ! _ZJUNIX_SYSCALL_H

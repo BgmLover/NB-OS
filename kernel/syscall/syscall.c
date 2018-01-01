@@ -4,6 +4,7 @@
 #include <zjunix/slub.h>
 #include <driver/vga.h>
 #include <zjunix/utils.h>
+#include <zjunix/fs/myvi.h>
 #include "syscall4.h"
 
 sys_fn syscalls[256];
@@ -20,6 +21,14 @@ void init_syscall() {
     register_syscall(4, syscall_puts_4);
     register_syscall(21, syscall_kmalloc_21);
     register_syscall(22, syscall_kfree_22);
+	
+	register_syscall(51,syscall_fopen_51);
+    register_syscall(52,syscall_fclose_52);
+    register_syscall(53,syscall_fread_53);
+    register_syscall(54,syscall_fwrite_54);
+    register_syscall(55,syscall_cat_55);
+    register_syscall(56,syscall_ls_56);
+    register_syscall(57,syscall_myvi_57);
 }
 
 void syscall(unsigned int status, unsigned int cause, context* pt_context) {
@@ -170,3 +179,56 @@ void puts(const char *s, int fc, int bg) {
     );
 }
 */
+void syscall_fopen_51(unsigned int status, unsigned int cause, context* pt_context) 
+{
+    //a0存放文件指针（FILE *），a1存放文件名指针（unsigned long *）
+    FILE *file=(FILE*)pt_context->a0;
+    unsigned char *filename=(unsigned char*)pt_context->a1;
+    fs_open(file,filename);
+}
+
+void syscall_fclose_52(unsigned int status, unsigned int cause, context* pt_context)
+{
+    //a0存放文件指针
+    FILE *file=(FILE*)pt_context->a0;
+    fs_close(file);
+}
+
+void syscall_fread_53(unsigned int status, unsigned int cause, context* pt_context)
+{
+    //a0存放文件指针，a1存放buffer指针（unsigned char*），a2存放要读取的字节数（unsigned long *）
+    FILE *file=(FILE*)pt_context->a0;
+    unsigned char *buffer=(unsigned char*)pt_context->a1;
+    unsigned long count=(unsigned long)pt_context->a2;
+    fs_read(file,buffer,count);
+}
+
+void syscall_fwrite_54(unsigned int status, unsigned int cause, context* pt_context)
+{
+    //a0存放文件指针。a1存放buffer指针，a2存放要写的字节数
+    FILE *file=(FILE*)pt_context->a0;
+    unsigned char *buffer=(unsigned char*)pt_context->a1;
+    unsigned long count=(unsigned long)pt_context->a2;
+    fs_write(file,buffer,count);
+}
+
+void syscall_cat_55(unsigned int status, unsigned int cause, context* pt_context)
+{
+    //a0存放要显示的文件的绝对路径
+    unsigned char *path=(unsigned char*)pt_context->a0;
+    fs_cat(path);
+}
+
+void syscall_ls_56(unsigned int status, unsigned int cause, context* pt_context)
+{
+    //a0存放目标文件夹
+    char *para=(char*)pt_context->a0;
+    ls(para);
+}
+
+void syscall_myvi_57(unsigned int status, unsigned int cause, context* pt_context)
+{
+    //a0存放要编辑的文件名(char*)
+    char *filename=(char*)pt_context->a0;
+    myvi(filename);
+}

@@ -116,3 +116,125 @@ void free(void* obj){
         :"r"(a0)
     );
 }
+
+void fopen(FILE *file,unsigned char *filename)
+{
+    unsigned int a0=(unsigned int)file;
+    unsigned int a1=(unsigned int)filename;
+
+    asm volatile(
+        "move $a0,%0\n\t"
+        "move $a1,%1\n\t"
+        "addi $v0,$zero,51\n\t"
+        "syscall 51\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0),"r"(a1)
+    );
+}
+
+void fclose(FILE *file)
+{
+    unsigned int a0=(unsigned int)file;
+
+    asm volatile(
+        "move $a0,%0\n\t"
+        "addi $v0,$zero,52\n\t"
+        "syscall 52\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0)
+    );
+}
+
+void fread(FILE *file,unsigned char *buffer,unsigned long count)
+{
+    unsigned int a0=(unsigned int)file;
+    unsigned int a1=(unsigned int)buffer;
+    unsigned int a2=(unsigned int)count;
+
+    asm volatile(
+        "move $a0,%0\n\t"
+        "move $a1,%1\n\t"
+        "move $a2,%2\n\t"
+        "addi $v0,$zero,53\n\t"
+        "syscall 53\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0),"r"(a1),"r"(a2)
+    );
+}
+
+void fwrite(FILE *file,unsigned char *buffer,unsigned long count)
+{
+    unsigned int a0=(unsigned int)file;
+    unsigned int a1=(unsigned int)buffer;
+    unsigned int a2=(unsigned int)count;
+
+    asm volatile(
+        "move $a0,%0\n\t"
+        "move $a1,%1\n\t"
+        "move $a2,%2\n\t"
+        "addi $v0,$zero,54\n\t"
+        "syscall 54\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0),"r"(a1),"r"(a2)
+    );
+}
+
+void cat(unsigned char *path)
+{
+    unsigned int a0=(unsigned int)path;
+
+    asm volatile(
+        "move $a0,%0\n\t"
+        "addi $v0,$zero,55\n\t"
+        "syscall 55\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0)
+    );
+}
+
+void listfile(char *para)
+{
+    unsigned int a0=(unsigned int)para;
+
+    asm volatile(
+        "move $a0,%0\n\t"
+        "addi $v0,$zero,56\n\t"
+        "syscall 56\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0)
+    );
+}
+
+void vi(char *filename)
+{
+    unsigned int a0=(unsigned int)filename;
+
+    asm volatile(
+        "move $a0,%0\n\t"
+        "addi $v0,$zero,57\n\t"
+        "syscall 57\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0)
+    );
+}
