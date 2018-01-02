@@ -141,6 +141,7 @@ void* kmalloc(unsigned int size){
     struct kmem_cache* cache;
     struct page* page;
     void* slub_addr;
+    unsigned int temp_order, temp_size;
 
     if(!size) return 0;
 
@@ -149,7 +150,21 @@ void* kmalloc(unsigned int size){
         // e.g. size=5k -> size=8k
         size += ((1<<PAGE_SHIFT)-1);
         size &= ~((1<<PAGE_SHIFT)-1);
-        page = buddy_alloc_pages(size>>PAGE_SHIFT);
+        //calculate order
+		temp_size = 1;
+		while (temp_size < (size>>12)) {
+			temp_size <<= 1;
+		}
+
+		//temp_size = size << 1;
+		temp_order = -1;
+		while (temp_size>0) {
+			temp_order++;
+			temp_size >>= 1;
+		}
+
+kernel_printf("temp_order=%d\n", temp_order);
+        page = buddy_alloc_pages(temp_order);
         return (void*)(KERNEL_ENTRY|(unsigned int)((page-pages)<<PAGE_SHIFT));
     }
 
@@ -219,8 +234,17 @@ void kfree(void* obj){
      // kernel_printf("yes\n");
     return slub_free(page->virtual, obj);
 }
-
+/*
 // a0=size, return v0 = start addr
+void syscall20(unsigned int status, unsigned int cause, context* pt_context){
+    unsigned int size;
+    void* addr;
+
+    size = pt_context->a0;
+    addr = kmalloc(size);
+    pt_context->v0 = addr;
+
+}*/
 void syscall_kmalloc_21(unsigned int status, unsigned int cause, context* pt_context){
     unsigned int size;
     void* addr;
@@ -230,45 +254,9 @@ void syscall_kmalloc_21(unsigned int status, unsigned int cause, context* pt_con
     pt_context->v0 = (unsigned int)addr;
     
 }
-/*
-void* malloc(unsigned int size){
-    unsigned int a0 = size;
-    unsigned int v0;
-    asm volatile(
-        "move $a0,%1\n\t"
-        "addi $v0,$zero,21\n\t"
-        "syscall\n\t"
-        "nop\n\t"
-        "move %0,$v0\n\t"
-        "jr $ra\n\t"
-        "nop\n\t"
-        :"=r"(v0)
-        :"r"(a0)
-    );
-    v0 &= 0x7fffffff;
-    return (void*)v0;
-}
-*/
-// a0 = obj
 void syscall_kfree_22(unsigned int status, unsigned int cause, context* pt_context){
     unsigned int obj;
 
     obj = pt_context->a0;
     kfree((void*)obj);
 }
-/*
-void free(void* obj){
-    unsigned int a0 = (unsigned int)obj;
-    a0 |= 0x80000000;
-    asm volatile(
-        "move $a0,%0\n\t"
-        "addi $v0,$zero,22\n\t"
-        "syscall\n\t"
-        "nop\n\t"
-        "jr $ra\n\t"
-        "nop\n\t"
-        :
-        :"r"(a0)
-    );
-}
-*/
