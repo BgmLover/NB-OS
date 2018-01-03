@@ -33,6 +33,7 @@ void init_syscall() {
     register_syscall(36, syscall_shm_get_36);
     register_syscall(37, syscall_shm_mount_37);
     register_syscall(38, syscall_shm_write_38);
+    register_syscall(39, syscall_shm_read_39);
 
 	register_syscall(51,syscall_fopen_51);
     register_syscall(52,syscall_fclose_52);
