@@ -26,10 +26,14 @@ void syscall_kill_33(unsigned int status, unsigned int cause, context* pt_contex
 void syscall_exit_34(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_print_tasks_35(unsigned int status, unsigned int cause, context* pt_context);
 
-void 
+void syscall_shm_get_36(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_shm_mount_37(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_shm_write_38(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_shm_read_39(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_getcurrent_pcb_40(unsigned int status, unsigned int cause, context* pt_context);
 
 
-// void syscall_fopen_51(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_fopen_51(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_fclose_52(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_fread_53(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_fwrite_54(unsigned int status, unsigned int cause, context* pt_context);

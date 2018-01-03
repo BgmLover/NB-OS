@@ -7,6 +7,8 @@
 #include <zjunix/utils.h>
 #include <zjunix/fs/myvi.h>
 #include <zjunix/shm.h>
+#include <zjunix/task.h>
+#include <zjunix/sche.h>
 #include "syscall4.h"
 
 sys_fn syscalls[256];
@@ -35,7 +37,7 @@ void init_syscall() {
     register_syscall(38, syscall_shm_write_38);
     register_syscall(39, syscall_shm_read_39);
 
-	// register_syscall(51,syscall_fopen_51);
+	register_syscall(51,syscall_fopen_51);
     register_syscall(52,syscall_fclose_52);
     register_syscall(53,syscall_fread_53);
     register_syscall(54,syscall_fwrite_54);
@@ -192,14 +194,14 @@ void puts(const char *s, int fc, int bg) {
     );
 }
 */
-/*
+
 void syscall_fopen_51(unsigned int status, unsigned int cause, context* pt_context) 
 {
     //a0存放文件指针（FILE *），a1存放文件名指针（unsigned long *）
     FILE *file=(FILE*)pt_context->a0;
     unsigned char *filename=(unsigned char*)pt_context->a1;
     fs_open(file,filename);
-}*/
+}
 
 void syscall_fclose_52(unsigned int status, unsigned int cause, context* pt_context)
 {
@@ -276,4 +278,5 @@ void syscall_print_tasks_35(unsigned int status, unsigned int cause, context* pt
 void syscall_getcurrent_pcb_40(unsigned int status, unsigned int cause, context* pt_context)
 {
     PCB *current=get_current_pcb();
+    pt_context->v0 = (unsigned int)current;
 }

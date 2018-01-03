@@ -32,16 +32,16 @@ void task_schedule(unsigned int status, unsigned int cause, context* pt_context)
         {
             task1=get_pcb_by_pid(1);//init
             task2=get_pcb_by_pid(2);//fork 后的进程
-            copy_context(pt_context,task1);
+            copy_context(pt_context,task1->context);
             flag=1;
-            copy_context(task2,pt_context);
+            copy_context(task2->context,pt_context);
         }
         else{
             task1=get_pcb_by_pid(2);//fork 后的进程
             task2=get_pcb_by_pid(1);//init
-            copy_context(pt_context,task1);
+            copy_context(pt_context, task1->context);
             flag=0;
-            copy_context(task2,pt_context);
+            copy_context(task2->context,pt_context);
         }
     }
     asm volatile("mtc0 $zero, $9\n\t");
