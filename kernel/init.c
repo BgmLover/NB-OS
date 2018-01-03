@@ -75,9 +75,10 @@ void init_kernel() {
     slub_init();
     log(LOG_OK, "Slab.");
 
-/*test memory*/
-    addr=kmalloc(4096);
+/*test memory
+    addr=kmalloc(4096*5);
     kernel_printf("%x\n", (unsigned int)addr);
+    
     kfree(addr);
 addr=kmalloc(4096);
     kernel_printf("%x\n", (unsigned int)addr);
@@ -122,6 +123,7 @@ addr=kmalloc(4096);
 
     *GPIO_SEG = 0x78778245;
     int flag=0;
+    
     // Enter shell
     while (1);
 }
