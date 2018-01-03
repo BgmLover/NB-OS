@@ -35,7 +35,7 @@ void syscall_fread_53(unsigned int status, unsigned int cause, context* pt_conte
 void syscall_fwrite_54(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_cat_55(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_ls_56(unsigned int status, unsigned int cause, context* pt_context);
- void syscall_myvi_57(unsigned int status, unsigned int cause, context* pt_context);
+void syscall_myvi_57(unsigned int status, unsigned int cause, context* pt_context);
 
 
 
