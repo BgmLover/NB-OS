@@ -54,7 +54,6 @@ void init_list(list_pcb *list);
 void insert_tail(list_pcb *task,list_pcb *head);
 
 //调度函数
-void pc_schedule(unsigned int status, unsigned int cause, context* pt_context);
-
+void schedule(unsigned int status, unsigned int cause, context* pt_context);
 
 #endif
