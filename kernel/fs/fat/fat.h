@@ -5,7 +5,11 @@
 #include <page.h>
 
 #define PAGE_SHIFT 12
+<<<<<<< HEAD
 
+=======
+// #define PAGE_SIZE (1 << PAGE_SHIFT)
+>>>>>>> 37937fd4bb7d133b63bb53fb74c74fbf137d698d
 
 #define FAT_BUF_NUM 2
 extern BUF_512 fat_buf[FAT_BUF_NUM];

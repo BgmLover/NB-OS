@@ -237,7 +237,11 @@ void syscall_myvi_57(unsigned int status, unsigned int cause, context* pt_contex
 {
     //a0存放要编辑的文件名(char*)
     char *filename=(char*)pt_context->a0;
+<<<<<<< HEAD
     //myvi(filename);
+=======
+    // myvi(filename);
+>>>>>>> 37937fd4bb7d133b63bb53fb74c74fbf137d698d
 }
 
 void syscall_fork_31(unsigned int status, unsigned int cause, context* pt_context)

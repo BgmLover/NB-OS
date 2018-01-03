@@ -19,6 +19,7 @@ typedef struct list_head list_head;
 extern list_pcb *current;
 
 void test_sched();
+void sched_example();
 
 PCB* get_current_pcb();
 //初始化调度系统
@@ -32,14 +33,14 @@ unsigned int list_is_empty(list_pcb *list);
 //进程调度操作，选取下一个进程，切换上下文
 unsigned int sched();
 
+//取就绪队列中的第一个进程
+list_pcb *get_first_task(list_pcb *task);
+
 //将进程添加到后台就绪队列
-void add_to_backgraound_list(list_pcb *task);
+void add_to_background_list(list_pcb *task);
 
 //将进程添加到前台优先级最高的队列
 void add_to_foreground_list(list_pcb *task);
-
-//取就绪队列中的第一个进程
-list_pcb *get_first_task(list_pcb *task);
 
 //取出后台队列的第一个进程
 unsigned int background_sched();
@@ -47,13 +48,12 @@ unsigned int background_sched();
 //取出前台队列中优先级最高队列的第一个进程
 unsigned int foreground_sched();
 
-void init_pcb_list(list_pcb *list);
+void init_list(list_pcb *list);
 
 //将进程加到就绪队列队尾
 void insert_tail(list_pcb *task,list_pcb *head);
 
 //调度函数
-void pc_schedule(unsigned int status, unsigned int cause, context* pt_context);
-
+void schedule(unsigned int status, unsigned int cause, context* pt_context);
 
 #endif
