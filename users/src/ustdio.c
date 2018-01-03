@@ -294,6 +294,91 @@ void uvi(char *filename)
     );
 }
 
+// a0 = PCB
+struct shared_memory* c_shm_get(struct task_struct* PCB){
+	unsigned int a0;
+	unsigned int v0;
+	a0 = (unsigned int)PCB;
+
+	asm volatile()
+        "move $a0,%1\n\t"
+        "addi $v0,$zero,36\n\t"
+        "syscall\n\t"
+        "nop\n\t"
+        "move %0,$v0\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(v0)
+        :"r"(a0)
+    );
+
+    return (struct shared_memory*)v0;	
+}
+
+// a0 = pid, a1 = PCB
+unsigned int c_shm_umount(unsigned int pid, struct task_struct* PCB){
+	unsigned int a0;
+	unsigned int a1;
+	unsigned int v0;
+
+	a0 = (unsigned int)pid;
+	a1 = (unsigned int)PCB;
+	asm volatile(
+        "move $a0,%1\n\t"
+        "move $a1,%2\n\t"
+        "addi $v0,$zero,37\n\t"
+        "syscall\n\t"
+        "nop\n\t"
+		"move %0,$v0\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(v0)
+        :"r"(a0),"r"(a1)
+    );
+	
+	return v0;
+}
+
+// a0 = task, a1 = offset, a2 = p
+void c_shm_write(struct task_struct* task, unsigned int offset, char p){
+	unsigned int a0, a1, a2;
+	a0 = (unsigned int)task;
+	a1 = (unsigned int)offset;
+	a2 = (unsigned int)p;
+	asm volatile(
+        "move $a0,%0\n\t"
+        "move $a1,%1\n\t"
+		"move $a2,%2\n\t"
+        "addi $v0,$zero,38\n\t"
+        "syscall\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0),"r"(a1),"r"(a3)
+    );
+}
+
+// a0 = task, a1 = offset
+char c_shm_read(struct task_struct* task, unsigned int offset){
+	unsigned int a0, a1;
+	unsigned int v0;
+	a0 = (unsigned int)task;
+	a1 = (unsigned int)offset;
+	asm volatile(
+        "move $a0,%1\n\t"
+        "move $a1,%2\n\t"
+        "addi $v0,$zero,39\n\t"
+        "syscall\n\t"
+        "nop\n\t"
+		"move %0,$v0\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(v0)
+        :"r"(a0),"r"(a1)
+    );
+	return (char)v0;
+}
 int* getvga()
 {
     int *cursor=umalloc(2*sizeof(int));
@@ -352,4 +437,18 @@ void demo_create()
         :
         :
     );
+}
+struct task_struct* get_current_pcb(){
+    unsigned int addr_pcb;
+    asm volatile(
+        "addi $v0,$zero,40\n\t"
+        "syscall 40\n\t"
+        "nop\n\t"
+        "move %0,v0\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(addr_pcb)
+        :
+    );
+    return addr_pcb;
 }

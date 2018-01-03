@@ -31,7 +31,7 @@ void uvi(char *filename);
 int ukill();
 int exec();
 int print_proc();
-
+unsigned int get_current_pcb();
 int* getvga();
 void demo_create();
 
