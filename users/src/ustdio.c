@@ -1,5 +1,5 @@
 #include"ustdio.h"
-void putchar(int ch, int fc, int bg){
+void uputchar(int ch, int fc, int bg){
     unsigned int a0 = (unsigned int)ch;
     unsigned int a1 = (unsigned int)fc;
     unsigned int a2 = (unsigned int)bg;
@@ -17,7 +17,56 @@ void putchar(int ch, int fc, int bg){
     );
 }
 
-int strcmp(const char* dest, const char* src) {
+void putchar_at(int ch,int row,int col)
+{
+    unsigned int a0=ch;
+    unsigned int a1=row;
+    unsigned int a2=col;
+    
+    asm volatile(
+        "move $a0,%0\n\t"
+        "move $a1,%1\n\t"
+        "move $a2,%2\n\t"
+        "addi $v0,$zero,7\n\t"
+        "syscall 7\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0),"r"(a1),"r"(a2)
+    );
+}
+
+void set_cursor()
+{
+    asm volatile(
+        "addi $v0,$zero,7\n\t"
+        "syscall 7\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :
+    );
+}
+
+int ugetchar()
+{
+    int c;
+    asm volatile(
+        "addi $v0,$zero,6\n\t"
+        "syscall 6\n\t"
+        "move %0,$v0\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(c)
+        :
+    );
+    return c;
+}
+
+int ustrcmp(const char* dest, const char* src) {
     unsigned int a0 = (unsigned int)dest;
     unsigned int a1 = (unsigned int)src;
     unsigned int v0;
@@ -37,7 +86,7 @@ int strcmp(const char* dest, const char* src) {
     return v0;
 }
 
-void printf(const char *format, ...){
+void uprintf(const char *format, ...){
     unsigned int a0;
     unsigned int a1;
     va_list ap;
@@ -57,7 +106,7 @@ void printf(const char *format, ...){
     );
 }
 
-void puts(const char *s, int fc, int bg) {
+void uputs(const char *s, int fc, int bg) {
     unsigned int a0, a1, a2;
     a0 = (unsigned int)s;
     a1 = (unsigned int)fc;
@@ -76,7 +125,21 @@ void puts(const char *s, int fc, int bg) {
     );
 }
 
-void* malloc(unsigned int size){
+void uclear_screen(int scope){
+    int a0 = scope;
+    asm volatile(
+        "move $a0,%0\n\t"
+        "addi $v0,$zero,2\n\t"
+        "syscall\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0)
+    );
+}
+
+void* umalloc(unsigned int size){
     unsigned int a0 = size;
     unsigned int v0;
     asm volatile(
@@ -94,7 +157,7 @@ void* malloc(unsigned int size){
     return (void*)v0;
 }
 
-void free(void* obj){
+void ufree(void* obj){
     unsigned int a0 = (unsigned int)obj;
     a0 |= 0x80000000;
     asm volatile(
@@ -109,7 +172,7 @@ void free(void* obj){
     );
 }
 
-void fopen(FILE *file,unsigned char *filename)
+void ufopen(FILE *file,unsigned char *filename)
 {
     unsigned int a0=(unsigned int)file;
     unsigned int a1=(unsigned int)filename;
@@ -127,7 +190,7 @@ void fopen(FILE *file,unsigned char *filename)
     );
 }
 
-void fclose(FILE *file)
+void ufclose(FILE *file)
 {
     unsigned int a0=(unsigned int)file;
 
@@ -143,7 +206,7 @@ void fclose(FILE *file)
     );
 }
 
-void fread(FILE *file,unsigned char *buffer,unsigned long count)
+void ufread(FILE *file,unsigned char *buffer,unsigned long count)
 {
     unsigned int a0=(unsigned int)file;
     unsigned int a1=(unsigned int)buffer;
@@ -163,7 +226,7 @@ void fread(FILE *file,unsigned char *buffer,unsigned long count)
     );
 }
 
-void fwrite(FILE *file,unsigned char *buffer,unsigned long count)
+void ufwrite(FILE *file,unsigned char *buffer,unsigned long count)
 {
     unsigned int a0=(unsigned int)file;
     unsigned int a1=(unsigned int)buffer;
@@ -183,7 +246,7 @@ void fwrite(FILE *file,unsigned char *buffer,unsigned long count)
     );
 }
 
-void cat(unsigned char *path)
+void ucat(unsigned char *path)
 {
     unsigned int a0=(unsigned int)path;
 
@@ -199,7 +262,7 @@ void cat(unsigned char *path)
     );
 }
 
-void listfile(char *para)
+void ulistfile(char *para)
 {
     unsigned int a0=(unsigned int)para;
 
@@ -215,7 +278,7 @@ void listfile(char *para)
     );
 }
 
-void vi(char *filename)
+void uvi(char *filename)
 {
     unsigned int a0=(unsigned int)filename;
 
@@ -315,4 +378,63 @@ char c_shm_read(struct task_struct* task, unsigned int offset){
         :"r"(a0),"r"(a1)
     );
 	return (char)v0;
+}
+int* getvga()
+{
+    int *cursor=umalloc(2*sizeof(int));
+    asm volatile(
+        "addi $v0,$zero,5\n\t"
+        "syscall 5\n\t"
+        "move %0,$v0\n\t"
+        "move %1,$v1\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(cursor[0]),"=r"(cursor[1])
+        :
+    );
+    return cursor;
+}
+
+int ukill()
+{
+    return 1;
+}
+
+int exec()
+{
+    return 1;
+}
+
+int print_proc()
+{
+    return 1;
+}
+
+int bootmap_info()
+{
+    return 1;
+}
+
+int buddy_info()
+{
+    return 1;
+}
+
+int get_time()
+{
+    return 1;
+}
+
+void demo_create()
+{
+    asm volatile(
+        "addi $v0,$zero,9\n\t"
+        "syscall 9\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :
+    );
 }

@@ -4,11 +4,11 @@ export TARGET := $(PROJECT).bin
 export MAP := $(PROJECT).map
 export ELF := $(PROJECT).elf
 export DISASSEMBLY := $(PROJECT).txt
-export OBJS := ../ustdio.o  $(PROJECT).o 
+export OBJS :=  $(PROJECT).o ../ustdio.o 
 export CLEAN_LIST := $(TARGET) $(MAP) $(ELF) $(DISASSEMBLY) $(OBJS)
 
 # code entrance
-export ENTRANCE := exec_start
+export ENTRANCE := ps
 
 # config file path
 CONFIG_PATH := ../../config
@@ -17,9 +17,11 @@ CONFIG_PATH := ../../config
 include $(CONFIG_PATH)/tools.conf
 
 # compile flags
-ASFLAG := -mips32 -EL
+TARGET_FLAG := -mips32 -EL
+ASFLAG := $(TARGET_FLAG)
 LDFLAG := -EL -T $(CONFIG_PATH)/kernel.ld -Ttext 0 -e $(ENTRANCE)
 OCFLAG := -S -O binary
+CCFLAG := $(TARGET_FLAG) -c -fno-builtin -mno-abicalls -nostdinc -Wno-pragmas -std=gnu99
 
 # default target
 default: all
@@ -48,3 +50,7 @@ clean:
 %.o: %.s
 	@echo -e "\t" AS $< "\t" -o $@
 	@$(AS) $(ASFLAG) $< -o $@
+
+%.o: %.c
+	@echo -e "\t" CC $< "\t" -o $@
+	@$(CC) $(CCFLAG) $< -o $@
