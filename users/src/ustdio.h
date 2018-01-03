@@ -4,22 +4,42 @@
 #include"fat.h"
 
 typedef unsigned char* va_list;
+#define va_start(ap, v) (ap = (va_list)&v + _INTSIZEOF(v))
+#define _INTSIZEOF(n) ((sizeof(n) + sizeof(unsigned int) - 1) & ~(sizeof(unsigned int) - 1))
 
 
-void putchar(int ch, int fc, int bg);
-int strcmp(const char* dest, const char* src) ;
-void clear_screen(int scope);
-void printf(const char *format, ...);
-void puts(const char *s, int fc, int bg);
-void* malloc(unsigned int size);
-void free(void* obj);
+void uputchar(int ch, int fc, int bg);
+void putchar_at(int ch,int row,int col);
+int ugetchar();
+void set_cursor();
+int ustrcmp(const char* dest, const char* src) ;
+void uclear_screen(int scope);
+void uprintf(const char *format, ...);
+void uputs(const char *s, int fc, int bg);
+void* umalloc(unsigned int size);
+void ufree(void* obj);
 
-void fopen(FILE *file,unsigned char *filename);
-void fclose(FILE *file);
-void fread(FILE *file,unsigned char *buffer,unsigned long count);
-void fwrite(FILE *file,unsigned char *buffer,unsigned long count);
-void cat(unsigned char *path);
-void listfile(char *para);
-void vi(char *filename);
+void ufopen(FILE *file,unsigned char *filename);
+void ufclose(FILE *file);
+void ufread(FILE *file,unsigned char *buffer,unsigned long count);
+void ufwrite(FILE *file,unsigned char *buffer,unsigned long count);
+void ucat(unsigned char *path);
+void ulistfile(char *para);
+void uvi(char *filename);
+
+
+int ukill();
+int exec();
+int print_proc();
+
+int* getvga();
+void demo_create();
+
+void parse_cmd();
+
+
+int bootmap_info();
+int buddy_info();
+int get_time();
 
 #endif

@@ -20,124 +20,51 @@ unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
 int flag=0;
 int first=1;
 void task_schedule(unsigned int status, unsigned int cause, context* pt_context) {
-    // Save context
-    // PCB *current,*next;
-
-    // if(flag==0){
-    //     current =pcbs.next->pcb;
-    //     next=pcbs.next->next->pcb;
-    //     flag=1;
-    // }
-    // else{
-    //     current =pcbs.next->next->pcb;
-    //     next=pcbs.next->pcb;
-    //     flag=0;
-    // }
-    // if(first){
-    //     copy_context(current->context,pt_context);
-    //     flag=0;
-    //     first=0;
-    // }
-    // else{
-    // kernel_printf("current is %s,pid=%x\n",current->name,current->asid);
-    // kernel_printf("next is %s,pid=%x\n",next->name,next->asid);
-    // copy_context(pt_context, current->context);
-    // // Load context
-    PCB *next=pcbs.next->pcb;
-    if(first){
-        kernel_printf("next:%s,pid:%x\n",next->name,next->asid);
-        copy_context(next->context, pt_context);
+    PCB * task1,*task2;
+    if(first)
+    {
+        task1=get_pcb_by_pid(1);//init
+        copy_context(task1->context,pt_context);//把init的内容覆盖当前上下文
         first=0;
     }
-    //copy_context(next->context, pt_context);}
+    else{
+        if(flag==0)
+        {
+            task1=get_pcb_by_pid(1);//init
+            task2=get_pcb_by_pid(2);//fork 后的进程
+            copy_context(pt_context,task1);
+            flag=1;
+            copy_context(task2,pt_context);
+        }
+        else{
+            task1=get_pcb_by_pid(2);//fork 后的进程
+            task2=get_pcb_by_pid(1);//init
+            copy_context(pt_context,task1);
+            flag=0;
+            copy_context(task2,pt_context);
+        }
+    }
     asm volatile("mtc0 $zero, $9\n\t");
 }
 void task_test(){
-//    PCB *current=pcbs.next->pcb;
-//    char filename[]="/seg.bin";
-//    char taskname[]="t1234";
-//     //do fork
-//     unsigned int child_pid=do_fork(current->context,current);
-//     if(child_pid<0){
-//         kernel_printf("error! failed to do_fork\n");
-//         //return -1;
-//     }
-//     PCB *child=get_pcb_by_pid(child_pid);
-//     //从文件中读取数据并替换
-//     if(exec2(child,filename)!=0){
-//         kernel_printf("error! failed to exec\n");
-//         //return -1;
-//     }
-//     kernel_memcpy(child->name,taskname,sizeof(char)*32);
-//     kernel_printf("child task name:%s\n",child->name);
+    PCB *init=get_pcb_by_pid(1);
+    char childfilename[]="/seg.bin";
+    char childtaskname[]="t1234";
+    unsigned int child_pid=do_fork(init->context,init);
+    PCB *child=get_pcb_by_pid(child_pid);
+    if(exec2(child,childfilename)!=0)
+    {
+        kernel_printf("error! failed to do_fork\n");
+    }
+    kernel_memcpy(child->name,childtaskname,sizeof(char)*32);
+    kernel_printf("child task name:%s\n",child->name);
+
     register_interrupt_handler(7, task_schedule);
     asm volatile(
         "li $v0, 1000000\n\t"
         "mtc0 $v0, $11\n\t"
         "mtc0 $zero, $9");
     return ;
-/*test shared memory*/
-    // struct shared_memory* shm;
-    // unsigned int p;
-    //  task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
-    //  task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
-/*
-    proc1->pcb.asid = (unsigned char)66;
-    proc2->pcb.asid = (unsigned char)77;
-    proc1->pcb.shm=NULL;
-    proc2->pcb.shm=NULL;
-    // shm_init();
-    shm=shm_get(4096);
-    shm_mount(&proc1->pcb, shm);
-    shm_mount(&proc2->pcb, shm);
-    shm_write(&proc1->pcb, 0, 'f');
-    p = shm_read(&proc2->pcb, 0);
-    kernel_printf("shm:%c\n", p);
-
-add_task(&proc1->pcb.process);
-add_task(&proc2->pcb.process);*/
-/*end test shared memory*/
-
-
-    // kernel_printf("begin to test\n");
-    // unsigned int entry0,entry1,entryhi,index;
-    // asm volatile(
-    //     "mfc0 %0, $2\n\t"
-    //     "mfc0 %1, $3\n\t"
-    //     "mfc0 %2, $10\n\t"
-    //     "mfc0 %3, $0\n\t"
-    //     "nop\n\t"
-    //     "nop\n\t"
-    //     :"=r"(entry0),"=r"(entry1),"=r"(entryhi),"=r"(index));
-    // kernel_printf("entry0:%x\n",entry0);
-    // kernel_printf("entry1:%x\n",entry1);
-    // kernel_printf("entryhi:%x\n",entryhi);
-    // kernel_printf("index:%x\n",index);
-    
-    
-    // context *t;
-    // kernel_printf("%s\n",pcbs.next->pcb->name);
-    // kernel_printf("%x\n",pcbs.next->pcb);
-    // kernel_printf("%x\n",pcbs.next->pcb->context);
-    // t=(pcbs.next->pcb->context);
-    
-    // t->at=123;
-    // kernel_printf("%d\n",t->at);
-    // do_fork(t,pcbs.next->pcb);
-    // kernel_printf("%x\n",pcbs.next->next->pcb->context->at);
-    // list_pcb *pos;
-    // for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-    //     kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
-    // del_task(0);
-    // for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-    //     kernel_printf("pid:%x   name:%s\n",pos->pcb->asid,pos->pcb->name);
-    // task_union *t[10];
-    // int i;
-    // for(i=0;i<10;i++)
-    // {
-    //     t[i]=(task_union *)umalloc(PAGE_SIZE);
-    //     kernel_printf("t[%x]:%x\n",i,t[i]);
-    // }
 }
 void init_code(){
     while(1)
@@ -192,8 +119,6 @@ void init_task()
     }
     //初始化pgd每一项
     clean_page(init->pcb.pgd);
-
-
     //设置pgd属性为默认属性——可写
     //set_pgd_attr(init->pcb.pgd,Default_attr);
     #ifdef TASK_DEBUG_INIT
@@ -224,8 +149,6 @@ void init_task()
     
     */
     
-
-    init->pcb.state=STATE_RUNNING;
     #ifdef TASK_DEBUG_INIT
     kernel_printf("init_proc created successfully\n");
     kernel_printf("Proc name:%s\n",init->pcb.name);
@@ -755,7 +678,7 @@ int exec2(PCB *task,char* filename){
     #ifdef EXEC_DEBUG
     kernel_printf("read file over\n");
     #endif
-
+   
     //物理地址转化为EntryLo0的值
     unsigned int cp0EntryLo0=va2pfn(phy_addr);
     //task->asid=task->asid+10;
@@ -766,13 +689,18 @@ int exec2(PCB *task,char* filename){
         "mtc0 $zero, $5\n\t"
         "mtc0 %1, $2\n\t"
         "mtc0 $zero, $3\n\t"
-        "mtc0 $zero, $0\n\t"
         "nop\n\t"
         "nop\n\t"
-        "tlbwi"
+        "tlbwr"
         :
         : "r"(asid),"r"(cp0EntryLo0));
     
+
+    //把这张物理页地址存入到pte中
+    set_V(&pte[0]);
+    set_W(&pte[0]);
+    pte[0]|=phy_addr;
+
 #ifdef EXEC_DEBUG
     kernel_printf("Exec load at: 0x%x\n", phy_addr);
     unsigned int hi,e0;
@@ -788,10 +716,7 @@ int exec2(PCB *task,char* filename){
     kernel_printf("s1=%x\n",s1);
     int (*f)() = (int (*)())(0);
     int r = f();
-    
 #endif  // ! EXEC_DEBUG
-
-
     return 0;
 }
 
