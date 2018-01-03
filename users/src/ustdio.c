@@ -438,3 +438,17 @@ void demo_create()
         :
     );
 }
+struct task_struct* get_current_pcb(){
+    unsigned int addr_pcb;
+    asm volatile(
+        "addi $v0,$zero,40\n\t"
+        "syscall 40\n\t"
+        "nop\n\t"
+        "move %0,v0\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(addr_pcb)
+        :
+    );
+    return addr_pcb;
+}

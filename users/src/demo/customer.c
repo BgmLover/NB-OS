@@ -15,7 +15,7 @@ void customer(){
         }
     }
 
-    customer_pcb = ; // need implement
+    customer_pcb = get_current_pcb(); // need implement
 
     for(i = 0; i<26; i++){
         data = c_shm_read(customer_pcb, offset);

@@ -7,7 +7,7 @@ void producer(){
     struct shared_memory* shm;
 
     shm = c_shm_get(producer_pcb);
-    producer_pcb = ; // need implement
+    producer_pcb = get_current_pcb(); // need implement
 
     // write 26 letters
     for(data = 'a'; data <= 'z'; data++){
