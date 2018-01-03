@@ -6,6 +6,7 @@
 #include <driver/vga.h>
 #include <zjunix/utils.h>
 #include <zjunix/fs/myvi.h>
+#include <zjunix/shm.h>
 #include "syscall4.h"
 
 sys_fn syscalls[256];
@@ -28,6 +29,10 @@ void init_syscall() {
     register_syscall(33,syscall_kill_33);
     register_syscall(34,syscall_exit_34);
     register_syscall(35,syscall_print_tasks_35);
+
+    register_syscall(36, syscall_shm_get_36);
+    register_syscall(37, syscall_shm_mount_37);
+    register_syscall(38, syscall_shm_write_38);
 
 	register_syscall(51,syscall_fopen_51);
     register_syscall(52,syscall_fclose_52);

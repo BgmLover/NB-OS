@@ -24,6 +24,7 @@ struct shared_memory
 {
 	unsigned int allocated; // 0->free
 	unsigned int signal; // only 1 process can access
+    unsigned int pid; // process id
 	// struct page shm_page;
 	char page[4096];
 };
