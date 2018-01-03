@@ -7,13 +7,6 @@
 
 #define MAX_SHM 256
 
-struct shared_memory{
-    unsigned int signal;
-
-}
-
-
-
 // extern unsigned int shm_map[MAX_SHM];
 extern struct shared_memory shm[MAX_SHM];
 
