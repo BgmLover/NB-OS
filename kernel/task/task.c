@@ -3,6 +3,7 @@
 #include <zjunix/sche.h>
 #include <zjunix/shm.h>
 #include <arch.h>
+#include <intr.h>
 #include <driver/vga.h>
 #include <zjunix/time.h>
 #include <zjunix/slub.h>
@@ -16,32 +17,85 @@ extern struct page *pages;
 list_pcb pcbs;//进程队列
 unsigned char idmap[32];//设置256个进程id
 unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
+int flag=0;
+int first=1;
+void task_schedule(unsigned int status, unsigned int cause, context* pt_context) {
+    // Save context
+    // PCB *current,*next;
 
-
-
-void task_test()
-{
-   
+    // if(flag==0){
+    //     current =pcbs.next->pcb;
+    //     next=pcbs.next->next->pcb;
+    //     flag=1;
+    // }
+    // else{
+    //     current =pcbs.next->next->pcb;
+    //     next=pcbs.next->pcb;
+    //     flag=0;
+    // }
+    // if(first){
+    //     copy_context(current->context,pt_context);
+    //     flag=0;
+    //     first=0;
+    // }
+    // else{
+    // kernel_printf("current is %s,pid=%x\n",current->name,current->asid);
+    // kernel_printf("next is %s,pid=%x\n",next->name,next->asid);
+    // copy_context(pt_context, current->context);
+    // // Load context
+    PCB *next=pcbs.next->pcb;
+    if(first){
+        kernel_printf("next:%s,pid:%x\n",next->name,next->asid);
+        copy_context(next->context, pt_context);
+        first=0;
+    }
+    //copy_context(next->context, pt_context);}
+    asm volatile("mtc0 $zero, $9\n\t");
+}
+void task_test(){
+//    PCB *current=pcbs.next->pcb;
+//    char filename[]="/seg.bin";
+//    char taskname[]="t1234";
+//     //do fork
+//     unsigned int child_pid=do_fork(current->context,current);
+//     if(child_pid<0){
+//         kernel_printf("error! failed to do_fork\n");
+//         //return -1;
+//     }
+//     PCB *child=get_pcb_by_pid(child_pid);
+//     //从文件中读取数据并替换
+//     if(exec2(child,filename)!=0){
+//         kernel_printf("error! failed to exec\n");
+//         //return -1;
+//     }
+//     kernel_memcpy(child->name,taskname,sizeof(char)*32);
+//     kernel_printf("child task name:%s\n",child->name);
+    register_interrupt_handler(7, task_schedule);
+    asm volatile(
+        "li $v0, 1000000\n\t"
+        "mtc0 $v0, $11\n\t"
+        "mtc0 $zero, $9");
+    return ;
 /*test shared memory*/
     // struct shared_memory* shm;
     // unsigned int p;
     //  task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
     //  task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
-	
-//     proc1->pcb.asid = (unsigned char)66;
-//     proc2->pcb.asid = (unsigned char)77;
-//     proc1->pcb.shm=NULL;
-//     proc2->pcb.shm=NULL;
-//     // shm_init();
-//     shm=shm_get(4096);
-//     shm_mount(&proc1->pcb, shm);
-//     shm_mount(&proc2->pcb, shm);
-//     shm_write(&proc1->pcb, 0, 'f');
-//     p = shm_read(&proc2->pcb, 0);
-//     kernel_printf("shm:%c\n", p);
+/*
+    proc1->pcb.asid = (unsigned char)66;
+    proc2->pcb.asid = (unsigned char)77;
+    proc1->pcb.shm=NULL;
+    proc2->pcb.shm=NULL;
+    // shm_init();
+    shm=shm_get(4096);
+    shm_mount(&proc1->pcb, shm);
+    shm_mount(&proc2->pcb, shm);
+    shm_write(&proc1->pcb, 0, 'f');
+    p = shm_read(&proc2->pcb, 0);
+    kernel_printf("shm:%c\n", p);
 
-// add_task(&proc1->pcb.process);
-// add_task(&proc2->pcb.process);
+add_task(&proc1->pcb.process);
+add_task(&proc2->pcb.process);*/
 /*end test shared memory*/
 
 
@@ -85,12 +139,17 @@ void task_test()
     //     kernel_printf("t[%x]:%x\n",i,t[i]);
     // }
 }
+void init_code(){
+    while(1)
+    kernel_printf("I'm init!\n");
+}
 void init_task()
 {
     int i=0;
     INIT_LIST_PCB(&pcbs,NULL);  
     
-    kernel_memset(idmap,0,16*sizeof(unsigned char));//初始化进程位图
+    kernel_memset(idmap,0,32*sizeof(unsigned char));//初始化进程位图
+    idmap[0]|=1;//把idmap的 0号位置给强行填住
     task_union *init;
     #ifdef TASK_DEBUG_INIT
     kernel_printf("task_union get start\n");
@@ -105,8 +164,13 @@ void init_task()
     #endif
 
     //初始化上下文
-    //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
     init->pcb.context=(context*)((unsigned int)init+sizeof(PCB));
+    clean_context(init->pcb.context);
+    init->pcb.context->epc=(unsigned int)init_code;
+    init->pcb.context->sp=(unsigned int)init+PAGE_SIZE;
+    unsigned int init_gp;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    init->pcb.context->gp=init_gp;
     // kernel_printf("address of init:%x\n",init);
     // kernel_printf("size of PCB:%x\n",sizeof(PCB));
     // kernel_printf("address of context:%x\n",init->pcb.context);
@@ -159,7 +223,7 @@ void init_task()
     注册中断和系统调用
     
     */
-   
+    
 
     init->pcb.state=STATE_RUNNING;
     #ifdef TASK_DEBUG_INIT
@@ -329,6 +393,9 @@ int do_fork(context* args,PCB*parent)
 
     //复制或是设置新的PCB信息
     kernel_memcpy(new->pcb.name,parent->name,sizeof(char)*32);
+    #ifdef DO_FORK_DEBUG
+    kernel_printf("copy name over\n");
+    #endif   
     new->pcb.asid=get_emptypid();
     if(new->pcb.asid>255)
     {
@@ -336,16 +403,17 @@ int do_fork(context* args,PCB*parent)
         goto error3;
     }
     //复制文件信息
-    if(parent->file==NULL)
-        new->pcb.file=NULL;
-    else{
-        new->pcb.file=(FILE*)kmalloc(sizeof(FILE));
-        if(new==NULL){
-            kernel_printf("error in do_fork:failed to malloc for FILE\n");
-            goto error4;
-        }
-        kernel_memcpy(new->pcb.file,parent->file,sizeof(FILE));
-    }
+    // if(parent->file==NULL)
+    //     new->pcb.file=NULL;
+    // else{
+    //     new->pcb.file=(FILE*)kmalloc(sizeof(FILE));
+    //     if(new==NULL){
+    //         kernel_printf("error in do_fork:failed to malloc for FILE\n");
+    //         goto error4;
+    //     }
+    //     kernel_memcpy(new->pcb.file,parent->file,sizeof(FILE));
+    // }
+    new->pcb.file=NULL;
     new->pcb.parent=parent->asid;
     new->pcb.uid=parent->uid;
     new->pcb.counter=parent->counter;
@@ -649,12 +717,14 @@ int exec2(PCB *task,char* filename){
     pgd[0]|=(unsigned int)pte;
 
     //申请 文件控制块的大小
-    if(task->file==NULL)
-        task->file=(FILE*)kmalloc(5*PAGE_SIZE);//此处还有bug
-    else{
-        kfree(task->file);
-        task->file=(FILE*)kmalloc(5*PAGE_SIZE);
-    }
+    // if(task->file==NULL)
+    //     task->file=(FILE*)kmalloc(5*PAGE_SIZE);//此处还有bug
+    // else{
+    //     kfree(task->file);
+    //     task->file=(FILE*)kmalloc(5*PAGE_SIZE);
+    // }
+    unsigned int tmp=0x9ffe0000;
+    task->file=(FILE*)tmp;
     #ifdef EXEC_DEBUG
     kernel_printf("address of task:%x\n",task);
     kernel_printf("size of FILE:%x\n",sizeof(FILE));
@@ -688,8 +758,8 @@ int exec2(PCB *task,char* filename){
 
     //物理地址转化为EntryLo0的值
     unsigned int cp0EntryLo0=va2pfn(phy_addr);
+    //task->asid=task->asid+10;
     unsigned int asid=task->asid;
-
     //TLB中随机写入这一项
     asm volatile(
         "mtc0 %0, $10\n\t"
@@ -718,7 +788,7 @@ int exec2(PCB *task,char* filename){
     kernel_printf("s1=%x\n",s1);
     int (*f)() = (int (*)())(0);
     int r = f();
-    while(1);
+    
 #endif  // ! EXEC_DEBUG
 
 

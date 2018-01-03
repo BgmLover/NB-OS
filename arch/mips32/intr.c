@@ -56,19 +56,7 @@ void do_interrupts(unsigned int status, unsigned int cause, context* pt_context)
     kernel_printf("index:%x\n",index);
     #endif
 
-    #ifdef pc_test
-    PCB* init=pcbs.next->pcb;
-    kernel_printf("name:%s\n",init->name);
-    init->context->epc=(unsigned int)print_0;
-    init->context->sp=(unsigned int)init+PAGE_SIZE;
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    init->context->gp=init_gp;
-    kernel_printf("func addr:%x\n",print_0);
     
-    //pt_context->epc=(unsigned int )print_0;
-    copy_context(init->context, pt_context);
-    #endif
     for (i = 0; i < 8; i++) {
         if ((index & 1) && interrupts[i] != 0) {
             interrupts[i](status, cause, pt_context);

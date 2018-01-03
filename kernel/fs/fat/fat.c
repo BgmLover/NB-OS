@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <driver/ps2.h>
 #include <zjunix/fs/fat.h>
+#include <page.h>
 
 #ifdef FS_DEBUG
 #include <intr.h>

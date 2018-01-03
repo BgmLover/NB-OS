@@ -126,6 +126,22 @@ void init_ps2() {
 }
 
 void ps2_handler(unsigned int status, unsigned int cause, context* pt_context) {
+    // #ifdef pc_test
+    // PCB* task1=pcbs.next->next->pcb;
+    // kernel_printf("pid:%x\n",task1->asid);
+    // kernel_printf("name:%s\n",task1->name);
+    // kernel_printf("key board\n");
+
+    // // init->context->epc=(unsigned int)print_0;
+    // // init->context->sp=(unsigned int)init+PAGE_SIZE;
+    // // unsigned int init_gp;
+    // // asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    // // init->context->gp=init_gp;
+    // // kernel_printf("func addr:%x\n",print_0);
+    
+    // //pt_context->epc=(unsigned int )print_0;
+    // copy_context(task1->context, pt_context);
+    // #endif
     unsigned int ps2_ctrl_reg;
     unsigned int ps2_data_reg;
     ps2_ctrl_reg = PS2_PHY[1];

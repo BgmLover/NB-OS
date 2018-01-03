@@ -72,6 +72,7 @@ unsigned int read_file_to_page(FILE*file,unsigned int start){
     const unsigned int CACHE_BLOCK_SIZE = 64;
     unsigned int j;
     unsigned int new=(unsigned int )kmalloc(PAGE_SIZE);
+    kernel_printf("new page address:%x\n",new);
     if(!new){
         kernel_printf("read_file_to_page error: failed to malloc for a page\n");
         return 0;
