@@ -3,6 +3,7 @@
 #include <zjunix/fs/fat.h>
 #include <zjunix/syscall.h>
 #include <zjunix/slub.h>
+#include <zjunix/sche.h>
 #include <driver/vga.h>
 #include <zjunix/utils.h>
 #include <zjunix/fs/myvi.h>
