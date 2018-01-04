@@ -47,7 +47,7 @@ struct shared_memory* shm_get(struct task_struct* PCB){
 		}
 	} 
 	shm[i].allocated = 1;
-	shm[i].name = PCB->name;
+	shm[i].pid = PCB->asid;
 	shm_setsignal(&shm[i]);
 
 	return &shm[i];
@@ -170,7 +170,7 @@ void syscall_shm_get_36(unsigned int status, unsigned int cause, context* pt_con
 	struct shared_memory* shm;
 	struct task_struct* PCB;
 	PCB = (struct task_struct*)pt_context->a0;
-	shm = shm_get(PCB0);
+	shm = shm_get(PCB);
 	pt_context->v0 = (unsigned int)shm;
 }
 /*

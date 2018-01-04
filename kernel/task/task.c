@@ -39,7 +39,11 @@ void task_schedule(unsigned int status, unsigned int cause, context* pt_context)
         else{
             task1=get_pcb_by_pid(2);//fork 后的进程
             task2=get_pcb_by_pid(1);//init
+<<<<<<< HEAD
             copy_context(pt_context,task1->context);
+=======
+            copy_context(pt_context, task1->context);
+>>>>>>> a5433a023aaf7c1bd4940fd745bfb17df2f4f6fc
             flag=0;
             copy_context(task2->context,pt_context);
         }
