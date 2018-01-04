@@ -17,32 +17,32 @@ void init_syscall() {
 
     // register all syscalls here
     // register_syscall(4, syscall4);
-    register_syscall(0, syscall_putchar_0);
-    register_syscall(1, syscall_strcmp_1);
-    register_syscall(2, syscall_clear_screen_2);
-    register_syscall(3, syscall_printf_3);
-    register_syscall(4, syscall_puts_4);
-    register_syscall(21, syscall_kmalloc_21);
-    register_syscall(22, syscall_kfree_22);
+    // register_syscall(0, syscall_putchar_0);
+    // register_syscall(1, syscall_strcmp_1);
+    // register_syscall(2, syscall_clear_screen_2);
+    // register_syscall(3, syscall_printf_3);
+    // register_syscall(4, syscall_puts_4);
+    // register_syscall(21, syscall_kmalloc_21);
+    // register_syscall(22, syscall_kfree_22);
     
-    register_syscall(31,syscall_fork_31);
-    register_syscall(32,syscall_exec_32);
-    register_syscall(33,syscall_kill_33);
-    register_syscall(34,syscall_exit_34);
-    register_syscall(35,syscall_print_tasks_35);
+    // register_syscall(31,syscall_fork_31);
+    // register_syscall(32,syscall_exec_32);
+    // register_syscall(33,syscall_kill_33);
+    // register_syscall(34,syscall_exit_34);
+    // register_syscall(35,syscall_print_tasks_35);
 
-    register_syscall(36, syscall_shm_get_36);
-    register_syscall(37, syscall_shm_mount_37);
-    register_syscall(38, syscall_shm_write_38);
-    register_syscall(39, syscall_shm_read_39);
+    // register_syscall(36, syscall_shm_get_36);
+    // register_syscall(37, syscall_shm_mount_37);
+    // register_syscall(38, syscall_shm_write_38);
+    // register_syscall(39, syscall_shm_read_39);
 
-	// register_syscall(51,syscall_fopen_51);
-    register_syscall(52,syscall_fclose_52);
-    register_syscall(53,syscall_fread_53);
-    register_syscall(54,syscall_fwrite_54);
-    register_syscall(55,syscall_cat_55);
-    register_syscall(56,syscall_ls_56);
-    register_syscall(57,syscall_myvi_57);
+	// // register_syscall(51,syscall_fopen_51);
+    // register_syscall(52,syscall_fclose_52);
+    // register_syscall(53,syscall_fread_53);
+    // register_syscall(54,syscall_fwrite_54);
+    // register_syscall(55,syscall_cat_55);
+    // register_syscall(56,syscall_ls_56);
+    // register_syscall(57,syscall_myvi_57);
 }
 
 void syscall(unsigned int status, unsigned int cause, context* pt_context) {

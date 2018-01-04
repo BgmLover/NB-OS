@@ -88,7 +88,7 @@ void init_kernel() {
 
     /*end test memory*/
 
-    shm_init();
+    //shm_init();
     log(LOG_OK, "Shm.");
     log(LOG_END, "Memory Modules.");
     // File system
