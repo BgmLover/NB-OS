@@ -2,10 +2,10 @@
 #include <driver/ps2.h>
 #include <driver/sd.h>
 #include <driver/vga.h>
-#include <zjunix/bootmm.h>
+#include <zjunix/bootmem.h>
 #include <zjunix/buddy.h>
 #include <zjunix/fs/fat.h>
-#include <zjunix/slab.h>
+#include <zjunix/slub.h>
 #include <zjunix/time.h>
 #include <zjunix/utils.h>
 #include "../usr/ls.h"
@@ -30,17 +30,17 @@ void test_proc() {
     }
 }
 
-int proc_demo_create() {
-    int asid = pc_peek();
-    if (asid < 0) {
-        kernel_puts("Failed to allocate pid.\n", 0xfff, 0);
-        return 1;
-    }
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    pc_create(asid, test_proc, (unsigned int)kmalloc(4096), init_gp, "test");
-    return 0;
-}
+// int proc_demo_create() {
+//     int asid = pc_peek();
+//     if (asid < 0) {
+//         kernel_puts("Failed to allocate pid.\n", 0xfff, 0);
+//         return 1;
+//     }
+//     unsigned int init_gp;
+//     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+//     pc_create(asid, test_proc, (unsigned int)kmalloc(4096), init_gp, "test");
+//     return 0;
+// }
 
 void ps() {
     kernel_printf("Press any key to enter shell.\n");
@@ -125,24 +125,24 @@ void parse_cmd() {
         sd_write_block(sd_buffer, 7, 1);
         kernel_puts("sdwz\n", 0xfff, 0);
     } else if (kernel_strcmp(ps_buffer, "mminfo") == 0) {
-        bootmap_info("bootmm");
-        buddy_info();
+        //bootmap_info("bootmm");
+        //buddy_info();
     } else if (kernel_strcmp(ps_buffer, "mmtest") == 0) {
         kernel_printf("kmalloc : %x, size = 1KB\n", kmalloc(1024));
     } else if (kernel_strcmp(ps_buffer, "ps") == 0) {
-        result = print_proc();
+        //result = print_proc();
         kernel_printf("ps return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "kill") == 0) {
         int pid = param[0] - '0';
         kernel_printf("Killing process %d\n", pid);
-        result = pc_kill(pid);
+        //result = pc_kill(pid);
         kernel_printf("kill return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "time") == 0) {
         unsigned int init_gp;
-        asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-        pc_create(2, system_time_proc, (unsigned int)kmalloc(4096), init_gp, "time");
+        //asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+        //pc_create(2, system_time_proc, (unsigned int)kmalloc(4096), init_gp, "time");
     } else if (kernel_strcmp(ps_buffer, "proc") == 0) {
-        result = proc_demo_create();
+        //result = proc_demo_create();
         kernel_printf("proc return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "cat") == 0) {
         result = fs_cat(param);
@@ -153,10 +153,11 @@ void parse_cmd() {
     } else if (kernel_strcmp(ps_buffer, "vi") == 0) {
         result = myvi(param);
         kernel_printf("vi return with %d\n", result);
-    } else if (kernel_strcmp(ps_buffer, "exec") == 0) {
-        result = exec(param);
-        kernel_printf("exec return with %d\n", result);
-    } else {
+     }// else if (kernel_strcmp(ps_buffer, "exec") == 0) {
+    //     result = exec(param);
+    //     kernel_printf("exec return with %d\n", result);
+    // } 
+    else {
         kernel_puts(ps_buffer, 0xfff, 0);
         kernel_puts(": command not found\n", 0xfff, 0);
     }
