@@ -75,20 +75,24 @@ void init_kernel() {
     slub_init();
     log(LOG_OK, "Slab.");
 
-/*test memory
-    addr=kmalloc(4096*5);
-    kernel_printf("%x\n", (unsigned int)addr);
+//test memory
+    // addr=kmalloc(4096*5);
+    // kernel_printf("%x\n", (unsigned int)addr);
+    // //buddy_info();    
+    // addr=kmalloc(4096*5);
+    // kernel_printf("%x\n", (unsigned int)addr);
     
-    kfree(addr);
-    addr=kmalloc(4096);
-    kernel_printf("%x\n", (unsigned int)addr);
-    addr=kmalloc(4096);
-    kernel_printf("%x\n", (unsigned int)addr);
+    // //kfree(addr);
+    // // addr=kmalloc(4096*5);
+    // // kernel_printf("%x\n", (unsigned int)addr);
+    // addr=kmalloc(4096*3);
+    // kernel_printf("%x\n", (unsigned int)addr);
+    // buddy_info();
 
 
     /*end test memory*/
 
-    //shm_init();
+    shm_init();
     log(LOG_OK, "Shm.");
     log(LOG_END, "Memory Modules.");
     // File system

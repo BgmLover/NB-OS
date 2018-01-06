@@ -56,13 +56,14 @@ void do_interrupts(unsigned int status, unsigned int cause, context* pt_context)
     kernel_printf("index:%x\n",index);
     #endif
 
-    
+    disable_interrupts();
     for (i = 0; i < 8; i++) {
         if ((index & 1) && interrupts[i] != 0) {
             interrupts[i](status, cause, pt_context);
         }
         index >>= 1;
     }
+    enable_interrupts();
 }
 
 void register_interrupt_handler(int index, intr_fn fn) {

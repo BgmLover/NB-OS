@@ -38,15 +38,6 @@ void init_syscall() {
     // register_syscall(38, syscall_shm_write_38);
     // register_syscall(39, syscall_shm_read_39);
 
-<<<<<<< HEAD
-	// // register_syscall(51,syscall_fopen_51);
-    // register_syscall(52,syscall_fclose_52);
-    // register_syscall(53,syscall_fread_53);
-    // register_syscall(54,syscall_fwrite_54);
-    // register_syscall(55,syscall_cat_55);
-    // register_syscall(56,syscall_ls_56);
-    // register_syscall(57,syscall_myvi_57);
-=======
 	register_syscall(51,syscall_fopen_51);
     register_syscall(52,syscall_fclose_52);
     register_syscall(53,syscall_fread_53);
@@ -54,7 +45,6 @@ void init_syscall() {
     register_syscall(55,syscall_cat_55);
     register_syscall(56,syscall_ls_56);
     register_syscall(57,syscall_myvi_57);
->>>>>>> a5433a023aaf7c1bd4940fd745bfb17df2f4f6fc
 }
 
 void syscall(unsigned int status, unsigned int cause, context* pt_context) {
