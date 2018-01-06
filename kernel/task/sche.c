@@ -9,23 +9,9 @@
 #include <zjunix/utils.h>
 #include <debug.h>
 #include <arch.h>
- 
-//判断前后台的时间片
-int counter;
-//前后台的标志1->前台  0->后台
-int flag;
+#include <../usr/ps.h>
+
 list_pcb *current=NULL;
-//后台队列，固定时间片
-list_pcb background_list;
-//前台队列优先级排列,时间片
-list_pcb high_list;
-list_pcb above_normal_list;
-list_pcb normal_list;
-list_pcb below_normal_list;
-list_pcb idle_list;
-list_pcb test;
-list_pcb example_list;
-list_pcb *next_list;
 
 PCB* get_current_pcb()
 {
@@ -98,6 +84,48 @@ void test_sched()
     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
     task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 
+    /*kernel_strcpy(proc1->pcb.name, "print_0");
+    kernel_strcpy(proc2->pcb.name, "print_2");
+
+    proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
+    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
+
+    clean_context(proc1->pcb.context);
+    clean_context(proc2->pcb.context);
+
+    proc1->pcb.counter=HIGH_TIMESLICES;
+    proc2->pcb.counter=HIGH_TIMESLICES;
+
+    proc1->pcb.priority=HIGH_PRIORITY;
+    proc2->pcb.priority=ABOVE_NORMAL_PRIORITY;
+	
+    proc1->pcb.asid = (unsigned char)66;
+    proc2->pcb.asid = (unsigned char)77;
+
+    proc1->pcb.state=STATE_READY;
+    proc2->pcb.state=STATE_READY;
+
+    proc1->pcb.context->a0=1;
+    proc2->pcb.context->a1=0;
+    //proc1->pcb.context->epc=(unsigned int)(&print_0_fun);
+    //proc2->pcb.context->epc=(unsigned int)(&print_2_fun);
+
+    add_task(&(proc1->pcb.process));
+    add_task(&(proc2->pcb.process));
+
+    INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
+    INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
+    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
+    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));*/
+
+    //kernel_printf("stop\n");
+    //while(1);
+
+    //list_pcb_add_tail(&(proc1->pcb.process),&(proc1->pcb.sched));
+    //list_pcb_add_tail(&(proc2->pcb.process),&(proc2->pcb.sched));
+
+    //初始化上下文
+    //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
     proc1->pcb.context->epc=(unsigned int)(print_0_fun);
@@ -145,7 +173,7 @@ void test_sched()
 
     proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
     clean_context(proc2->pcb.context);
-    proc2->pcb.context->epc=(unsigned int)(print_2_fun);
+    proc2->pcb.context->epc=(unsigned int)(ps);
     proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
     proc2->pcb.context->gp=init_gp;
@@ -166,7 +194,7 @@ void test_sched()
         (proc2->pcb.pgd)[i]=0;
     }
     //设置pgd属性为默认属性——可写
-    kernel_strcpy(proc2->pcb.name, "print_2");
+    kernel_strcpy(proc2->pcb.name, "ps");
     proc2->pcb.parent=0;//init没有父进程
     proc2->pcb.uid=0;
     proc2->pcb.counter=DEFAULT_TIMESLICES;
@@ -187,9 +215,12 @@ void test_sched()
 
     // kernel_printf("stop\n");
     // while(1);
-
+    //add_to_foreground_list(&(proc1->pcb.process));
+    //current=&(proc1->pcb.process);
+    //add_to_background_list(&(proc2->pcb.process));
+    //add_to_background_list(&(proc1->pcb.process));
     list_pcb_add_tail(&(proc2->pcb.process),&high_list);
-    list_pcb_add_tail(&(proc1->pcb.process),&high_list);
+    //list_pcb_add_tail(&(proc1->pcb.process),&high_list);
 
     kernel_printf("current name :  %s\n",current->pcb->name);
     list_pcb *pos;
@@ -245,7 +276,7 @@ void init_sched()
 void schedule(unsigned int status, unsigned int cause, context* pt_context) {
     // Save context
     list_pcb *pos;
-    kernel_printf("copy context\n");
+    //kernel_printf("copy context\n");
     copy_context(pt_context, current->pcb->context);
    *GPIO_SEG =counter;
 
@@ -260,10 +291,10 @@ void schedule(unsigned int status, unsigned int cause, context* pt_context) {
     
     copy_context(current->pcb->context, pt_context);
     
-    kernel_printf("load context\n");
+    //kernel_printf("load context\n");
     //print_context(pt_context);
  
-    kernel_printf("name:  %s\n",current->pcb->name);
+    //kernel_printf("name:  %s\n",current->pcb->name);
    asm volatile("mtc0 $zero, $9\n\t");
     //kernel_printf("set time\n");
 }
@@ -310,7 +341,7 @@ void add_to_background_list(list_pcb *task)
 //后台进程调度
 unsigned int background_sched()
 {
-    kernel_printf("background sched\n");
+    //kernel_printf("background sched\n");
     current=get_first_task(&background_list);
     current->pcb->counter=BACKGROUND_PER_TIMESLICES;
     current->pcb->state=STATE_RUNNING;
@@ -321,11 +352,51 @@ unsigned int background_sched()
     }
     return 0;
 }
+// unsigned int background_sched()
+// {//重新修改过，待调试
+//     kernel_printf("background sched begin\n");
+//     list_pcb *next;
+//     list_pcb *old;
+
+//     if(list_is_empty(&background_list))
+//     {
+//         kernel_printf("No process background\n");
+//         //切换到前台状态
+//         flag=1;
+//         counter=FOREGROUNG_TIMESLICES;
+//         kernel_printf("current state timeslices is %d\n",counter);
+//         kernel_printf("current state is %d\n",flag);
+//         goto background_sched_error;
+//     }
+    
+//     next=get_first_task(&background_list);
+//     kernel_printf("get next\n");
+
+//     if(next!=current)
+//     {
+//         kernel_printf("next != current\n");
+//         kernel_printf("next is %s\n",next->pcb->name);
+//         //old=current;
+//         current=next;
+//         current->pcb->state=STATE_RUNNING;
+//         //old->pcb->state=STATE_READY;
+//         //old->pcb->counter=BACKGROUND_PER_TIMESLICES;
+//         //init_pcb_list(current);    
+//     }
+//     else
+//         current->pcb->counter=BACKGROUND_PER_TIMESLICES;
+//     kernel_printf("current state timeslices is %d\n",current->pcb->counter);
+
+//     return 0;
+
+// background_sched_error:
+//     return 1;  
+// }
 
 //前台进程调度
 unsigned int foreground_sched()
 {
-    kernel_printf("foreground sched\n");
+    //kernel_printf("foreground sched\n");
     if(!list_is_empty(&high_list))
     {
         current=get_first_task(&high_list);
