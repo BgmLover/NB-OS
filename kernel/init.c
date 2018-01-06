@@ -108,16 +108,16 @@ void init_kernel() {
     //init_pc();
     init_task();
     //create_startup_process();
-    task_test();
+    //task_test();
     //exec2(pcbs.next->pcb,"/seg.bin");
     //exec("seg.bin","1234");
 
     //exec1("/seg.bin");
     log(LOG_END, "Process Control Module.");
     //shced
-    //log(LOG_START, "Sched.");
-    //init_sched();
-    //log(LOG_END, "Sched.");
+    log(LOG_START, "Sched.");
+    init_sched();
+    log(LOG_END, "Sched.");
     // Interrupts
     log(LOG_START, "Enable Interrupts.");
     init_interrupts();
