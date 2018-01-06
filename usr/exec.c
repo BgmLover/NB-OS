@@ -13,7 +13,7 @@
 FILE file;
 const unsigned int CACHE_BLOCK_SIZE = 64;
 
-int exec(char* filename) {
+int exec(char* filename,char *taskname) {
     #ifdef EXEC_DEBUG
     kernel_printf("begin to exec\n");
     kernel_printf("filename:%s\n",filename);
