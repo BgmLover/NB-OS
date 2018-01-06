@@ -17,6 +17,22 @@
 
 typedef struct list_head list_head;
 extern list_pcb *current;
+//判断前后台的时间片
+int counter;
+//前后台的标志1->前台  0->后台
+int flag;
+
+//后台队列，固定时间片
+list_pcb background_list;
+//前台队列优先级排列,时间片
+list_pcb high_list;
+list_pcb above_normal_list;
+list_pcb normal_list;
+list_pcb below_normal_list;
+list_pcb idle_list;
+list_pcb test;
+list_pcb example_list;
+list_pcb *next_list;
 
 void test_sched();
 void sched_example();
