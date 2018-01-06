@@ -221,7 +221,7 @@ void test_sched()
     //add_to_background_list(&(proc1->pcb.process));
     list_pcb_add_tail(&(proc2->pcb.process),&high_list);
     //list_pcb_add_tail(&(proc1->pcb.process),&high_list);
-    add_to_foreground_list()
+    
     kernel_printf("current name :  %s\n",current->pcb->name);
     list_pcb *pos;
     for(pos=background_list.next;pos!=&background_list;pos=pos->next)
