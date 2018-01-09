@@ -109,4 +109,8 @@ unsigned int  del_task(unsigned int asid);
 int do_fork(context* args,PCB*parent);
 pgd_term *copy_pagetables(PCB* child,PCB* parent);
 void print_tasks();
+void producer();
+void customer();
+void create_demo();
+
 #endif

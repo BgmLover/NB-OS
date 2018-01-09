@@ -17,8 +17,8 @@ extern struct shared_memory* shm_get(struct task_struct* PCB); // get a allocate
 extern void shm_delete(struct shared_memory* shm); //delete a shared memory
 extern unsigned int shm_mount(unsigned int pid, struct task_struct* PCB); // mount a shm to a process
 extern unsigned int shm_umount(unsigned int pid, struct task_struct* PCB); // umount a shm from a process
-extern void shm_write(struct shared_memory* task, unsigned int offset, char p);
-extern char shm_read(struct shared_memory* task, unsigned int offset);
+extern void shm_write(PCB* task, unsigned int offset, char p);
+extern char shm_read(PCB* task, unsigned int offset);
 extern struct shared_memory* shm_test();
 
 #endif

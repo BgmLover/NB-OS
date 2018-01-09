@@ -34,7 +34,7 @@ list_pcb test;
 list_pcb example_list;
 list_pcb *next_list;
 
-void test_sched();
+// void test_sched();
 void sched_example();
 
 PCB* get_current_pcb();

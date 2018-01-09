@@ -111,9 +111,16 @@ void init_kernel() {
     //init_pc();
     init_task();
 
+    create_demo();
 
+<<<<<<< HEAD
     //exec1("/producer.bin");
 
+=======
+
+// exec1("/producer.bin");
+/*
+>>>>>>> 27d7f47a9199c777547144ca0b321f36f7d29d00
     //create_startup_process();
     //task_test();
     exec2(pcbs.next->pcb,"/seg.bin");

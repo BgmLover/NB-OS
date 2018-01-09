@@ -98,6 +98,7 @@ void init_code(){
     kernel_printf("                                              I'm init!\n");
 }
 
+<<<<<<< HEAD
 // void producer(){
 //     char data;
 //     unsigned int offset = 0;
@@ -157,6 +158,42 @@ void init_code(){
 //     unsigned int init_gp;
 //     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
 //     producer->context->gp=init_gp;
+=======
+void producer(){
+    char data;
+    unsigned int offset = 0;
+    struct shared_memory* shm;
+    PCB* producer_pcb = get_current_pcb();
+    kernel_printf("pid:%d\n",producer_pcb->asid);
+    // while(1);
+
+	shm = shm_get(producer_pcb);
+    kernel_printf("shm=%x\n",(unsigned int)shm);
+
+    // write 26 letters
+    data='a';
+    
+    for(data = 'a';data<='d';data++){
+        shm_write(producer_pcb,offset,data);
+        offset++;
+        kernel_printf("producer write:%c\n",data);
+    }
+    
+}
+void customer(){
+    char data;
+    int offset=0;
+    int flag;
+    int i;
+    PCB* customer_pcb = get_current_pcb();
+    shm_mount(1,customer_pcb);
+
+    for(i = 0; i<4; i++){
+        data = shm_read(customer_pcb, offset);
+        offset++;
+        kernel_printf("customer read:%c\n", data);
+    }
+>>>>>>> 27d7f47a9199c777547144ca0b321f36f7d29d00
 
 //     int co=do_fork(init->context,init);
 //     PCB *customer=get_pcb_by_pid(co);
@@ -166,8 +203,19 @@ void init_code(){
 //     customer->context->gp=init_gp;
 
 
+<<<<<<< HEAD
 
 // }
+=======
+    int co=do_fork(init->context,init);
+    PCB *customer=get_pcb_by_pid(co);
+    customer->context->epc=(unsigned int)customer;
+    customer->context->sp=(unsigned int)customer+PAGE_SIZE;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    customer->context->gp=init_gp;
+
+}
+>>>>>>> 27d7f47a9199c777547144ca0b321f36f7d29d00
 void init_task()
 {
     int i=0;
