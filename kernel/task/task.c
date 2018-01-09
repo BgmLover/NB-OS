@@ -677,7 +677,6 @@ int exec2(PCB *task,char* filename){
     // task->file=(FILE*)tmp;
     #ifdef EXEC_DEBUG
     kernel_printf("address of task:%x\n",task);
-    kernel_printf("size of FILE:%x\n",sizeof(FILE));
     kernel_printf("address of task_file:%x\n",task->file);
     #endif
     
@@ -713,7 +712,6 @@ int exec2(PCB *task,char* filename){
         task->context->sp=(unsigned int)task+PAGE_SIZE;
         unsigned int init_gp;
         asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-        kernel_printf("s1=%x\n",task->context->epc);
         task->context->gp=init_gp;
     }
     else{
@@ -725,7 +723,7 @@ int exec2(PCB *task,char* filename){
     kernel_printf("%x\n",task);
     kernel_printf("%x\n",task->context);
     kernel_printf("epc=%x\n",task->context->epc);
-    kernel_printf("pid=%x",task->asid);
+    kernel_printf("pid=%x\n",task->asid);
     #endif
     //物理地址转化为EntryLo0的值
     unsigned int cp0EntryLo0=va2pfn(phy_addr);
@@ -762,7 +760,7 @@ kernel_printf("epc=%x\n",task->context->epc);
     unsigned int s1=*(unsigned int*)0;
     kernel_printf("s1=%x\n",s1);
     int (*f)() = (int (*)())(0);
-    //int r = f();
+    int r = f();
     kernel_printf("exec over\n");
    
 #endif  // ! EXEC_DEBUG
@@ -771,28 +769,33 @@ kernel_printf("epc=%x\n",task->context->epc);
 
 int exec(char *filename,char* taskname)
 {
-    PCB *current=get_current_pcb();
+    //PCB *current=get_current_pcb();
+    PCB *current=pcbs.next->pcb;
     //do fork
     unsigned int child_pid=do_fork(current->context,current);
+    PCB *child=get_pcb_by_pid(child_pid);
+    kernel_memcpy(child->name,taskname,sizeof(char)*32);
     if(child_pid<0){
         kernel_printf("error! failed to do_fork\n");
         return -1;
     }
-    PCB *child=get_pcb_by_pid(child_pid);
+    
     //从文件中读取数据并替换
     if(exec2(child,filename)!=0){
         kernel_printf("error! failed to exec\n");
         return -1;
     }
-    kernel_memcpy(child->name,taskname,sizeof(char)*32);
-    return 0;
+    
+    return child->asid;
 }
 
 void print_tasks(){
     int i=1;
     while(1)
     {
+        kernel_printf("now i=%x\n",i);
         PCB* task=get_pcb_by_pid(i);
+
         if(task==NULL)
             break;
         else{

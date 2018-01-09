@@ -841,7 +841,7 @@ void get_filename(u8 *entry, u8 *buf) {
 }
 
 
-char *cut_front_blank(char *str) {
+/*char *cut_front_blank(char *str) {
     char *s = str;
     unsigned int index = 0;
 
@@ -862,29 +862,29 @@ char *cut_front_blank(char *str) {
     *s = 0;
 
     return str;
-}
+}*/
 
-unsigned int strlen(unsigned char *str) {
-    unsigned int len = 0;
-    while (str[len])
-        ++len;
-    return len;
-}
+// unsigned int strlen(unsigned char *str) {
+//     unsigned int len = 0;
+//     while (str[len])
+//         ++len;
+//     return len;
+// }
 
-unsigned int each_param(char *para, char *word, unsigned int off, char ch) {
-    int index = 0;
+// unsigned int each_param(char *para, char *word, unsigned int off, char ch) {
+//     int index = 0;
 
-    while (para[off] && para[off] != ch) {
-        word[index] = para[off];
-        ++index;
-        ++off;
-    }
+//     while (para[off] && para[off] != ch) {
+//         word[index] = para[off];
+//         ++index;
+//         ++off;
+//     }
 
-    word[index] = 0;
+//     word[index] = 0;
 
-    return off;
-}
-
+//     return off;
+// }
+/*
 int ls(char *para) {
     char pwd[128];
     struct dir_entry_attr entry;
@@ -922,4 +922,4 @@ readdir:
         return 1;
 
     return 0;
-}
+}*/

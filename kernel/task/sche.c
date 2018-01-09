@@ -83,49 +83,6 @@ void test_sched()
 {
     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
     task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
-
-    /*kernel_strcpy(proc1->pcb.name, "print_0");
-    kernel_strcpy(proc2->pcb.name, "print_2");
-
-    proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
-    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
-
-    clean_context(proc1->pcb.context);
-    clean_context(proc2->pcb.context);
-
-    proc1->pcb.counter=HIGH_TIMESLICES;
-    proc2->pcb.counter=HIGH_TIMESLICES;
-
-    proc1->pcb.priority=HIGH_PRIORITY;
-    proc2->pcb.priority=ABOVE_NORMAL_PRIORITY;
-	
-    proc1->pcb.asid = (unsigned char)66;
-    proc2->pcb.asid = (unsigned char)77;
-
-    proc1->pcb.state=STATE_READY;
-    proc2->pcb.state=STATE_READY;
-
-    proc1->pcb.context->a0=1;
-    proc2->pcb.context->a1=0;
-    //proc1->pcb.context->epc=(unsigned int)(&print_0_fun);
-    //proc2->pcb.context->epc=(unsigned int)(&print_2_fun);
-
-    add_task(&(proc1->pcb.process));
-    add_task(&(proc2->pcb.process));
-
-    INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
-    INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
-    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
-    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));*/
-
-    //kernel_printf("stop\n");
-    //while(1);
-
-    //list_pcb_add_tail(&(proc1->pcb.process),&(proc1->pcb.sched));
-    //list_pcb_add_tail(&(proc2->pcb.process),&(proc2->pcb.sched));
-
-    //初始化上下文
-    //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
     proc1->pcb.context->epc=(unsigned int)(print_0_fun);
@@ -170,10 +127,9 @@ void test_sched()
     add_task(&(proc1->pcb.process));//添加到pcb链表中
     proc1->pcb.state=STATE_RUNNING;
 
-
     proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
     clean_context(proc2->pcb.context);
-    proc2->pcb.context->epc=(unsigned int)(ps);
+    proc2->pcb.context->epc=0;
     proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
     proc2->pcb.context->gp=init_gp;
@@ -221,6 +177,11 @@ void test_sched()
     //add_to_background_list(&(proc1->pcb.process));
     list_pcb_add_tail(&(proc2->pcb.process),&high_list);
     //list_pcb_add_tail(&(proc1->pcb.process),&high_list);
+    print_tasks();while(1);
+    int pid3=exec("/seg.bin","1234");
+    task_union *proc3=(task_union*)get_pcb_by_pid(pid3);
+    
+    add_to_foreground_list(&proc3->pcb.sched);
     
     kernel_printf("current name :  %s\n",current->pcb->name);
     list_pcb *pos;
@@ -294,7 +255,7 @@ void schedule(unsigned int status, unsigned int cause, context* pt_context) {
     //kernel_printf("load context\n");
     //print_context(pt_context);
  
-    //kernel_printf("name:  %s\n",current->pcb->name);
+    kernel_printf("name:  %s\n",current->pcb->name);
    asm volatile("mtc0 $zero, $9\n\t");
     //kernel_printf("set time\n");
 }

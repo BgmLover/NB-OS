@@ -4,6 +4,7 @@
 #include <exc.h>
 #include <intr.h>
 #include <page.h>
+#include <zjunix/list_pcb.h>
 #include <zjunix/bootmem.h>
 #include <zjunix/buddy.h>
 #include <zjunix/fs/fat.h>
@@ -15,7 +16,7 @@
 #include <zjunix/syscall.h>
 #include <zjunix/time.h>
 #include <zjunix/shm.h>
-
+#include "../usr/ps.h"
 //#include "../usr/exec.h"
 
 void machine_info() {
@@ -42,6 +43,66 @@ void machine_info() {
     log(LOG_OK, "Timer init");
 }*/
 #pragma GCC pop_options
+
+void create_proc()
+{
+    kernel_printf("create begin\n");
+    int i=0;
+    unsigned int init_gp;
+
+    task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
+
+    kernel_printf("stop\n");
+    while(1);   
+    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
+    clean_context(proc2->pcb.context);
+    proc2->pcb.context->epc=(unsigned int)(ps);
+    proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    proc2->pcb.context->gp=init_gp;
+
+
+    proc2->pcb.asid=get_emptypid();
+    if(proc2->pcb.asid<0){
+        kernel_printf("failed to get right asid\n");   
+        return;
+    }
+    proc2->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空间
+    if(proc2->pcb.pgd==NULL)
+    {
+        kernel_printf("failed to kmalloc space for pgd\n");
+        return;
+    }
+    //初始化pgd每一项
+    for(i=0;i<PAGE_SIZE>>2;i++)
+    {
+        (proc2->pcb.pgd)[i]=0;
+    }
+
+
+    //设置pgd属性为默认属性——可写
+    kernel_strcpy(proc2->pcb.name, "ps");
+    proc2->pcb.parent=0;//init没有父进程
+    proc2->pcb.uid=0;
+    proc2->pcb.counter=DEFAULT_TIMESLICES;
+    proc2->pcb.start_time=0;//get_time();
+    proc2->pcb.state=STATE_WAITTING;
+    proc2->pcb.priority=HIGH_PRIORITY;//设置优先级为最低优先级
+    proc2->pcb.policy=0;//暂未定义调度算法
+    proc2->pcb.shm=NULL; //shared memory
+
+    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
+    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
+    //暂不考虑线程
+    proc2->pcb.thread_head=NULL;
+    proc2->pcb.num_thread=0;
+    
+    add_task(&(proc2->pcb.process));//添加到pcb链表中
+    proc2->pcb.state=STATE_RUNNING;
+
+    //list_pcb_add_tail(&(proc2->pcb.process),&high_list);
+    add_to_foreground_list(&(proc2->pcb.process));
+}
 
 void show_status()
 {
@@ -75,19 +136,14 @@ void init_kernel() {
     slub_init();
     log(LOG_OK, "Slab.");
 
-//test memory
-    // addr=kmalloc(4096*5);
-    // kernel_printf("%x\n", (unsigned int)addr);
-    // //buddy_info();    
-    // addr=kmalloc(4096*5);
-    // kernel_printf("%x\n", (unsigned int)addr);
-    
-    // //kfree(addr);
-    // // addr=kmalloc(4096*5);
-    // // kernel_printf("%x\n", (unsigned int)addr);
-    // addr=kmalloc(4096*3);
-    // kernel_printf("%x\n", (unsigned int)addr);
-    // buddy_info();
+/*test memory*/
+    addr=kmalloc(4096);
+    kernel_printf("%x\n", (unsigned int)addr);
+    kfree(addr);
+    addr=kmalloc(4096);
+    kernel_printf("%x\n", (unsigned int)addr);
+    addr=kmalloc(4096);
+    kernel_printf("%x\n", (unsigned int)addr);
 
 
     /*end test memory*/
@@ -110,25 +166,24 @@ void init_kernel() {
     //create_startup_process();
     //task_test();
     //exec2(pcbs.next->pcb,"/seg.bin");
-    //exec("seg.bin","1234");
-
+    exec("/seg.bin","789");
     //exec1("/seg.bin");
-    log(LOG_END, "Process Control Module.");
-    //shced
-    log(LOG_START, "Sched.");
-    init_sched();
-    log(LOG_END, "Sched.");
-    // Interrupts
-    log(LOG_START, "Enable Interrupts.");
-    init_interrupts();
-    show_status();
-    log(LOG_END, "Enable Interrupts.");
-    // Init finished
-    machine_info();
+    // log(LOG_END, "Process Control Module.");\
+    // //shced
+    // log(LOG_START, "Sched.");
+    // //init_sched();
+    // //create_proc();
+    // log(LOG_END, "Sched.");
+    // // Interrupts
+    // log(LOG_START, "Enable Interrupts.");
+    // init_interrupts();
+    // show_status();
+    // log(LOG_END, "Enable Interrupts.");
+    // // Init finished
+    // machine_info();
 
 
-    *GPIO_SEG = 0x78778245;
-    int flag=0;
+    //*GPIO_SEG = 0x78778245;
     
     // Enter shell
     while (1);
