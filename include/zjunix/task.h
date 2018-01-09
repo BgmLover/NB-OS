@@ -19,7 +19,7 @@
 #define IDLE_PRIORITY 4
 
 
-
+// struct shared_memory* shm;
 struct shared_memory
 {
 	unsigned int allocated; // 0->free

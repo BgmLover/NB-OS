@@ -136,6 +136,7 @@ void init_kernel() {
     slub_init();
     log(LOG_OK, "Slab.");
 
+<<<<<<< HEAD
 /*test memory*/
     addr=kmalloc(4096);
     kernel_printf("%x\n", (unsigned int)addr);
@@ -144,6 +145,21 @@ void init_kernel() {
     kernel_printf("%x\n", (unsigned int)addr);
     addr=kmalloc(4096);
     kernel_printf("%x\n", (unsigned int)addr);
+=======
+//test memory
+    // addr=kmalloc(4096*5);
+    // kernel_printf("%x\n", (unsigned int)addr);
+    // //buddy_info();    
+    // addr=kmalloc(4096*5);
+    // kernel_printf("%x\n", (unsigned int)addr);
+    
+    // //kfree(addr);
+    // // addr=kmalloc(4096*5);
+    // // kernel_printf("%x\n", (unsigned int)addr);
+    // addr=kmalloc(4096*3);
+    // kernel_printf("%x\n", (unsigned int)addr);
+    // buddy_info();
+>>>>>>> eab03acace45aa82ece555320d387b31129f307c
 
 
     /*end test memory*/
@@ -163,6 +179,10 @@ void init_kernel() {
     log(LOG_START, "Process Control Module.");
     //init_pc();
     init_task();
+
+
+exec1("/producer.bin");
+/*
     //create_startup_process();
     //task_test();
     //exec2(pcbs.next->pcb,"/seg.bin");
@@ -183,8 +203,14 @@ void init_kernel() {
     // machine_info();
 
 
+<<<<<<< HEAD
     //*GPIO_SEG = 0x78778245;
     
+=======
+    *GPIO_SEG = 0x78778245;
+    int flag=0;
+  */  
+>>>>>>> eab03acace45aa82ece555320d387b31129f307c
     // Enter shell
     while (1);
 }

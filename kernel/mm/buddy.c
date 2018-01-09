@@ -86,12 +86,31 @@ void buddy_free_pages(struct page* page, unsigned int order){
     page->flag = 0;
 
     lockup(&buddy.lock);
-
+/*
     page_idx = page-buddy.start_page; // current page index
     while(order<MAX_BUDDY_ORDER){
         buddy_idx = page_idx^(1<<order); // the index of its buddy
         buddy_page = page + (buddy_idx - page_idx); // get the buddy page
-        if(/*!_is_same_bplevel(buddy_page, order)*/buddy_page->bplevel != order) break; //not same order, stop
+        if(buddy_page->bplevel != order) break; //not same order, stop
+        list_del_init(&buddy_page->list);
+        --buddy.freelist[order].nr_free;
+        set_bplevel(buddy_page, -1);
+        combined_idx = buddy_idx & page_idx; // new page addr = small one among two blocks
+        page += (combined_idx - page_idx);
+        page_idx = combined_idx;
+        ++order;
+    }*/
+    page_idx = page-buddy.start_page; // current page index
+    while(order<MAX_BUDDY_ORDER){
+        buddy_idx = page_idx^(1<<order); // the index of its buddy
+        buddy_page = page + (buddy_idx - page_idx); // get the buddy page
+        if(buddy_page->bplevel != order){
+            //尝试另一个方向匹配
+            if(buddy_idx<page_idx) buddy_idx = page_idx+(1<<order);
+            else buddy_idx = page_idx-(1<<order);
+            buddy_page = page+(buddy_idx-page_idx);
+            if(buddy_page->bplevel != order) break;
+        }
         list_del_init(&buddy_page->list);
         --buddy.freelist[order].nr_free;
         set_bplevel(buddy_page, -1);
