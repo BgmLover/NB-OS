@@ -170,10 +170,9 @@ void test_sched()
     add_task(&(proc1->pcb.process));//添加到pcb链表中
     proc1->pcb.state=STATE_RUNNING;
 
-
     proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
     clean_context(proc2->pcb.context);
-    proc2->pcb.context->epc=(unsigned int)(ps);
+    proc2->pcb.context->epc=0;
     proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
     proc2->pcb.context->gp=init_gp;
@@ -221,7 +220,12 @@ void test_sched()
     //add_to_background_list(&(proc1->pcb.process));
     list_pcb_add_tail(&(proc2->pcb.process),&high_list);
     //list_pcb_add_tail(&(proc1->pcb.process),&high_list);
-
+    print_tasks();while(1);
+    int pid3=exec("/seg.bin","1234");
+    task_union *proc3=(task_union*)get_pcb_by_pid(pid3);
+    
+    add_to_foreground_list(&proc3->pcb.sched);
+    
     kernel_printf("current name :  %s\n",current->pcb->name);
     list_pcb *pos;
     for(pos=background_list.next;pos!=&background_list;pos=pos->next)
@@ -294,7 +298,7 @@ void schedule(unsigned int status, unsigned int cause, context* pt_context) {
     //kernel_printf("load context\n");
     //print_context(pt_context);
  
-    //kernel_printf("name:  %s\n",current->pcb->name);
+    kernel_printf("name:  %s\n",current->pcb->name);
    asm volatile("mtc0 $zero, $9\n\t");
     //kernel_printf("set time\n");
 }
