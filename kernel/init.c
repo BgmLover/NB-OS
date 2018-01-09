@@ -108,8 +108,10 @@ void init_kernel() {
     //init_pc();
     init_task();
 
+    create_demo();
 
-exec1("/producer.bin");
+
+// exec1("/producer.bin");
 /*
     //create_startup_process();
     task_test();

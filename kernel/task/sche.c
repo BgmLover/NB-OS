@@ -78,7 +78,7 @@ void sched_example()
     current=get_first_task(&high_list);
 
 }
-
+/*
 void test_sched()
 {
     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
@@ -116,7 +116,7 @@ void test_sched()
     INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
     INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
     INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
-    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));*/
+    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
 
     //kernel_printf("stop\n");
     //while(1);
@@ -231,7 +231,7 @@ void test_sched()
     //while(1);
         
 }
-
+*/
 
 
 void init_sched()
@@ -262,7 +262,7 @@ void init_sched()
     next_list=&background_list;
 
     kernel_printf("test sched begin!\n");
-    test_sched();
+    // test_sched();
     kernel_printf("Add process complete!\n");
     //register_syscall(10, pc_kill_syscall);
     register_interrupt_handler(7, schedule);
