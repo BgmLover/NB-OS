@@ -17,36 +17,29 @@ sys_fn syscalls[256];
 void init_syscall() {
     register_exception_handler(8, syscall);
 
-    // register all syscalls here
+    //register all syscalls here
     // register_syscall(4, syscall4);
-    // register_syscall(0, syscall_putchar_0);
-    // register_syscall(1, syscall_strcmp_1);
-    // register_syscall(2, syscall_clear_screen_2);
-    // register_syscall(3, syscall_printf_3);
-    // register_syscall(4, syscall_puts_4);
-    // register_syscall(21, syscall_kmalloc_21);
-    // register_syscall(22, syscall_kfree_22);
+    register_syscall(0, syscall_putchar_0);
+    register_syscall(1, syscall_strcmp_1);
+    register_syscall(2, syscall_clear_screen_2);
+    register_syscall(3, syscall_printf_3);
+    register_syscall(4, syscall_puts_4);
+    register_syscall(21, syscall_kmalloc_21);
+    register_syscall(22, syscall_kfree_22);
     
-    // register_syscall(31,syscall_fork_31);
-    // register_syscall(32,syscall_exec_32);
-    // register_syscall(33,syscall_kill_33);
-    // register_syscall(34,syscall_exit_34);
-    // register_syscall(35,syscall_print_tasks_35);
+    register_syscall(31,syscall_fork_31);
+    register_syscall(32,syscall_exec_32);
+    register_syscall(33,syscall_kill_33);
+    register_syscall(34,syscall_exit_34);
+    register_syscall(35,syscall_print_tasks_35);
 
-    // register_syscall(36, syscall_shm_get_36);
-    // register_syscall(37, syscall_shm_mount_37);
-    // register_syscall(38, syscall_shm_write_38);
-    // register_syscall(39, syscall_shm_read_39);
+    register_syscall(36, syscall_shm_get_36);
+    register_syscall(37, syscall_shm_mount_37);
+    register_syscall(38, syscall_shm_write_38);
+    register_syscall(39, syscall_shm_read_39);
+    register_syscall(40, syscall_getcurrent_pcb_40);
+    register_syscall(41,syscall_shm_test_41);
 
-<<<<<<< HEAD
-	// // register_syscall(51,syscall_fopen_51);
-    // register_syscall(52,syscall_fclose_52);
-    // register_syscall(53,syscall_fread_53);
-    // register_syscall(54,syscall_fwrite_54);
-    // register_syscall(55,syscall_cat_55);
-    // register_syscall(56,syscall_ls_56);
-    // register_syscall(57,syscall_myvi_57);
-=======
 	register_syscall(51,syscall_fopen_51);
     register_syscall(52,syscall_fclose_52);
     register_syscall(53,syscall_fread_53);
@@ -54,7 +47,6 @@ void init_syscall() {
     register_syscall(55,syscall_cat_55);
     register_syscall(56,syscall_ls_56);
     register_syscall(57,syscall_myvi_57);
->>>>>>> a5433a023aaf7c1bd4940fd745bfb17df2f4f6fc
 }
 
 void syscall(unsigned int status, unsigned int cause, context* pt_context) {
@@ -131,7 +123,7 @@ void syscall_clear_screen_2(unsigned int status, unsigned int cause, context* pt
     int scope = (int)pt_context->a0;
     kernel_clear_screen(scope);
 }
-
+/*
 void clear_screen(int scope){
     int a0 = scope;
     asm volatile(
@@ -144,7 +136,7 @@ void clear_screen(int scope){
         :
         :"r"(a0)
     );
-}
+}*/
 
 // a0 = const char* format, a1 = ap
 void syscall_printf_3(unsigned int status, unsigned int cause, context* pt_context){
@@ -152,7 +144,9 @@ void syscall_printf_3(unsigned int status, unsigned int cause, context* pt_conte
     const char* format = (const char*)pt_context->a0;
     va_list ap = (va_list)pt_context->a1;
 
+kernel_printf("format=%x,ap=%x\n",format,ap);
     cnt = kernel_vprintf(format, ap);
+    va_end(ap);
 }
 
 /*

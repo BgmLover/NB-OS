@@ -19,7 +19,7 @@
 #define IDLE_PRIORITY 4
 
 
-
+// struct shared_memory* shm;
 struct shared_memory
 {
 	unsigned int allocated; // 0->free
@@ -77,11 +77,6 @@ struct task_struct{
     FILE * file;//文件信息
     struct shared_memory* shm;
 
-    // struct list_head stack_vma_head;//用户栈表头
-    // struct list_head code_vma_head;//代码区表头
-    // struct list_head heap_vma_head;//数据区表头
-    // unsigned int user_stack;//用户态栈顶指针
-    // unsigned int user_code;//用户态代码起始地址
 };
 
 

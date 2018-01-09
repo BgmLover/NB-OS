@@ -58,6 +58,25 @@ struct shared_memory* shm_get(struct task_struct* PCB){
 
 }
 
+struct shared_memory* shm_test(){
+	unsigned int i;
+	// find a free shm
+	i=0;
+	while(shm[i].allocated!=0){
+		i++;
+		if(i==256){
+			kernel_printf("SHM run not!\n");
+			while(1){
+
+			}
+		}
+	}
+	shm[i].allocated = 1;
+	shm[i].pid = 0;
+	shm_setsignal(&shm[i]);
+	return &shm[i];
+}
+
 
 
 void shm_delete(struct shared_memory* shm){
@@ -107,7 +126,8 @@ unsigned int shm_umount(unsigned int pid, struct task_struct* PCB){
 	return 1;
 }	
 
-void shm_write(struct task_struct* task, unsigned int offset, char p){
+void shm_write(struct shared_memory* shm, unsigned int offset, char p){
+	/*
 	if(task->shm==0){
 		kernel_printf("No shared memory!\n");
 		while(1){
@@ -116,17 +136,19 @@ void shm_write(struct task_struct* task, unsigned int offset, char p){
 	}
 	while(task->shm->signal!=1){
 
-	}
+	}*/
 	shm->signal = 0;
 	// kernel_printf("process%d:lock write\n", (unsigned int)task->asid);
-	*(task->shm->page+offset)=p;
+	*((shm->page)+offset)=p;
+	// *(task->shm->page+offset)=p;
 	shm->signal = 1;
 	// kernel_printf("process%d:unlock write\n", (unsigned int)task->asid);
 	return;
 }
 
-char shm_read(struct task_struct* task, unsigned int offset){
-	unsigned int res;
+char shm_read(struct shared_memory* shm, unsigned int offset){
+	char res;
+	/*
 	if(task->shm==0){
 		kernel_printf("No shared memory!\n");
 		while(1){
@@ -135,10 +157,10 @@ char shm_read(struct task_struct* task, unsigned int offset){
 	}
 	while(task->shm->signal!=1){
 
-	}
+	}*/
 	shm->signal = 0;
 	// kernel_printf("process%d:lock read\n", (unsigned int)task->asid);
-	res = *(task->shm->page+offset);
+	res = *((shm->page)+offset);
 	shm->signal = 1;
 	// kernel_printf("process%d:unlock read\n", (unsigned int)task->asid);
 	return res;
@@ -267,4 +289,10 @@ void syscall_shm_read_39(unsigned int status, unsigned int cause, context* pt_co
 	offset = pt_context->a1;
 	p = shm_read(task,offset);
 	pt_context->v0 = (unsigned int)p;
+}
+
+void syscall_shm_test_41(unsigned int status, unsigned int cause, context* pt_context){
+	struct shared_memory* shm;
+	shm = shm_test();
+	pt_context->v0 = (unsigned int)shm;
 }

@@ -1,4 +1,4 @@
-#include"ustdio.h"
+#include "ustdio.h"
 void uputchar(int ch, int fc, int bg){
     unsigned int a0 = (unsigned int)ch;
     unsigned int a1 = (unsigned int)fc;
@@ -36,6 +36,20 @@ void putchar_at(int ch,int row,int col)
         :"r"(a0),"r"(a1),"r"(a2)
     );
 }
+/*
+void uclear_screen(int scope){
+    int a0 = scope;
+    asm volatile(
+        "move $a0,%0\n\t"
+        "addi $v0,$zero,2\n\t"
+        "syscall\n\t"
+        "nop\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :
+        :"r"(a0)
+    );
+}*/
 
 void set_cursor()
 {
@@ -93,6 +107,8 @@ void uprintf(const char *format, ...){
     va_start(ap, format);
     a0 = (unsigned int)format;
     a1 = (unsigned int)ap;
+
+    
     asm volatile(
         "move $a0,%0\n\t"
         "move $a1,%1\n\t"
@@ -300,7 +316,7 @@ struct shared_memory* c_shm_get(struct task_struct* PCB){
 	unsigned int v0;
 	a0 = (unsigned int)PCB;
 
-	asm volatile()
+	asm volatile(
         "move $a0,%1\n\t"
         "addi $v0,$zero,36\n\t"
         "syscall\n\t"
@@ -316,7 +332,7 @@ struct shared_memory* c_shm_get(struct task_struct* PCB){
 }
 
 // a0 = pid, a1 = PCB
-unsigned int c_shm_umount(unsigned int pid, struct task_struct* PCB){
+unsigned int c_shm_mount(unsigned int pid, struct task_struct* PCB){
 	unsigned int a0;
 	unsigned int a1;
 	unsigned int v0;
@@ -339,10 +355,10 @@ unsigned int c_shm_umount(unsigned int pid, struct task_struct* PCB){
 	return v0;
 }
 
-// a0 = task, a1 = offset, a2 = p
-void c_shm_write(struct task_struct* task, unsigned int offset, char p){
+// a0 = shm, a1 = offset, a2 = p
+void c_shm_write(struct shared_memory* shm, unsigned int offset, char p){
 	unsigned int a0, a1, a2;
-	a0 = (unsigned int)task;
+    a0 = (unsigned int)shm;
 	a1 = (unsigned int)offset;
 	a2 = (unsigned int)p;
 	asm volatile(
@@ -355,15 +371,15 @@ void c_shm_write(struct task_struct* task, unsigned int offset, char p){
         "jr $ra\n\t"
         "nop\n\t"
         :
-        :"r"(a0),"r"(a1),"r"(a3)
+        :"r"(a0),"r"(a1),"r"(a2)
     );
 }
 
 // a0 = task, a1 = offset
-char c_shm_read(struct task_struct* task, unsigned int offset){
+char c_shm_read(struct shared_memory* shm, unsigned int offset){
 	unsigned int a0, a1;
 	unsigned int v0;
-	a0 = (unsigned int)task;
+	a0 = (unsigned int)shm;
 	a1 = (unsigned int)offset;
 	asm volatile(
         "move $a0,%1\n\t"
@@ -438,17 +454,34 @@ void demo_create()
         :
     );
 }
-struct task_struct* get_current_pcb(){
+unsigned int get_current_pcb(){
     unsigned int addr_pcb;
     asm volatile(
         "addi $v0,$zero,40\n\t"
         "syscall 40\n\t"
         "nop\n\t"
-        "move %0,v0\n\t"
+        "move %0,$v0\n\t"
         "jr $ra\n\t"
         "nop\n\t"
         :"=r"(addr_pcb)
         :
     );
     return addr_pcb;
+}
+
+struct shared_memory* c_shm_test(){
+	unsigned int v0;
+
+	asm volatile(
+        "addi $v0,$zero,41\n\t"
+        "syscall\n\t"
+        "nop\n\t"
+        "move %0,$v0\n\t"
+        "jr $ra\n\t"
+        "nop\n\t"
+        :"=r"(v0)
+        :
+    );
+
+    return (struct shared_memory*)v0;
 }

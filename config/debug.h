@@ -23,10 +23,10 @@
 // #define FS_DEBUG
 
 // exec
-//#define EXEC_DEBUG
+#define EXEC_DEBUG
 
 //init task
-//#define TASK_DEBUG_INIT
+#define TASK_DEBUG_INIT
 
 //do_fork
 #define DO_FORK_DEBUG
