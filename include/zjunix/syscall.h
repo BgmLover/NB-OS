@@ -31,11 +31,7 @@ void syscall_shm_mount_37(unsigned int status, unsigned int cause, context* pt_c
 void syscall_shm_write_38(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_shm_read_39(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_getcurrent_pcb_40(unsigned int status, unsigned int cause, context* pt_context);
-<<<<<<< HEAD
-
-=======
 void syscall_shm_test_41(unsigned int status, unsigned int cause, context* pt_context);
->>>>>>> eab03acace45aa82ece555320d387b31129f307c
 
 void syscall_fopen_51(unsigned int status, unsigned int cause, context* pt_context);
 void syscall_fclose_52(unsigned int status, unsigned int cause, context* pt_context);

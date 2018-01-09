@@ -130,7 +130,7 @@ void parse_cmd() {
     } else if (kernel_strcmp(ps_buffer, "mmtest") == 0) {
         kernel_printf("kmalloc : %x, size = 1KB\n", kmalloc(1024));
     } else if (kernel_strcmp(ps_buffer, "ps") == 0) {
-        //result = print_proc();
+        print_procs();
         kernel_printf("ps return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "kill") == 0) {
         int pid = param[0] - '0';

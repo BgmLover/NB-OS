@@ -96,80 +96,78 @@ void task_test(){
 void init_code(){
     while(1)
     kernel_printf("                                              I'm init!\n");
-<<<<<<< HEAD
-=======
 }
 
-void producer(){
-    char data;
-    unsigned int offset = 0;
-    struct shared_memory* shm;
+// void producer(){
+//     char data;
+//     unsigned int offset = 0;
+//     struct shared_memory* shm;
     
-    /*
-    producer_pcb = (PCB*)get_current_pcb(); // need implement
-    uprintf("%x\n",producer_pcb);
-    */
+//     /*
+//     producer_pcb = (PCB*)get_current_pcb(); // need implement
+//     uprintf("%x\n",producer_pcb);
+//     */
     
-	shm = shm_test();
+// 	shm = shm_test();
 
-    // write 26 letters
-    data='a';
-    /*
-    offset=0;
-    kernel_printf("offset:%x\n",offset);
-    */
-    for(data = 'a';data<='z';data++){
-        shm_write(shm,offset,data);
-        offset++;
-        kernel_printf("producer write:%c\n",data);
-    }
+//     // write 26 letters
+//     data='a';
+//     /*
+//     offset=0;
+//     kernel_printf("offset:%x\n",offset);
+//     */
+//     for(data = 'a';data<='z';data++){
+//         shm_write(shm,offset,data);
+//         offset++;
+//         kernel_printf("producer write:%c\n",data);
+//     }
     
-}
-void customer(struct shared_memory* shm){
-    char data;
-    int offset=0;
-    int flag;
-    int i;
-/*
-    flag = c_shm_mount(1, customer_pcb);
-    if(flag == 0){
-        uprintf("mount error!\n");
-        while(1){
+// }
+// void customer(struct shared_memory* shm){
+//     char data;
+//     int offset=0;
+//     int flag;
+//     int i;
+// /*
+//     flag = c_shm_mount(1, customer_pcb);
+//     if(flag == 0){
+//         uprintf("mount error!\n");
+//         while(1){
 
-        }
-    }*/
+//         }
+//     }*/
 
     
 
-    for(i = 0; i<26; i++){
-        data = c_shm_read(shm, offset);
-        offset++;
-        kernel_printf("customer read:%c\n", data);
-    }
+//     for(i = 0; i<26; i++){
+//         data = c_shm_read(shm, offset);
+//         offset++;
+//         kernel_printf("customer read:%c\n", data);
+//     }
 
-}
-void create_demo()
-{
-    PCB* init=pcbs.next->pcb;
+// }
+// void create_demo()
+// {
+//     PCB* init=pcbs.next->pcb;
 
-    int pr=do_fork(init->context,init);
-    PCB *producer=get_pcb_by_pid(pr);
-    producer->context->epc=(unsigned int)producer;
-    producer->context->sp=(unsigned int)producer+PAGE_SIZE;
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    producer->context->gp=init_gp;
+//     int pr=do_fork(init->context,init);
+//     PCB *producer=get_pcb_by_pid(pr);
+//     producer->context->epc=(unsigned int)producer;
+//     producer->context->sp=(unsigned int)producer+PAGE_SIZE;
+//     unsigned int init_gp;
+//     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+//     producer->context->gp=init_gp;
 
-    int co=do_fork(init->context,init);
-    PCB *consumer=get_pcb_by_pid(co);
-    consumer->context->epc=(unsigned int)consumer;
-    consumer->context->sp=(unsigned int)consumer+PAGE_SIZE;
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    consumer->context->gp=init_gp;
+//     int co=do_fork(init->context,init);
+//     PCB *customer=get_pcb_by_pid(co);
+//     customer->context->epc=(unsigned int)customer;
+//     customer->context->sp=(unsigned int)customer+PAGE_SIZE;
+//     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+//     customer->context->gp=init_gp;
 
->>>>>>> eab03acace45aa82ece555320d387b31129f307c
-}
+
+
+// }
 void init_task()
 {
     int i=0;
@@ -792,10 +790,7 @@ int exec2(PCB *task,char* filename){
         task->context->sp=(unsigned int)task+PAGE_SIZE;
         unsigned int init_gp;
         asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-<<<<<<< HEAD
-=======
         kernel_printf("s1=%x\n",task->context->epc);
->>>>>>> eab03acace45aa82ece555320d387b31129f307c
         task->context->gp=init_gp;
     }
     else{
@@ -807,11 +802,7 @@ int exec2(PCB *task,char* filename){
     kernel_printf("%x\n",task);
     kernel_printf("%x\n",task->context);
     kernel_printf("epc=%x\n",task->context->epc);
-<<<<<<< HEAD
     kernel_printf("pid=%x\n",task->asid);
-=======
-    kernel_printf("pid=%x",task->asid);
->>>>>>> eab03acace45aa82ece555320d387b31129f307c
     #endif
     //物理地址转化为EntryLo0的值
     unsigned int cp0EntryLo0=va2pfn(phy_addr);
@@ -848,11 +839,7 @@ kernel_printf("epc=%x\n",task->context->epc);
     unsigned int s1=*(unsigned int*)0;
     kernel_printf("s1=%x\n",s1);
     int (*f)() = (int (*)())(0);
-<<<<<<< HEAD
     int r = f();
-=======
-    //int r = f();
->>>>>>> eab03acace45aa82ece555320d387b31129f307c
     kernel_printf("exec over\n");
    
 #endif  // ! EXEC_DEBUG
@@ -877,7 +864,8 @@ int exec(char *filename,char* taskname)
         kernel_printf("error! failed to exec\n");
         return -1;
     }
-    
+    //加入到前台队列
+    //add_to_foreground_list(&(child->sched));
     return child->asid;
 }
 
@@ -887,10 +875,11 @@ void print_tasks(){
     {
         kernel_printf("now i=%x\n",i);
         PCB* task=get_pcb_by_pid(i);
-
-        if(task==NULL)
-            break;
+        if(task==NULL){
+            kernel_printf("find over\n");
+            break;}
         else{
+            kernel_printf("ready to print\n");
             i++;
             kernel_printf("pid: %d  ",task->asid);
             kernel_printf("task name: %s  ",task->name);

@@ -71,12 +71,10 @@ struct task_struct{
     list_pcb sched;//就绪队列
     list_pcb process;//pcb链表
 
-    struct TCB *thread_head;//指向进程中的第一个线程
-    unsigned int  num_thread;//线程数量  
-    
     FILE * file;//文件信息
     struct shared_memory* shm;
-
+    struct TCB *thread_head;//指向进程中的第一个线程
+    unsigned int  num_thread;//线程数量  
 };
 
 
@@ -105,12 +103,10 @@ unsigned char get_emptypid();
 PCB *get_pcb_by_pid(unsigned int pid);
 //把一个进程pcb添加到链表末尾
 void add_task(list_pcb* process);
-
 //删除进程
 unsigned int  del_task(unsigned int asid);
 
 int do_fork(context* args,PCB*parent);
-
 pgd_term *copy_pagetables(PCB* child,PCB* parent);
 void print_tasks();
 #endif

@@ -32,9 +32,10 @@ void do_exceptions(unsigned int status, unsigned int cause, context* pt_context)
     // }
 }
 
+
 void die(){while(1);}
 
-void tlb_modified_exception(unsigned int status,unsigned int cause, context* pt_context)
+void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_context)
 {
     unsigned int entry0=0;
     unsigned int badVaddr;
@@ -146,7 +147,8 @@ void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_
 /*  
     if addr>=8000,0000   error   kernel addr can't cause page fault
     if addr<8000,0000    load from file
-*/  pgd_term *pgd;
+*/  
+    pgd_term *pgd;
     pte_term *pte;
     unsigned int badVaddr,phy_addr;
     unsigned int pgd_index,pte_index;
@@ -201,9 +203,6 @@ void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_
         #endif
         del_task(current->asid);
 }
-
-
-
 
 void tlb_refill(){
     pgd_term *pgd;
