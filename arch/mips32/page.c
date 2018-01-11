@@ -85,6 +85,7 @@ unsigned int read_file_to_page(FILE*file,unsigned int start){
         fs_read(file, buffer, CACHE_BLOCK_SIZE);
         kernel_memcpy((void*)(new + j * CACHE_BLOCK_SIZE), buffer, CACHE_BLOCK_SIZE);
         //kernel_cache(new + j * CACHE_BLOCK_SIZE);
+        //kernel_cache(new + j * CACHE_BLOCK_SIZE);
         if((j+1)==PAGE_SIZE/CACHE_BLOCK_SIZE){
             break;//已经读满了一个页的内容
         }

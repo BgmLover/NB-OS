@@ -7,6 +7,7 @@
 #include <zjunix/fs/fat.h>
 #include <zjunix/slub.h>
 #include <zjunix/time.h>
+#include <zjunix/sche.h>
 #include <zjunix/utils.h>
 #include "../usr/ls.h"
 #include "myvi.h"

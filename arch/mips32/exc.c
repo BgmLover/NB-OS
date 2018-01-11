@@ -33,9 +33,11 @@ void do_exceptions(unsigned int status, unsigned int cause, context* pt_context)
 }
 
 
-void die(){while(1);}
+void die(){
+    while(1);
+}
 
-void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_context)
+void tlb_modified_exception(unsigned int status, unsigned int cause, context* pt_context)
 {
     unsigned int entry0=0;
     unsigned int badVaddr;

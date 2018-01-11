@@ -110,40 +110,35 @@ void init_kernel() {
     log(LOG_START, "Process Control Module.");
     //init_pc();
     init_task();
-
-    create_demo();
-
-<<<<<<< HEAD
-    //exec1("/producer.bin");
-
-=======
-
-// exec1("/producer.bin");
-/*
->>>>>>> 27d7f47a9199c777547144ca0b321f36f7d29d00
-    //create_startup_process();
-    //task_test();
-    exec2(pcbs.next->pcb,"/seg.bin");
-    //exec("/seg.bin","789");
     //exec1("/seg.bin");
-    log(LOG_END, "Process Control Module.");\
-    // //shced
-    // log(LOG_START, "Sched.");
-    //init_sched();
+   // exec("/seg.bin","seg_proc");
+
+
+// // exec1("/producer.bin");
+
+//     //create_startup_process();
+//     //task_test();
+//     exec2(pcbs.next->pcb,"/seg.bin");
+//     //exec("/seg.bin","789");
+//     //exec1("/seg.bin");
+//     log(LOG_END, "Process Control Module.");\
+//     // //shced
+    log(LOG_START, "Sched.");
+    init_sched();
     // //create_proc();
     log(LOG_END, "Sched.");
     // // Interrupts
     log(LOG_START, "Enable Interrupts.");
-    //init_interrupts();
-    show_status();
-    log(LOG_END, "Enable Interrupts.");
-    // Init finished
-    machine_info();
+    init_interrupts();
+//     show_status();
+//     log(LOG_END, "Enable Interrupts.");
+//     // Init finished
+//     machine_info();
 
 
-    *GPIO_SEG = 0x78778245;
-    int flag=0;
-    
+//     *GPIO_SEG = 0x78778245;
     // Enter shell
+    kernel_printf("init over!\n");
     while (1);
 }
+

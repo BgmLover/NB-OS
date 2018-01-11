@@ -73,4 +73,6 @@ void insert_tail(list_pcb *task,list_pcb *head);
 void schedule(unsigned int status, unsigned int cause, context* pt_context);
 
 void print_context(context* pt_context);
+
+void print_procs();
 #endif

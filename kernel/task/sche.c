@@ -86,9 +86,6 @@ void test_sched()
     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
     task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 
-<<<<<<< HEAD
-
-=======
     /*kernel_strcpy(proc1->pcb.name, "print_0");
     kernel_strcpy(proc2->pcb.name, "print_2");
 
@@ -131,7 +128,6 @@ void test_sched()
 
     //初始化上下文
     //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
->>>>>>> 27d7f47a9199c777547144ca0b321f36f7d29d00
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
     proc1->pcb.context->epc=(unsigned int)(print_0_fun);
