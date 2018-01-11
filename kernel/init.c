@@ -113,6 +113,7 @@ void init_kernel() {
     //exec1("/seg.bin");
    // exec("/seg.bin","seg_proc");
 
+<<<<<<< HEAD
 
 // // exec1("/producer.bin");
 
@@ -126,14 +127,38 @@ void init_kernel() {
     log(LOG_START, "Sched.");
     init_sched();
     // //create_proc();
+=======
+    //create_demo();
+
+
+// exec1("/producer.bin");
+
+    //create_startup_process();
+    //task_test();
+    //exec2(pcbs.next->pcb,"/seg.bin");
+    //exec("/seg.bin","789");
+    //exec1("/seg.bin");
+    log(LOG_END, "Process Control Module.");\
+    // //shced
+    log(LOG_START, "Sched.");
+    init_sched();
+    //create_proc();
+>>>>>>> a9a8f58588cc8ed0bde9345ac49cdabdb4014e37
     log(LOG_END, "Sched.");
     // // Interrupts
     log(LOG_START, "Enable Interrupts.");
     init_interrupts();
+<<<<<<< HEAD
 //     show_status();
 //     log(LOG_END, "Enable Interrupts.");
 //     // Init finished
 //     machine_info();
+=======
+    //show_status();
+    log(LOG_END, "Enable Interrupts.");
+    // Init finished
+    machine_info();
+>>>>>>> a9a8f58588cc8ed0bde9345ac49cdabdb4014e37
 
 
 //     *GPIO_SEG = 0x78778245;

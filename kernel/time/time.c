@@ -37,7 +37,7 @@ void system_time_proc() {
     unsigned int ticks_high, ticks_low;
     int i;
     char buffer[8];
-    char *day = "01/07/2016 ";
+    char *day = "01/13/2018 ";
     while (1) {
         asm volatile(
             "mfc0 %0, $9, 6\n\t"

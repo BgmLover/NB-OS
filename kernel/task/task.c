@@ -149,6 +149,10 @@ void init_code(){
 //     customer->context->gp=init_gp;
 
 // }
+<<<<<<< HEAD
+=======
+
+>>>>>>> a9a8f58588cc8ed0bde9345ac49cdabdb4014e37
 void init_task()
 {
     int i=0;

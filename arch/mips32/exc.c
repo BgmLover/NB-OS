@@ -37,112 +37,120 @@ void die(){
     while(1);
 }
 
+<<<<<<< HEAD
 void tlb_modified_exception(unsigned int status, unsigned int cause, context* pt_context)
 {
     unsigned int entry0=0;
     unsigned int badVaddr;
     asm volatile("mfc0 %0, $8\n\t" : "=r"(badVaddr));
+=======
+// void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_context)
+// {
+//     unsigned int entry0=0;
+//     unsigned int badVaddr;
+//     asm volatile("mfc0 %0, $8\n\t" : "=r"(badVaddr));
+>>>>>>> a9a8f58588cc8ed0bde9345ac49cdabdb4014e37
 
-    PCB* current =get_current_pcb();
-    pgd_term *pgd=current->pgd;
-    unsigned int pgd_index=badVaddr>>PGD_SHIFT;
-    pgd_index&=INDEX_MASK;
-    unsigned int pte_index=badVaddr>>PTE_SHIFT;
-    pte_index&=INDEX_MASK;
+//     PCB* current =get_current_pcb();
+//     pgd_term *pgd=current->pgd;
+//     unsigned int pgd_index=badVaddr>>PGD_SHIFT;
+//     pgd_index&=INDEX_MASK;
+//     unsigned int pte_index=badVaddr>>PTE_SHIFT;
+//     pte_index&=INDEX_MASK;
 
-    if(!pgd[pgd_index])
-    {
-        kernel_printf("tlb_modified error: The pte equals to 0\n");
-        #ifdef EXCEPTION_DEBUG
-        kernel_printf("die in the tlb_modified\n");
-        die();
-        #endif
-        goto kill;
-    }
-    else if(!is_V(&pgd[pgd_index]))
-    {
-        kernel_printf("tlb_modified error: The pte is invalid\n");
-        #ifdef EXCEPTION_DEBUG
-        kernel_printf("die in the tlb_modified\n");
-        die();
-        #endif
-        goto kill;
-    }
-    else if(!is_W(&pgd[pgd_index]))
-    {
-        kernel_printf("tlb_modified error: The pte can't be written\n");
-        #ifdef EXCEPTION_DEBUG
-        kernel_printf("die in the tlb_modified\n");
-        die();
-        #endif
-        goto kill;
-    }
-    //读取二级页表项中的对应index的内容
-    pte_term *pte=(pte_term*) (pgd[pgd_index]&(~OFFSET_MASK));
-    if(!pte[pte_index])
-    {
-        kernel_printf("tlb_modified error: The phy_addr equals to 0\n");
-        #ifdef EXCEPTION_DEBUG
-        kernel_printf("die in the tlb_modified\n");
-        die();
-        #endif
-        goto kill;
-    }
-    else if(!is_V(&pte[pte_index]))
-    {
-        kernel_printf("tlb_modified error: The phy_addr is invalid\n");
-        #ifdef EXCEPTION_DEBUG
-        kernel_printf("die in the tlb_modified\n");
-        die();
-        #endif
-        goto kill;
-    }
-    pte_term phy_addr=pte[pte_index];
-    struct page *old;
-    old=pages+(phy_addr>>PAGE_SHIFT);
-    if(old->reference==1)
-    {
-        //如果该页只被引用了一次，则将其设置为可写
-        set_W(&phy_addr);
-        goto ok;
-    }
-    else {
-        //重新分配一个物理帧给进程
-        unsigned int *new=kmalloc(PAGE_SIZE);
-        if(!new){
-            kernel_printf("tlb_modified error : failed to malloc for a new page\n");
-        #ifdef EXCEPTION_DEBUG
-        kernel_printf("die in the tlb_modified\n");
-        die();
-        #endif            
-            goto kill;
-        }
-        dec_ref(old,1);
-        kernel_memcpy(new,(void*)(phy_addr&(~OFFSET_MASK)),PAGE_SIZE);
-        pte[pte_index]&=OFFSET_MASK;
-        pte[pte_index]|=(unsigned int )new;
-        set_W(&pte[pte_index]);
-        goto ok;
-    }
+//     if(!pgd[pgd_index])
+//     {
+//         kernel_printf("tlb_modified error: The pte equals to 0\n");
+//         #ifdef EXCEPTION_DEBUG
+//         kernel_printf("die in the tlb_modified\n");
+//         die();
+//         #endif
+//         goto kill;
+//     }
+//     else if(!is_V(&pgd[pgd_index]))
+//     {
+//         kernel_printf("tlb_modified error: The pte is invalid\n");
+//         #ifdef EXCEPTION_DEBUG
+//         kernel_printf("die in the tlb_modified\n");
+//         die();
+//         #endif
+//         goto kill;
+//     }
+//     else if(!is_W(&pgd[pgd_index]))
+//     {
+//         kernel_printf("tlb_modified error: The pte can't be written\n");
+//         #ifdef EXCEPTION_DEBUG
+//         kernel_printf("die in the tlb_modified\n");
+//         die();
+//         #endif
+//         goto kill;
+//     }
+//     //读取二级页表项中的对应index的内容
+//     pte_term *pte=(pte_term*) (pgd[pgd_index]&(~OFFSET_MASK));
+//     if(!pte[pte_index])
+//     {
+//         kernel_printf("tlb_modified error: The phy_addr equals to 0\n");
+//         #ifdef EXCEPTION_DEBUG
+//         kernel_printf("die in the tlb_modified\n");
+//         die();
+//         #endif
+//         goto kill;
+//     }
+//     else if(!is_V(&pte[pte_index]))
+//     {
+//         kernel_printf("tlb_modified error: The phy_addr is invalid\n");
+//         #ifdef EXCEPTION_DEBUG
+//         kernel_printf("die in the tlb_modified\n");
+//         die();
+//         #endif
+//         goto kill;
+//     }
+//     pte_term phy_addr=pte[pte_index];
+//     struct page *old;
+//     old=pages+(phy_addr>>PAGE_SHIFT);
+//     if(old->reference==1)
+//     {
+//         //如果该页只被引用了一次，则将其设置为可写
+//         set_W(&phy_addr);
+//         goto ok;
+//     }
+//     else {
+//         //重新分配一个物理帧给进程
+//         unsigned int *new=kmalloc(PAGE_SIZE);
+//         if(!new){
+//             kernel_printf("tlb_modified error : failed to malloc for a new page\n");
+//         #ifdef EXCEPTION_DEBUG
+//         kernel_printf("die in the tlb_modified\n");
+//         die();
+//         #endif            
+//             goto kill;
+//         }
+//         dec_ref(old,1);
+//         kernel_memcpy(new,(void*)(phy_addr&(~OFFSET_MASK)),PAGE_SIZE);
+//         pte[pte_index]&=OFFSET_MASK;
+//         pte[pte_index]|=(unsigned int )new;
+//         set_W(&pte[pte_index]);
+//         goto ok;
+//     }
 
-    kill:
-        //kill current pc
-        #ifdef EXCEPTION_DEBUG
-        kernel_printf("die in the tlb_invalid\n");
-        die();
-        #endif
-        del_task(current->asid);
-        return ;
-    ok:
-        entry0=pt2pfn(pte[pte_index]);
-        asm volatile(
-        "mtc0 %0, $2\n\t"
-        "nop\n\t"
-        "nop\n\t"
-        "tlbwi\n\t"
-        :
-        : "r"(entry0));
-}
+//     kill:
+//         //kill current pc
+//         #ifdef EXCEPTION_DEBUG
+//         kernel_printf("die in the tlb_invalid\n");
+//         die();
+//         #endif
+//         del_task(current->asid);
+//         return ;
+//     ok:
+//         entry0=pt2pfn(pte[pte_index]);
+//         asm volatile(
+//         "mtc0 %0, $2\n\t"
+//         "nop\n\t"
+//         "nop\n\t"
+//         "tlbwi\n\t"
+//         :
+//         : "r"(entry0));
+// }
 //page fault
 void tlb_invalid_exception(unsigned int status, unsigned int cause, context* pt_context)
 {
