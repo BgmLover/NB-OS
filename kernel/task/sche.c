@@ -80,58 +80,12 @@ void sched_example()
     current=get_first_task(&high_list);
 
 }
-/*
+
 void test_sched()
 {
     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
     task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 
-<<<<<<< HEAD
-
-=======
-    /*kernel_strcpy(proc1->pcb.name, "print_0");
-    kernel_strcpy(proc2->pcb.name, "print_2");
-
-    proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
-    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
-
-    clean_context(proc1->pcb.context);
-    clean_context(proc2->pcb.context);
-
-    proc1->pcb.counter=HIGH_TIMESLICES;
-    proc2->pcb.counter=HIGH_TIMESLICES;
-
-    proc1->pcb.priority=HIGH_PRIORITY;
-    proc2->pcb.priority=ABOVE_NORMAL_PRIORITY;
-	
-    proc1->pcb.asid = (unsigned char)66;
-    proc2->pcb.asid = (unsigned char)77;
-
-    proc1->pcb.state=STATE_READY;
-    proc2->pcb.state=STATE_READY;
-
-    proc1->pcb.context->a0=1;
-    proc2->pcb.context->a1=0;
-    //proc1->pcb.context->epc=(unsigned int)(&print_0_fun);
-    //proc2->pcb.context->epc=(unsigned int)(&print_2_fun);
-
-    add_task(&(proc1->pcb.process));
-    add_task(&(proc2->pcb.process));
-
-    INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
-    INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
-    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
-    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
-
-    //kernel_printf("stop\n");
-    //while(1);
-
-    //list_pcb_add_tail(&(proc1->pcb.process),&(proc1->pcb.sched));
-    //list_pcb_add_tail(&(proc2->pcb.process),&(proc2->pcb.sched));
-
-    //初始化上下文
-    //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
->>>>>>> 27d7f47a9199c777547144ca0b321f36f7d29d00
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
     proc1->pcb.context->epc=(unsigned int)(print_0_fun);
@@ -219,18 +173,12 @@ void test_sched()
     add_task(&(proc2->pcb.process));//娣诲姞鍒皃cb閾捐〃涓?
     proc2->pcb.state=STATE_RUNNING;
 
-    // kernel_printf("stop\n");
-    // while(1);
-    //add_to_foreground_list(&(proc1->pcb.process));
-    //current=&(proc1->pcb.process);
-    //add_to_background_list(&(proc2->pcb.process));
-    //add_to_background_list(&(proc1->pcb.process));
     list_pcb_add_tail(&(proc2->pcb.process),&high_list);
     list_pcb_add_tail(&(proc1->pcb.process),&high_list);
 
-    int pid3=exec("/seg.bin","1234");
-    task_union *proc3=(task_union*)get_pcb_by_pid(pid3);
-    kernel_printf("current name :  %s\n",current->pcb->name);
+    // int pid3=exec("/seg.bin","1234");
+    // task_union *proc3=(task_union*)get_pcb_by_pid(pid3);
+    // kernel_printf("current name :  %s\n",current->pcb->name);
     list_pcb *pos;
     for(pos=background_list.next;pos!=&background_list;pos=pos->next)
         kernel_printf("back name :  %s\n",pos->pcb->name);
@@ -238,7 +186,7 @@ void test_sched()
         kernel_printf("fore name :  %s\n",pos->pcb->name);
         
 }
-*/
+
 
 
 void init_sched()
@@ -269,13 +217,13 @@ void init_sched()
     next_list=&background_list;
 
     kernel_printf("test sched begin!\n");
-    // test_sched();
+    test_sched();
     kernel_printf("Add process complete!\n");
     //register_syscall(10, pc_kill_syscall);
     register_interrupt_handler(7, schedule);
 
     asm volatile(
-        "li $v0, 30000000\n\t"
+        "li $v0, 10000000\n\t"
         "mtc0 $v0, $11\n\t"
         "mtc0 $zero, $9");
 }
@@ -359,46 +307,6 @@ unsigned int background_sched()
     }
     return 0;
 }
-// unsigned int background_sched()
-// {//閲嶆柊淇敼杩囷紝寰呰皟璇?
-//     kernel_printf("background sched begin\n");
-//     list_pcb *next;
-//     list_pcb *old;
-
-//     if(list_is_empty(&background_list))
-//     {
-//         kernel_printf("No process background\n");
-//         //鍒囨崲鍒板墠鍙扮姸鎬?
-//         flag=1;
-//         counter=FOREGROUNG_TIMESLICES;
-//         kernel_printf("current state timeslices is %d\n",counter);
-//         kernel_printf("current state is %d\n",flag);
-//         goto background_sched_error;
-//     }
-    
-//     next=get_first_task(&background_list);
-//     kernel_printf("get next\n");
-
-//     if(next!=current)
-//     {
-//         kernel_printf("next != current\n");
-//         kernel_printf("next is %s\n",next->pcb->name);
-//         //old=current;
-//         current=next;
-//         current->pcb->state=STATE_RUNNING;
-//         //old->pcb->state=STATE_READY;
-//         //old->pcb->counter=BACKGROUND_PER_TIMESLICES;
-//         //init_pcb_list(current);    
-//     }
-//     else
-//         current->pcb->counter=BACKGROUND_PER_TIMESLICES;
-//     kernel_printf("current state timeslices is %d\n",current->pcb->counter);
-
-//     return 0;
-
-// background_sched_error:
-//     return 1;  
-// }
 
 //鍓嶅彴杩涚▼璋冨害
 unsigned int foreground_sched()
@@ -541,13 +449,13 @@ void print_procs()
     kernel_printf("foreground\n");
     if(flag==1)
     {
-        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->state);
+        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->counter);
     }
     if(!list_is_empty(&high_list))
     {
         for(pos=high_list.next;pos!=&high_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
             //while(1);
         }
     }
@@ -555,7 +463,7 @@ void print_procs()
     {
         for(pos=above_normal_list.next;pos!=&above_normal_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
             //while(1);
         }
     }
@@ -563,7 +471,7 @@ void print_procs()
     {
         for(pos=normal_list.next;pos!=&normal_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
             //while(1);
         }
     }
@@ -571,7 +479,7 @@ void print_procs()
     {
         for(pos=below_normal_list.next;pos!=&below_normal_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
             //while(1);
         }
     }
@@ -579,7 +487,7 @@ void print_procs()
     {
         for(pos=idle_list.next;pos!=&idle_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
             //while(1);
         }
     }
@@ -587,11 +495,50 @@ void print_procs()
     kernel_printf("background\n");
     if(flag==0)
     {
-        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->state);
+        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->counter);
     }
     for(pos=background_list.next;pos!=&background_list;pos=pos->next)
     {
-        kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
+        kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
         //while(1);
     }
+}
+
+void creat_time()
+{
+    task_union* time_proc=( task_union*)kmalloc(PAGE_SIZE);
+    time_proc->pcb.context=(context*)((unsigned int)time_proc+sizeof(PCB));
+    clean_context(time_proc->pcb.context);
+    time_proc->pcb.context->epc=(unsigned int)(system_time_proc);
+    time_proc->pcb.context->sp=(unsigned int)time_proc+PAGE_SIZE;
+    unsigned int init_gp;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    time_proc->pcb.context->gp=init_gp;
+    time_proc->pcb.asid=get_emptypid();
+    if(time_proc->pcb.asid<0){
+        kernel_printf("failed to get right asid\n");   
+        return;
+    }
+    time_proc->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//鍒嗛厤椤电洰褰曠┖闂?
+    if(time_proc->pcb.pgd==NULL)
+    {
+        kernel_printf("failed to kmalloc space for pgd\n");
+        return;
+    }
+    //鍒濆鍖杙gd姣忎竴椤?
+    int i=0;
+    for(i=0;i<PAGE_SIZE>>2;i++)
+    {
+        (time_proc->pcb.pgd)[i]=0;
+    }
+    //璁剧疆pgd灞炴€т负榛樿灞炴€р€斺€斿彲鍐?
+    kernel_strcpy(time_proc->pcb.name, "time");
+
+    INIT_LIST_PCB(&time_proc->pcb.sched,&(time_proc->pcb));
+    INIT_LIST_PCB(&time_proc->pcb.process,&(time_proc->pcb));
+    //鏆備笉鑰冭檻绾跨▼
+    
+    //add_task(&(proc1->pcb.process));//娣诲姞鍒皃cb閾捐〃涓?
+    time_proc->pcb.state=STATE_RUNNING;
+    add_to_background_list(&(time_proc->pcb.sched));
 }
