@@ -86,51 +86,6 @@ void test_sched()
     task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
     task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
 
-<<<<<<< HEAD
-    /*kernel_strcpy(proc1->pcb.name, "print_0");
-    kernel_strcpy(proc2->pcb.name, "print_2");
-
-    proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
-    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
-
-    clean_context(proc1->pcb.context);
-    clean_context(proc2->pcb.context);
-
-    proc1->pcb.counter=HIGH_TIMESLICES;
-    proc2->pcb.counter=HIGH_TIMESLICES;
-
-    proc1->pcb.priority=HIGH_PRIORITY;
-    proc2->pcb.priority=ABOVE_NORMAL_PRIORITY;
-	
-    proc1->pcb.asid = (unsigned char)66;
-    proc2->pcb.asid = (unsigned char)77;
-
-    proc1->pcb.state=STATE_READY;
-    proc2->pcb.state=STATE_READY;
-
-    proc1->pcb.context->a0=1;
-    proc2->pcb.context->a1=0;
-    //proc1->pcb.context->epc=(unsigned int)(&print_0_fun);
-    //proc2->pcb.context->epc=(unsigned int)(&print_2_fun);
-
-    add_task(&(proc1->pcb.process));
-    add_task(&(proc2->pcb.process));
-
-    INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
-    INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
-    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
-    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
-
-    //kernel_printf("stop\n");
-    //while(1);
-
-    //list_pcb_add_tail(&(proc1->pcb.process),&(proc1->pcb.sched));
-    //list_pcb_add_tail(&(proc2->pcb.process),&(proc2->pcb.sched));
-
-    //初始化上下文
-    //init->pcb.context=(context*)(init+PAGE_SIZE-(sizeof(context)));
-=======
->>>>>>> cc1e4358d308d5af25dc6ba316b79c9d0044b39d
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
     proc1->pcb.context->epc=(unsigned int)(print_0_fun);
