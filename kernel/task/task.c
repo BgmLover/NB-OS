@@ -770,6 +770,7 @@ int exec2(PCB *task,char* filename){
     
     // fopen操作
     int result = fs_open(task->file, filename);
+    kernel_printf("result=%d\n",result);
     if (result != 0) {
         kfree(task->file);
         delete_pagetables(task);

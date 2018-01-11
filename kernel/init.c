@@ -108,12 +108,12 @@ void init_kernel() {
     // create_demo();
 kernel_printf("ok\n");
 
-exec1("/producer.bin");
+// exec1("/producer.bin");
 
-/*
+
     //create_startup_process();
-    //task_test();
-    //exec2(pcbs.next->pcb,"/seg.bin");
+    task_test();
+    exec2(pcbs.next->pcb,"/producer.bin");
     //exec("/seg.bin","789");
     //exec1("/seg.bin");
     log(LOG_END, "Process Control Module.");\
@@ -133,7 +133,7 @@ exec1("/producer.bin");
 
     *GPIO_SEG = 0x78778245;
     int flag=0;
-    */
+    
     // Enter shell
     while (1);
 }
