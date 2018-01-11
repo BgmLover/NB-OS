@@ -7,6 +7,7 @@
 #include <zjunix/list_pcb.h>
 #include <zjunix/syscall.h>
 #include <zjunix/utils.h>
+#include <zjunix/shm.h>
 #include <debug.h>
 #include <arch.h>
 #include <../usr/ps.h>
@@ -31,7 +32,53 @@ void print_0_fun()
     //     kernel_printf(" 0 ");
     // }
 }
+void producer(){
+    char data;
+    unsigned int offset = 0;
+    struct shared_memory* shm;
+    PCB* producer_pcb = get_current_pcb();
+    kernel_printf("pid:%d\n",producer_pcb->asid);
+    kernel_printf("PCB:%x\n",(unsigned int)producer_pcb);
+    // while(1);
 
+	shm = shm_get(producer_pcb);
+    kernel_printf("shm=%x\n",(unsigned int)(producer_pcb->shm));
+
+    // write 26 letters
+    data='a';
+    
+    for(data = 'a';data<='z';data++){
+        shm_write(producer_pcb,offset,data);
+        offset++;
+        kernel_printf("producer write:%c\n",data);
+    }
+    while(1);
+    
+}
+void customer(){
+    char data;
+    unsigned int offset=0;
+    int flag;
+    int i;
+    PCB* customer_pcb = get_current_pcb();
+    shm_mount(2,customer_pcb);
+
+    // kernel_printf("cus shm=%x\n",(unsigned int)(customer_pcb->shm));
+
+    for(i = 0; i<30; i++){
+        data = shm_read(customer_pcb, offset);
+        
+        if(data!=0){
+            offset++;
+            kernel_printf("customer read:%c\n", data);
+        }
+        else{
+            kernel_printf("Shm empty!\n");
+        }
+        
+    }
+    while(1);
+}
 void print_2_fun()
 {
     int i=0;
@@ -88,7 +135,7 @@ void test_sched()
 
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
-    proc1->pcb.context->epc=(unsigned int)(print_0_fun);
+    proc1->pcb.context->epc=(unsigned int)(producer);
     proc1->pcb.context->sp=(unsigned int)proc1+PAGE_SIZE;
     unsigned int init_gp;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
@@ -133,7 +180,7 @@ void test_sched()
 
     proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
     clean_context(proc2->pcb.context);
-    proc2->pcb.context->epc=(unsigned int)(ps);
+    proc2->pcb.context->epc=(unsigned int)(customer);
     proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
     proc2->pcb.context->gp=init_gp;
@@ -173,8 +220,11 @@ void test_sched()
     add_task(&(proc2->pcb.process));//娣诲姞鍒皃cb閾捐〃涓?
     proc2->pcb.state=STATE_RUNNING;
 
-    list_pcb_add_tail(&(proc2->pcb.process),&high_list);
     list_pcb_add_tail(&(proc1->pcb.process),&high_list);
+    list_pcb_add_tail(&(proc2->pcb.process),&high_list);
+    // add_to_background_list(&(proc1->pcb.process));
+    // add_to_background_list(&(proc2->pcb.process));
+    
 
     // int pid3=exec("/seg.bin","1234");
     // task_union *proc3=(task_union*)get_pcb_by_pid(pid3);

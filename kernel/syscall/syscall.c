@@ -144,7 +144,7 @@ void syscall_printf_3(unsigned int status, unsigned int cause, context* pt_conte
     const char* format = (const char*)pt_context->a0;
     va_list ap = (va_list)pt_context->a1;
 
-kernel_printf("format=%x,ap=%x\n",format,ap);
+// kernel_printf("format=%x,ap=%x\n",format,ap);
     cnt = kernel_vprintf(format, ap);
     va_end(ap);
 }

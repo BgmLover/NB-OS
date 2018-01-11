@@ -1,16 +1,13 @@
 #include "producer.h"
 
 void producer(){
-    
+    /*
     char data;
     unsigned int offset = 0;
     struct shared_memory* shm;
     
     uprintf("%d\n", 4321);
-    /*
-    producer_pcb = (PCB*)get_current_pcb(); // need implement
-    uprintf("%x\n",producer_pcb);
-    */
+    
     
 	shm = c_shm_test();
     uprintf("%x\n", (unsigned int)shm);
@@ -31,6 +28,8 @@ void producer(){
     while(1){
 
     }
-    
+    */
+    // uputs("This is a user program.\n",0xf0,0);
+    uprintf("This is a user program.\n");
     
 }
