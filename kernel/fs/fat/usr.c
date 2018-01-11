@@ -160,6 +160,59 @@ u32 fs_cat(u8 *path) {
     buf[file_size] = 0;
     kernel_printf("%s\n", buf);
     fs_close(&cat_file);
-    kfree(buf);
+    //kfree(buf);
+    return 0;
+}
+
+//str之后加上param
+void append_dir(char *nowdir,char *newdir,char *param)
+{
+    int i=0;
+        
+    for(i=0;i<64;i++)
+        newdir[i]=0;
+    i=0;
+    while(nowdir[i]!=0){
+        newdir[i]=nowdir[i];
+        ++i;
+    }
+    int j=0;
+    while(param[j]){
+        newdir[i]=param[j];
+        ++i;
+        ++j;
+    }
+}
+
+u32 fs_touch(u8 *filename)
+{
+    if(fs_create(filename) == 1)
+        goto fs_touch_error;
+        return 0;
+fs_touch_error:
+        return 1;
+}
+    
+u32 fs_makedir(u8 *filename)
+{
+    if(fs_mkdir(filename) == 1)
+        goto fs_touch_error;
+        return 0;
+fs_touch_error:
+        return 1;
+}
+
+u32 fs_remove(u8 *filename)
+{
+    if(fs_rm(filename) == 1)
+        return 1;
+    else
+        return 0;
+}
+    
+u32 fs_changedir(u8 *newdir,u8 *nowdir,u8 *param)
+{
+    append_dir(nowdir,newdir,param);
+    kernel_memcpy(nowdir,newdir,64*sizeof(char));
     return 0;
 }

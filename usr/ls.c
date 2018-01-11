@@ -1,6 +1,7 @@
 #include <driver/vga.h>
 #include <zjunix/fs/fat.h>
 
+//删除掉空格
 char *cut_front_blank(char *str) {
     char *s = str;
     unsigned int index = 0;
@@ -14,12 +15,13 @@ char *cut_front_blank(char *str) {
         return str;
 
     while (*s) {
+        //覆盖掉前面的空格
         *(s - index) = *s;
         ++s;
     }
 
     --s;
-    *s = 0;
+    *s = 0;//最后一位写成0
 
     return str;
 }
@@ -73,6 +75,10 @@ readdir:
             get_filename((unsigned char *)&entry, name);
             if (entry.attr == 0x10)  // sub dir
                 kernel_printf("%s/", name);
+            else if(entry.attr == 0xE5)
+            {
+                kernel_printf("has deleted");
+            } 
             else
                 kernel_printf("%s", name);
             kernel_printf("\n");

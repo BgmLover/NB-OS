@@ -111,31 +111,26 @@ void init_kernel() {
     //init_pc();
     init_task();
 
-    create_demo();
+    //create_demo();
 
-<<<<<<< HEAD
-    //exec1("/producer.bin");
-
-=======
 
 // exec1("/producer.bin");
-/*
->>>>>>> 27d7f47a9199c777547144ca0b321f36f7d29d00
+
     //create_startup_process();
     //task_test();
-    exec2(pcbs.next->pcb,"/seg.bin");
+    //exec2(pcbs.next->pcb,"/seg.bin");
     //exec("/seg.bin","789");
     //exec1("/seg.bin");
     log(LOG_END, "Process Control Module.");\
     // //shced
-    // log(LOG_START, "Sched.");
-    //init_sched();
-    // //create_proc();
+    log(LOG_START, "Sched.");
+    init_sched();
+    //create_proc();
     log(LOG_END, "Sched.");
     // // Interrupts
     log(LOG_START, "Enable Interrupts.");
-    //init_interrupts();
-    show_status();
+    init_interrupts();
+    //show_status();
     log(LOG_END, "Enable Interrupts.");
     // Init finished
     machine_info();

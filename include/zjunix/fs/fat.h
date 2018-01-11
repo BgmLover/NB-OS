@@ -150,5 +150,14 @@ u32 get_entry_filesize(u8 *entry);
 
 u32 get_entry_attr(u8 *entry);
 
+void append_dir(char *nowdir,char *newdir,char *param);
+
+u32 fs_touch(u8 *filename);
+    
+u32 fs_makedir(u8 *filename);
+
+u32 fs_remove(u8 *filename);
+    
+u32 fs_changedir(u8 *newdir,u8 *nowdir,u8 *param);
 
 #endif  // !_ZJUNIX_FS_FAT_H
