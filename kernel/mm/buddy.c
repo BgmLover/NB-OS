@@ -108,6 +108,7 @@ void buddy_free_pages(struct page* page, unsigned int order){
         page_idx = combined_idx;
         ++order;
     }*/
+    //寻找伙伴页，判断是否可以合并
     page_idx = page-buddy.start_page; // current page index
     while(order<MAX_BUDDY_ORDER){
         buddy_idx = page_idx^(1<<order); // the index of its buddy
@@ -121,19 +122,20 @@ void buddy_free_pages(struct page* page, unsigned int order){
         }
         list_del_init(&buddy_page->list);
         --buddy.freelist[order].nr_free;
-        set_bplevel(buddy_page, -1);
+        set_bplevel(buddy_page, -1); // 将块中除第一个页之外的页，order设置为-1
         combined_idx = buddy_idx & page_idx; // new page addr = small one among two blocks
         page += (combined_idx - page_idx);
         page_idx = combined_idx;
         ++order;
     }
     // set_bplevel(page, order);
-    page->bplevel = order;
+    page->bplevel = order; // 设置阶数
     list_add(&(page->list), &(buddy.freelist[order].free_head)); //add to the head of list
     ++buddy.freelist[order].nr_free;
     unlock(&buddy.lock);
 }
 
+// 分配页
 struct page* buddy_alloc_pages(unsigned int order){
     unsigned int current_order, size;
     struct page* page, *buddy_page;
@@ -143,7 +145,7 @@ struct page* buddy_alloc_pages(unsigned int order){
 
     for(current_order = order; current_order<=MAX_BUDDY_ORDER; ++current_order){
         free = buddy.freelist + current_order;
-        if(!list_empty(&free->free_head)) goto found;
+        if(!list_empty(&free->free_head)) goto found;//如果当前链表里没找到，就向上找，找到一个能用的高阶块
     }
 
     unlock(&buddy.lock);
