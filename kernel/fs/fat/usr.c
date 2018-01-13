@@ -216,3 +216,20 @@ u32 fs_changedir(u8 *newdir,u8 *nowdir,u8 *param)
     kernel_memcpy(nowdir,newdir,64*sizeof(char));
     return 0;
 }
+
+u32 fs_prev_dir(u8 *nowdir)
+{
+    u8 *p;
+    p=&nowdir[59];
+    while(*p==0)
+    {
+        p--;   
+    }
+    while(*p!='/')
+    {
+        *p=0;
+        p--;
+    }
+    *p=0;
+    return 0;
+}
