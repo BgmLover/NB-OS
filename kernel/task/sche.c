@@ -145,26 +145,26 @@ void test_sched()
         kernel_printf("failed to get right asid\n");   
         return;
     }
-    proc1->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
+    proc1->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
     if(proc1->pcb.pgd==NULL)
     {
         kernel_printf("failed to kmalloc space for pgd\n");
         return;
     }
-    //初始化pgd每一�?
+    //初始化pgd每一�?
     int i=0;
     for(i=0;i<PAGE_SIZE>>2;i++)
     {
         (proc1->pcb.pgd)[i]=0;
     }
-    //设置pgd属��为默认属������可�?
+    //设置pgd属��为默认属������可�?
     kernel_strcpy(proc1->pcb.name, "print_0");
-    proc1->pcb.parent=0;//init没有父进�?
+    proc1->pcb.parent=0;//init没有父进�?
     proc1->pcb.uid=0;
     proc1->pcb.counter=DEFAULT_TIMESLICES;
     proc1->pcb.start_time=0;//get_time();
     proc1->pcb.state=STATE_WAITTING;
-    proc1->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
+    proc1->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
     proc1->pcb.policy=0;//暂未定义调度算法
     proc1->pcb.shm=NULL; //shared memory
 
@@ -173,7 +173,7 @@ void test_sched()
     //暂不考虑线程
     proc1->pcb.thread_head=NULL;
     proc1->pcb.num_thread=0;
-    add_task(&(proc1->pcb.process));//添加到pcb链表�?
+    add_task(&(proc1->pcb.process));//添加到pcb链表�?
     //print_tasks();
     proc1->pcb.state=STATE_RUNNING;
 
@@ -189,25 +189,25 @@ void test_sched()
         kernel_printf("failed to get right asid\n");   
         return;
     }
-    proc2->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
+    proc2->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
     if(proc2->pcb.pgd==NULL)
     {
         kernel_printf("failed to kmalloc space for pgd\n");
         return;
     }
-    //初始化pgd每一�?
+    //初始化pgd每一�?
     for(i=0;i<PAGE_SIZE>>2;i++)
     {
         (proc2->pcb.pgd)[i]=0;
     }
-    //设置pgd属��为默认属������可�?
+    //设置pgd属��为默认属������可�?
     kernel_strcpy(proc2->pcb.name, "ps");
-    proc2->pcb.parent=0;//init没有父进�?
+    proc2->pcb.parent=0;//init没有父进�?
     proc2->pcb.uid=0;
     proc2->pcb.counter=DEFAULT_TIMESLICES;
     proc2->pcb.start_time=0;//get_time();
     proc2->pcb.state=STATE_WAITTING;
-    proc2->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
+    proc2->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
     proc2->pcb.policy=0;//暂未定义调度算法
     proc2->pcb.shm=NULL; //shared memory
 
@@ -217,19 +217,11 @@ void test_sched()
     proc2->pcb.thread_head=NULL;
     proc2->pcb.num_thread=0;
 
-    add_task(&(proc2->pcb.process));//添加到pcb链表�?
+    add_task(&(proc2->pcb.process));//添加到pcb链表�?
     proc2->pcb.state=STATE_RUNNING;
 
-<<<<<<< HEAD
     list_pcb_add_tail(&(proc2->pcb.sched),&high_list);
     list_pcb_add_tail(&(proc1->pcb.sched),&high_list);
-=======
-    list_pcb_add_tail(&(proc1->pcb.process),&high_list);
-    list_pcb_add_tail(&(proc2->pcb.process),&high_list);
-    // add_to_background_list(&(proc1->pcb.process));
-    // add_to_background_list(&(proc2->pcb.process));
-    
->>>>>>> 1808a68fc4df79f6ce6d56142db82b115754ef72
 
     // int pid3=exec("/seg.bin","1234");
     // task_union *proc3=(task_union*)get_pcb_by_pid(pid3);
@@ -245,7 +237,7 @@ void test_sched()
 
 
 void init_sched()
-{//未完�?
+{//未完�?
     kernel_printf("begin\n");
     //初始化各队列
     INIT_LIST_PCB(&background_list,NULL);
@@ -260,13 +252,13 @@ void init_sched()
     kernel_printf("List init complete!\n");
     //#endif
     
-    //初始情况为前台队列进�?
+    //初始情况为前台队列进�?
     flag=1;
     counter=FOREGROUNG_TIMESLICES;
     
     kernel_printf("Timeslices complete!\n");
      
-    //把init进程放在后台队列�?
+    //把init进程放在后台队列�?
     current=&(pcbs.next->pcb->sched);
     //add_to_background_list(current);
     next_list=&background_list;
@@ -309,7 +301,7 @@ void schedule(unsigned int status, unsigned int cause, context* pt_context) {
     //kernel_printf("set time\n");
 }
 
-//初始化队�?
+//初始化队�?
 void init_list(list_pcb *list)
 {
     list->prev=list;
@@ -325,7 +317,7 @@ unsigned int list_is_empty(list_pcb *list)
         return 0;
 }
 
-//取队列中的第丢�个进�?并将其从队列中删�?
+//取队列中的第丢�个进�?并将其从队列中删�?
 list_pcb *get_first_task(list_pcb *list)
 {
     list_pcb *task;
@@ -365,7 +357,7 @@ unsigned int background_sched()
     current->pcb->counter=BACKGROUND_PER_TIMESLICES;
     current->pcb->state=STATE_RUNNING;
     if(current==NULL)
-    {//后台队列为空，切换到前台状��?
+    {//后台队列为空，切换到前台状��?
        flag==1; 
        counter=FOREGROUNG_TIMESLICES;
     }
@@ -424,7 +416,7 @@ unsigned int foreground_sched()
         current->pcb->priority=IDLE_PRIORITY;
     }
     else
-    {//前台队列为空，转换状�?
+    {//前台队列为空，转换状�?
         flag=0;
         counter=BACKGROUND_TIMESLICES;
     }
@@ -457,31 +449,31 @@ unsigned int sched()
         {//前后台状态时间片用完
             if(flag==1)
             {
-                //把current放入到��当的队列中，并且更新pcb中sched�?
+                //把current放入到��当的队列中，并且更新pcb中sched�?
                 list_pcb_add_tail(current,next_list);
                 current->pcb->sched=*current; 
                 current->pcb->state=STATE_READY;
                 
-                //切换状��，执行调度
+                //切换状��，执行调度
                 flag=0;
                 counter=BACKGROUND_TIMESLICES;
                 background_sched();
             }
             else
             {
-                //将当前进程放回到后台调度队列�?
+                //将当前进程放回到后台调度队列�?
                 list_pcb_add_tail(current,&background_list);
                 current->pcb->sched=*current;
                 current->pcb->state=STATE_READY;
                 
-                //切换状��，执行调度
+                //切换状��，执行调度
                 flag=1;
                 counter=FOREGROUNG_TIMESLICES;
                 foreground_sched();
             }
         }
         else if((--(current->pcb->counter))==0)
-        {//程序时间片用�?
+        {//程序时间片用�?
             if(flag==1)
             {
                 list_pcb_add_tail(current,next_list);
@@ -583,26 +575,26 @@ void creat_time()
         kernel_printf("failed to get right asid\n");   
         return;
     }
-    time_proc->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
+    time_proc->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
     if(time_proc->pcb.pgd==NULL)
     {
         kernel_printf("failed to kmalloc space for pgd\n");
         return;
     }
-    //初始化pgd每一�?
+    //初始化pgd每一�?
     int i=0;
     for(i=0;i<PAGE_SIZE>>2;i++)
     {
         (time_proc->pcb.pgd)[i]=0;
     }
-    //设置pgd属��为默认属������可�?
+    //设置pgd属��为默认属������可�?
     kernel_strcpy(time_proc->pcb.name, "time");
 
     INIT_LIST_PCB(&time_proc->pcb.sched,&(time_proc->pcb));
     INIT_LIST_PCB(&time_proc->pcb.process,&(time_proc->pcb));
     //暂不考虑线程
     
-    //add_task(&(proc1->pcb.process));//添加到pcb链表�?
+    //add_task(&(proc1->pcb.process));//添加到pcb链表�?
     time_proc->pcb.state=STATE_RUNNING;
     add_to_background_list(&(time_proc->pcb.sched));
 }
