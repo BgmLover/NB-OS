@@ -116,8 +116,8 @@ void init_kernel() {
 
 
     //create_startup_process();
-    task_test();
-    exec2(pcbs.next->pcb,"/producer.bin");
+    // task_test();
+    // exec2(pcbs.next->pcb,"/producer.bin");
     //exec("/seg.bin","789");
     //exec1("/seg.bin");
     // log(LOG_END, "Process Control Module.");\
