@@ -163,7 +163,7 @@ void* kmalloc(unsigned int size){
 			temp_size >>= 1;
 		}
 
-kernel_printf("temp_order=%d\n", temp_order);
+// kernel_printf("temp_order=%d\n", temp_order);
         page = buddy_alloc_pages(temp_order);
         return (void*)(KERNEL_ENTRY|(unsigned int)((page-pages)<<PAGE_SHIFT));
     }

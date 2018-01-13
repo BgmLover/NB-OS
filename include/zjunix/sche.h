@@ -51,7 +51,7 @@ unsigned int sched();
 
 //取就绪队列中的第一个进程
 list_pcb *get_first_task(list_pcb *task);
-
+list_pcb *get_init_task(list_pcb *task);
 //将进程添加到后台就绪队列
 void add_to_background_list(list_pcb *task);
 
@@ -72,14 +72,8 @@ void insert_tail(list_pcb *task,list_pcb *head);
 //调度函数
 void schedule(unsigned int status, unsigned int cause, context* pt_context);
 
-<<<<<<< HEAD
-void print_context(context* pt_context);
-
-void print_procs();
-=======
 void print_procs();
 
 void creat_time();
 
->>>>>>> a9a8f58588cc8ed0bde9345ac49cdabdb4014e37
 #endif

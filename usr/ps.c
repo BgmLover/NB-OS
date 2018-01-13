@@ -12,7 +12,7 @@
 #include <zjunix/sche.h>
 #include "../usr/ls.h"
 #include "myvi.h"
-#include "exec.h"
+
 
 char ps_buffer[64];
 int ps_buffer_index;
@@ -162,7 +162,17 @@ void parse_cmd() {
         result = myvi(param);
         kernel_printf("vi return with %d\n", result);
      } else if (kernel_strcmp(ps_buffer, "exec") == 0) {
-         //result = exec2(param);
+         char *filename,*taskname;
+         for (i = 0; i < 63; i++) {
+            if (param[i] == ' ') {
+            param[i] = 0;
+            filename=param;
+            taskname=param+i+1;
+            break;
+        }
+    }
+         result = exec(filename,taskname);
+        //  exec2(pcbs.next->pcb,"/seg.bin");
          kernel_printf("exec return with %d\n", result);
      } 
     else if(kernel_strcmp(ps_buffer,"touch") == 0){
@@ -192,6 +202,9 @@ void parse_cmd() {
     }else if(kernel_strcmp(ps_buffer,"pwd") == 0){
         kernel_printf("current dir %s\n",nowdir);
         //kernel_printf("rm return with %d\n", result);
+    }else if(kernel_strcmp(ps_buffer,"pts") == 0){
+        print_tasks();
+        //kernel_printf("rm return with %d\n", result);        
     }else{
         kernel_puts(ps_buffer, 0xfff, 0);
         kernel_puts(": command not found\n", 0xfff, 0);

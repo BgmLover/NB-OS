@@ -110,24 +110,11 @@ void init_kernel() {
     log(LOG_START, "Process Control Module.");
     //init_pc();
     init_task();
+
+    print_tasks();
     //exec1("/seg.bin");
    // exec("/seg.bin","seg_proc");
 
-<<<<<<< HEAD
-
-// // exec1("/producer.bin");
-
-//     //create_startup_process();
-//     //task_test();
-//     exec2(pcbs.next->pcb,"/seg.bin");
-//     //exec("/seg.bin","789");
-//     //exec1("/seg.bin");
-//     log(LOG_END, "Process Control Module.");\
-//     // //shced
-    log(LOG_START, "Sched.");
-    init_sched();
-    // //create_proc();
-=======
     //create_demo();
 
 
@@ -138,29 +125,31 @@ void init_kernel() {
     //exec2(pcbs.next->pcb,"/seg.bin");
     //exec("/seg.bin","789");
     //exec1("/seg.bin");
-    log(LOG_END, "Process Control Module.");\
-    // //shced
-    log(LOG_START, "Sched.");
+    // log(LOG_END, "Process Control Module.");\
+    // // //shced
+    // log(LOG_START, "Sched.");
     init_sched();
-    //create_proc();
->>>>>>> a9a8f58588cc8ed0bde9345ac49cdabdb4014e37
-    log(LOG_END, "Sched.");
-    // // Interrupts
-    log(LOG_START, "Enable Interrupts.");
+    // //create_proc();
+    // log(LOG_END, "Sched.");
+    // // // Interrupts
+    // log(LOG_START, "Enable Interrupts.");
     init_interrupts();
-<<<<<<< HEAD
-//     show_status();
-//     log(LOG_END, "Enable Interrupts.");
-//     // Init finished
-//     machine_info();
-=======
-    //show_status();
-    log(LOG_END, "Enable Interrupts.");
-    // Init finished
-    machine_info();
->>>>>>> a9a8f58588cc8ed0bde9345ac49cdabdb4014e37
-
-
+    // //show_status();
+    // log(LOG_END, "Enable Interrupts.");
+    // // Init finished
+    // machine_info();
+    // PCB *current=pcbs.next->pcb;
+    // // //do fork
+    // unsigned int child_pid=do_fork(current->context,current);
+    // PCB *child=get_pcb_by_pid(child_pid);
+    // exec1("/seg.bin");
+    // exec2(child,"/seg.bin");
+    // exec2(pcbs.next->pcb,"/seg.bin");
+    // print_tasks();
+   
+    // kernel_printf("%s\n",pcbs.next->next->pcb->name);
+    // kernel_printf("%s\n",pcbs.next->next->next->pcb->name);
+    // print_tasks();
 //     *GPIO_SEG = 0x78778245;
     // Enter shell
     kernel_printf("init over!\n");
