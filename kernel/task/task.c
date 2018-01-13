@@ -305,7 +305,6 @@ PCB *get_pcb_by_pid(unsigned int pid){
             return task;
         }
     }
-    return NULL;
 }
 //把一个进程加到进程队列末尾
 void add_task(list_pcb* process)
@@ -585,17 +584,17 @@ unsigned int del_task(unsigned int pid)
     int index=0;
     list_pcb *pos;
     PCB * task_to_del=get_pcb_by_pid(pid);
-    if(task_to_del==0){
-        kernel_printf("process not found,pid %d",pid);
+    if(task_to_del==NULL){
+        kernel_printf("process not found,pid %d\n",pid);
         return 1;
     }
     kfree(task_to_del->context);//删去上下文
     delete_pagetables(task_to_del);  //删去页表
     kfree(task_to_del->file);      //删去文件信息
     free_pid(task_to_del->asid);      //释放进程号
+    list_pcb_del_init(&(task_to_del->process));
+    list_pcb_del_init(&(task_to_del->sched));
     kfree((task_union*)task_to_del);//删去整个task_union
-    list_pcb_del_init(pos);
-    //在调度队列中删去它
     return 0;
     
 }
@@ -617,7 +616,6 @@ int exec1(char* filename) {
     unsigned int i = 0;
     unsigned int j = 0;
     unsigned int ENTRY = (unsigned int)kmalloc(4096);
-    kernel_printf("yes");
 
 
 
@@ -649,7 +647,7 @@ int exec1(char* filename) {
     kernel_printf("Exec load at: 0x%x\n", ENTRY);
 #endif  // ! EXEC_DEBUG
     unsigned int s1=*(unsigned int*)0;
-    // kernel_printf("s1=%x\n",s1);
+     kernel_printf("The first instruction =%x\n",s1);
     // while(1);
     
     //kernel_printf("s2=%x\n",s2);
@@ -760,7 +758,7 @@ int exec2(PCB *task,char* filename){
     kernel_printf("The first instruction is %x\n",s1);
 #endif  // ! EXEC_DEBUG
 
-    int r = f();
+    //int r = f();
     //存入到pte中
     set_V(&pte[0]);
     set_W(&pte[0]);
@@ -816,15 +814,14 @@ int exec2(PCB *task,char* filename){
 int exec(char *filename,char* taskname)
 {
     //PCB *current=get_current_pcb();
+    if(filename==NULL||taskname==NULL)
+    {
+        kernel_printf("error :filename or taskname is not initialized!\n");
+        return -1;
+    }
     PCB *current=pcbs.next->pcb;
     //do fork
     unsigned int child_pid=do_fork(current->context,current);
-    // kernel_printf("init:%x\n",pcbs.next);
-    // kernel_printf("prev:%x\n",pcbs.prev);
-    // kernel_printf("prev->prev:%x\n",pcbs.prev->prev);
-    // kernel_printf("next:%x\n",pcbs.next->next);
-    // kernel_printf("background:%x\n",&background_list);
-    // kernel_printf("foreground:%x\n",high_list);
     
 
     PCB *child=get_pcb_by_pid(child_pid);
@@ -838,7 +835,7 @@ int exec(char *filename,char* taskname)
     }
     
     //从文件中读取数据并替换
-    if(exec2(child,filename)!=0){
+    if(exec1(filename)!=0){
         kernel_printf("error! failed to exec\n");
         return -1;
     }

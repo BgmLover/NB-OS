@@ -29,7 +29,7 @@
 //#define TASK_DEBUG_INIT
 
 //do_fork
-//#define DO_FORK_DEBUG
+#define DO_FORK_DEBUG
 #define EXCEPTION_DEBUG
 //#define INTR_DEBUG
 #define pc_test

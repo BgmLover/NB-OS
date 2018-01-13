@@ -160,4 +160,6 @@ u32 fs_remove(u8 *filename);
     
 u32 fs_changedir(u8 *newdir,u8 *nowdir,u8 *param);
 
+u32 fs_prev_dir(u8 *nowdir);
+
 #endif  // !_ZJUNIX_FS_FAT_H
