@@ -816,15 +816,14 @@ int exec2(PCB *task,char* filename){
 int exec(char *filename,char* taskname)
 {
     //PCB *current=get_current_pcb();
+    if(filename==NULL||taskname==NULL)
+    {
+        kernel_printf("error :filename or taskname is not initialized!\n");
+        return -1;
+    }
     PCB *current=pcbs.next->pcb;
     //do fork
     unsigned int child_pid=do_fork(current->context,current);
-    // kernel_printf("init:%x\n",pcbs.next);
-    // kernel_printf("prev:%x\n",pcbs.prev);
-    // kernel_printf("prev->prev:%x\n",pcbs.prev->prev);
-    // kernel_printf("next:%x\n",pcbs.next->next);
-    // kernel_printf("background:%x\n",&background_list);
-    // kernel_printf("foreground:%x\n",high_list);
     
 
     PCB *child=get_pcb_by_pid(child_pid);
@@ -838,7 +837,7 @@ int exec(char *filename,char* taskname)
     }
     
     //从文件中读取数据并替换
-    if(exec2(child,filename)!=0){
+    if(exec1(filename)!=0){
         kernel_printf("error! failed to exec\n");
         return -1;
     }

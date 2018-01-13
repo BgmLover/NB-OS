@@ -11,7 +11,7 @@
 #include <zjunix/sche.h>
 #include "../usr/ls.h"
 #include "myvi.h"
-#include "exec.h"
+
 
 char ps_buffer[64];
 int ps_buffer_index;
@@ -155,7 +155,7 @@ void parse_cmd() {
     } else if (kernel_strcmp(ps_buffer, "kill") == 0) {
         int pid = param[0] - '0';
         kernel_printf("Killing process %d\n", pid);
-        //result = pc_kill(pid);
+        del_task(pid);
         del_task(pid);
         kernel_printf("kill return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "time") == 0) {
@@ -178,7 +178,16 @@ void parse_cmd() {
         result = myvi(param);
         kernel_printf("vi return with %d\n", result);
      } else if (kernel_strcmp(ps_buffer, "exec") == 0) {
-         //result = exec2(param);
+         char *filename,*taskname;
+         for (i = 0; i < 63; i++) {
+            if (param[i] == ' ') {
+            param[i] = 0;
+            filename=param;
+            taskname=param+i+1;
+            break;
+        }
+    }
+         result = exec(filename,taskname);
          kernel_printf("exec return with %d\n", result);
      } 
     else if(kernel_strcmp(ps_buffer,"touch") == 0){
