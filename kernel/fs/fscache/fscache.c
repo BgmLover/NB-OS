@@ -3,21 +3,22 @@
 
 extern struct fs_info fat_info;
 
+//文件缓冲块的选取，second chance算法
 u32 fs_victim_4k(BUF_4K *buf, u32 *clock_head, u32 size) {
     u32 i;
     u32 index = *clock_head;
 
-    /* sweep 1 */
+    //第一轮循环
     for (i = 0; i < size; i++) {
-        /* if reference bit is zero */
+        //如果reference位为0
         if (((buf[*clock_head].state) & 0x01) == 0) {
-            /* if dirty bit is also zero, it is the victim */
+            //如果dirty位也为0，那么改块就是要找的空闲块
             if (((buf[*clock_head].state) & 0x02) == 0) {
                 index = *clock_head;
                 goto fs_victim_4k_ok;
             }
         }
-        /* otherwise, clean reference bit */
+        //斗则就将reference位设置为1
         else
             buf[*clock_head].state &= 0xfe;
 
@@ -25,9 +26,9 @@ u32 fs_victim_4k(BUF_4K *buf, u32 *clock_head, u32 size) {
             *clock_head = 0;
     }
 
-    /* sweep 2 */
+    //第二轮
     for (i = 0; i < size; i++) {
-        /* since reference bit has cleaned in sweep 1, only check dirty bit */
+        //如果dirty位为1
         if (((buf[*clock_head].state) & 0x02) == 0) {
             index = *clock_head;
             goto fs_victim_4k_ok;
@@ -37,7 +38,6 @@ u32 fs_victim_4k(BUF_4K *buf, u32 *clock_head, u32 size) {
             *clock_head = 0;
     }
 
-    /* if all blocks are dirty, just use clock head */
     index = *clock_head;
 
 fs_victim_4k_ok:
@@ -48,7 +48,7 @@ fs_victim_4k_ok:
     return index;
 }
 
-/* Write current 4k buffer */
+//写4Kbuffer
 u32 fs_write_4k(BUF_4K *f) {
     if ((f->cur != 0xffffffff) && (((f->state) & 0x02) != 0)) {
         if (write_block(f->buf, f->cur, fat_info.BPB.attr.sectors_per_cluster) == 1)
@@ -63,11 +63,11 @@ fs_write_4k_err:
     return 1;
 }
 
-/* Read 4k cluster */
+//读4Kbuffer
 u32 fs_read_4k(BUF_4K *f, u32 FirstSectorOfCluster, u32 *clock_head, u32 size) {
     u32 index;
     u32 FirstSecWithOfs = FirstSectorOfCluster + fat_info.base_addr;
-    /* try to find in buffer */
+    //先在buffer里寻找
     for (index = 0; (index < size) && (f[index].cur != FirstSecWithOfs); index++) {
     }
 
@@ -91,7 +91,7 @@ fs_read_4k_err:
     return 0xffffffff;
 }
 
-/* clear a buffer block, used to avoid reading a new erased block from sd */
+//清空4Kbuffer
 u32 fs_clr_4k(BUF_4K *buf, u32 *clock_head, u32 size, u32 cur) {
     u32 index;
     u32 i;
@@ -113,7 +113,6 @@ fs_clr_4k_err:
     return 1;
 }
 
-/* find victim in 512-byte/4k buffer */
 u32 fs_victim_512(BUF_512 *buf, u32 *clock_head, u32 size) {
     u32 i;
     u32 index = *clock_head;

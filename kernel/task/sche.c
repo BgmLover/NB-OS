@@ -115,21 +115,14 @@ void test_sched()
     //设置pgd属��为默认属������可�?
     kernel_strcpy(proc1->pcb.name, "print_0");
     proc1->pcb.parent=0;//init没有父进�?
-    proc1->pcb.uid=0;
     proc1->pcb.counter=DEFAULT_TIMESLICES;
-    proc1->pcb.start_time=0;//get_time();
     proc1->pcb.state=STATE_WAITTING;
     proc1->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
-    proc1->pcb.policy=0;//暂未定义调度算法
     proc1->pcb.shm=NULL; //shared memory
 
     INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
     INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
-    //暂不考虑线程
-    proc1->pcb.thread_head=NULL;
-    proc1->pcb.num_thread=0;
     add_task(&(proc1->pcb.process));//添加到pcb链表�?
-    //print_tasks();
     proc1->pcb.state=STATE_RUNNING;
 
 
@@ -158,19 +151,13 @@ void test_sched()
     //设置pgd属��为默认属������可�?
     kernel_strcpy(proc2->pcb.name, "ps");
     proc2->pcb.parent=0;//init没有父进�?
-    proc2->pcb.uid=0;
     proc2->pcb.counter=DEFAULT_TIMESLICES;
-    proc2->pcb.start_time=0;//get_time();
     proc2->pcb.state=STATE_WAITTING;
     proc2->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
-    proc2->pcb.policy=0;//暂未定义调度算法
     proc2->pcb.shm=NULL; //shared memory
 
     INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
     INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
-    //暂不考虑线程
-    proc2->pcb.thread_head=NULL;
-    proc2->pcb.num_thread=0;
 
     add_task(&(proc2->pcb.process));//添加到pcb链表�?
     proc2->pcb.state=STATE_RUNNING;
@@ -178,9 +165,6 @@ void test_sched()
     list_pcb_add_tail(&(proc2->pcb.sched),&high_list);
     list_pcb_add_tail(&(proc1->pcb.sched),&high_list);
 
-    // int pid3=exec("/seg.bin","1234");
-    // task_union *proc3=(task_union*)get_pcb_by_pid(pid3);
-    // kernel_printf("current name :  %s\n",current->pcb->name);
     list_pcb *pos;
     for(pos=background_list.next;pos!=&background_list;pos=pos->next)
         kernel_printf("back name :  %s\n",pos->pcb->name);

@@ -12,7 +12,7 @@
 #include "debug.h"
 #endif  // ! FS_DEBUG
 
-/* fat buffer clock head */
+//文件缓冲块的clock head
 u32 fat_clock_head = 0;
 BUF_512 fat_buf[FAT_BUF_NUM];
 
@@ -28,19 +28,17 @@ struct fs_info fat_info;
 u32 init_fat_info() {
     u8 meta_buf[512];
 
-    /* Init bufs */
+    //初始化文件的缓冲块
     kernel_memset(meta_buf, 0, sizeof(meta_buf));
     kernel_memset(&fat_info, 0, sizeof(struct fs_info));
 
-    /* Get MBR sector */
     if (read_block(meta_buf, 0, 1) == 1) {
         goto init_fat_info_err;
     }
     log(LOG_OK, "Get MBR sector info");
-    /* MBR partition 1 entry starts from +446, and LBA starts from +8 */
+    
     fat_info.base_addr = get_u32(meta_buf + 446 + 8);
 
-    /* Get FAT BPB */
     if (read_block(fat_info.BPB.data, fat_info.base_addr, 1) == 1)
         goto init_fat_info_err;
     log(LOG_OK, "Get FAT BPB");
@@ -48,26 +46,23 @@ u32 init_fat_info() {
     dump_bpb_info(&(fat_info.BPB.attr));
 #endif
 
-    /* Sector size (MBR[11]) must be SECTOR_SIZE bytes */
+    //检测文件系统的相关参数是否符合fat32
+    //如果不符合fat32的标准，则返回错误信息 
+    //检测文件的扇区数是否符合规定
     if (fat_info.BPB.attr.sector_size != SECTOR_SIZE) {
         log(LOG_FAIL, "FAT32 Sector size must be %d bytes, but get %d bytes.", SECTOR_SIZE, fat_info.BPB.attr.sector_size);
         goto init_fat_info_err;
     }
-
-    /* Determine FAT type */
-    /* For FAT32, max root dir entries must be 0 */
     if (fat_info.BPB.attr.max_root_dir_entries != 0) {
         goto init_fat_info_err;
     }
-    /* For FAT32, sectors per fat at BPB[0x16] is 0 */
     if (fat_info.BPB.attr.sectors_per_fat != 0) {
         goto init_fat_info_err;
     }
-    /* For FAT32, total sectors at BPB[0x16] is 0 */
     if (fat_info.BPB.attr.num_of_small_sectors != 0) {
         goto init_fat_info_err;
     }
-    /* If not FAT32, goto error state */
+
     u32 total_sectors = fat_info.BPB.attr.num_of_sectors;
     u32 reserved_sectors = fat_info.BPB.attr.reserved_sectors;
     u32 sectors_per_fat = fat_info.BPB.attr.num_of_sectors_per_fat;
@@ -77,25 +72,21 @@ u32 init_fat_info() {
     if (fat_info.total_data_clusters < 65525) {
         goto init_fat_info_err;
     }
-    /* Get root dir stctor */
+    //找到跟目录的扇区
     fat_info.first_data_sector = reserved_sectors + sectors_per_fat * 2;
     log(LOG_OK, "Partition type determined: FAT32");
 
-    /* Keep FSInfo in buf */
+    //将fsinfo保存在buffer中
     read_block(fat_info.fat_fs_info, 1 + fat_info.base_addr, 1);
     log(LOG_OK, "Get FSInfo sector");
 
-#ifdef FS_DEBUG
-    dump_fat_info(&(fat_info));
-#endif
-
-    /* Init success */
     return 0;
 
 init_fat_info_err:
     return 1;
 }
 
+//初始化文件buffer
 void init_fat_buf() {
     int i = 0;
     for (i = 0; i < FAT_BUF_NUM; i++) {
@@ -104,6 +95,7 @@ void init_fat_buf() {
     }
 }
 
+//初始化路径buffer
 void init_dir_buf() {
     int i = 0;
     for (i = 0; i < DIR_DATA_BUF_NUM; i++) {
@@ -112,7 +104,7 @@ void init_dir_buf() {
     }
 }
 
-/* FAT Initialize */
+//文件目录项初始化
 u32 init_fs() {
     u32 succ = init_fat_info();
     if (0 != succ)
@@ -126,10 +118,10 @@ fs_init_err:
     return 1;
 }
 
-/* Write current fat sector */
+//写当前的目录项扇区
 u32 write_fat_sector(u32 index) {
     if ((fat_buf[index].cur != 0xffffffff) && (((fat_buf[index].state) & 0x02) != 0)) {
-        /* Write FAT and FAT copy */
+        //写fat同时复制fat，备份
         if (write_block(fat_buf[index].buf, fat_buf[index].cur, 1) == 1)
             goto write_fat_sector_err;
         if (write_block(fat_buf[index].buf, fat_info.BPB.attr.num_of_sectors_per_fat + fat_buf[index].cur, 1) == 1)
@@ -141,14 +133,15 @@ write_fat_sector_err:
     return 1;
 }
 
-/* Read fat sector */
+//读fat扇区
 u32 read_fat_sector(u32 ThisFATSecNum) {
     u32 index;
-    /* try to find in buffer */
+    //先在buffer中寻找buffer
     for (index = 0; (index < FAT_BUF_NUM) && (fat_buf[index].cur != ThisFATSecNum); index++)
         ;
 
-    /* if not in buffer, find victim & replace, otherwise set reference bit */
+    //second chance算法缓冲机制
+    //如果没有找到，那么就利用fs_victim_512函数来寻找空闲的buffer，否则设置reference位
     if (index == FAT_BUF_NUM) {
         index = fs_victim_512(fat_buf, &fat_clock_head, FAT_BUF_NUM);
 
@@ -205,7 +198,7 @@ u32 fs_next_slash(u8 *f) {
     return i;
 }
 
-/* strcmp */
+//文件名比较函数
 u32 fs_cmp_filename(const u8 *f1, const u8 *f2) {
     u32 i;
     for (i = 0; i < 11; i++) {
@@ -216,7 +209,7 @@ u32 fs_cmp_filename(const u8 *f1, const u8 *f2) {
     return 0;
 }
 
-/* Find a file, only absolute path with starting '/' accepted */
+//寻找一个文件，绝对路径
 u32 fs_find(FILE *file) {
     u8 *f = file->path;
     u32 next_slash;
@@ -229,11 +222,11 @@ u32 fs_find(FILE *file) {
         goto fs_find_err;
 
     index = fs_read_512(dir_data_buf, fs_dataclus2sec(2), &dir_data_clock_head, DIR_DATA_BUF_NUM);
-    /* Open root directory */
+    
     if (index == 0xffffffff)
         goto fs_find_err;
 
-    /* Find directory entry */
+    //循环寻找目录项
     while (1) {
         file->dir_entry_pos = 0xFFFFFFFF;
 
@@ -241,16 +234,14 @@ u32 fs_find(FILE *file) {
 
         while (1) {
             for (sec = 1; sec <= fat_info.BPB.attr.sectors_per_cluster; sec++) {
-                /* Find directory entry in current cluster */
+                //在当前簇中寻找目录项
                 for (i = 0; i < 512; i += 32) {
                     if (*(dir_data_buf[index].buf + i) == 0)
                         goto after_fs_find;
 
-                    /* Ignore long path */
                     if ((fs_cmp_filename(dir_data_buf[index].buf + i, filename11) == 0) &&
                         ((*(dir_data_buf[index].buf + i + 11) & 0x08) == 0)) {
                         file->dir_entry_pos = i;
-                        // refer to the issue in fs_close()
                         file->dir_entry_sector = dir_data_buf[index].cur - fat_info.base_addr;
 
                         for (k = 0; k < 32; k++)
@@ -259,13 +250,12 @@ u32 fs_find(FILE *file) {
                         goto after_fs_find;
                     }
                 }
-                /* next sector in current cluster */
+                //当前簇读取结束，换取当前扇区的下一个簇
                 if (sec < fat_info.BPB.attr.sectors_per_cluster) {
                     index = fs_read_512(dir_data_buf, dir_data_buf[index].cur + 1, &dir_data_clock_head, DIR_DATA_BUF_NUM);
                     if (index == 0xffffffff)
                         goto fs_find_err;
                 } else {
-                    /* Read next cluster of current directory */
                     if (get_fat_entry_value(dir_data_buf[index].cur - fat_info.BPB.attr.sectors_per_cluster + 1, &next_clus) == 1)
                         goto fs_find_err;
 
@@ -280,21 +270,21 @@ u32 fs_find(FILE *file) {
         }
 
     after_fs_find:
-        /* If not found */
+        //没有找到文件
         if (file->dir_entry_pos == 0xFFFFFFFF)
             goto fs_find_ok;
 
-        /* If path parsing completes */
+        //如果路径分析完成了
         if (f[next_slash] == 0)
             goto fs_find_ok;
 
-        /* If not a sub directory */
+        //如果不是子目录
         if ((file->entry.data[11] & 0x10) == 0)
             goto fs_find_err;
 
         f += next_slash + 1;
 
-        /* Open sub directory, high word(+20), low word(+26) */
+        //打开子目录
         next_clus = get_start_cluster(file);
 
         if (next_clus <= fat_info.total_data_clusters + 1) {
@@ -310,11 +300,11 @@ fs_find_err:
     return 1;
 }
 
-/* Open: just do initializing & fs_find */
+//打开文件，具体执行找到文件并且初始化buffer
 u32 fs_open(FILE *file, u8 *filename) {
     u32 i;
 
-    /* Local buffer initialize */
+    //局部变量的初始化
     for (i = 0; i < LOCAL_DATA_BUF_NUM; i++) {
         file->data_buf[i].cur = 0xffffffff;
         file->data_buf[i].state = 0;
@@ -332,7 +322,7 @@ u32 fs_open(FILE *file, u8 *filename) {
     if (fs_find(file) == 1)
         goto fs_open_err;
 
-    /* If file not exists */
+    //如果文件不存在，打开失败
     if (file->dir_entry_pos == 0xFFFFFFFF)
         goto fs_open_err;
 
@@ -340,11 +330,11 @@ u32 fs_open(FILE *file, u8 *filename) {
 fs_open_err:
     return 1;
 }
-/* fflush, write global buffers to sd */
+
+//将全局buffer写到sd卡上
 u32 fs_fflush() {
     u32 i;
 
-    // FSInfo shoud add base_addr
     if (write_block(fat_info.fat_fs_info, 1 + fat_info.base_addr, 1) == 1)
         goto fs_fflush_err;
 
@@ -365,25 +355,24 @@ fs_fflush_err:
     return 1;
 }
 
-/* Close: write all buf in memory to SD */
+//关闭文件，具体执行文件的全局和局部buffer写到sd卡
 u32 fs_close(FILE *file) {
     u32 i;
     u32 index;
 
-    /* Write directory entry */
+    //写文件的目录项
     index = fs_read_512(dir_data_buf, file->dir_entry_sector, &dir_data_clock_head, DIR_DATA_BUF_NUM);
     if (index == 0xffffffff)
         goto fs_close_err;
 
     dir_data_buf[index].state = 3;
 
-    // Issue: need file->dir_entry to be local partition offset
     for (i = 0; i < 32; i++)
         *(dir_data_buf[index].buf + file->dir_entry_pos + i) = file->entry.data[i];
-    /* do fflush to write global buffers */
+    //写全局buffer到sd卡
     if (fs_fflush() == 1)
         goto fs_close_err;
-    /* write local data buffer */
+    //写局部buffer到sd卡
     for (i = 0; i < LOCAL_DATA_BUF_NUM; i++)
         if (fs_write_4k(file->data_buf + i) == 1)
             goto fs_close_err;
@@ -393,7 +382,7 @@ fs_close_err:
     return 1;
 }
 
-/* Read from file */
+//读取文件，count为读取的字节数
 u32 fs_read(FILE *file, u8 *buf, u32 count) {
     u32 start_clus, start_byte;
     u32 end_clus, end_byte;
@@ -404,19 +393,15 @@ u32 fs_read(FILE *file, u8 *buf, u32 count) {
     u32 cc;
     u32 index;
 
-#ifdef FS_DEBUG
-    kernel_printf("fs_read: count %d\n", count);
-    disable_interrupts();
-#endif  // ! FS_DEBUG
-    /* If file is empty */
+    //如果目标文件为空
     if (clus == 0)
         return 0;
 
-    /* If loc + count > filesize, only up to EOF will be read */
+    //如果当前读到的位置加上要读的字节数大于文件的大小，那么只能读取文件大小的内容
     if (file->loc + count > filesize)
         count = filesize - file->loc;
 
-    /* If read 0 byte */
+    //如果读取0字节的内容，直接返回0
     if (count == 0)
         return 0;
 
@@ -425,13 +410,7 @@ u32 fs_read(FILE *file, u8 *buf, u32 count) {
     end_clus = (file->loc + count - 1) >> fs_wa(fat_info.BPB.attr.sectors_per_cluster << 9);
     end_byte = (file->loc + count - 1) & ((fat_info.BPB.attr.sectors_per_cluster << 9) - 1);
 
-#ifdef FS_DEBUG
-    kernel_printf("start cluster: %d\n", start_clus);
-    kernel_printf("start byte: %d\n", start_byte);
-    kernel_printf("end cluster: %d\n", end_clus);
-    kernel_printf("end byte: %d\n", end_byte);
-#endif  // ! FS_DEBUG
-    /* Open first cluster to read */
+    //打开第一个簇
     for (i = 0; i < start_clus; i++) {
         if (get_fat_entry_value(clus, &next_clus) == 1)
             goto fs_read_err;
@@ -445,13 +424,13 @@ u32 fs_read(FILE *file, u8 *buf, u32 count) {
         if (index == 0xffffffff)
             goto fs_read_err;
 
-        /* If in same cluster, just read */
+        //如果要读的内容起始位置和终止位置都在同一个簇内，那么直接读
         if (start_clus == end_clus) {
             for (i = start_byte; i <= end_byte; i++)
                 buf[cc++] = file->data_buf[index].buf[i];
             goto fs_read_end;
         }
-        /* otherwise, read clusters one by one */
+        //如果不在同一个簇中，那么就顺着每个簇读
         else {
             for (i = start_byte; i < (fat_info.BPB.attr.sectors_per_cluster << 9); i++)
                 buf[cc++] = file->data_buf[index].buf[i];
@@ -467,18 +446,14 @@ u32 fs_read(FILE *file, u8 *buf, u32 count) {
     }
 fs_read_end:
 
-#ifdef FS_DEBUG
-    kernel_printf("fs_read: count %d\n", count);
-    enable_interrupts();
-#endif  // ! FS_DEBUG
-    /* modify file pointer */
+    //修改文件当前读到的位置指针
     file->loc += count;
     return cc;
 fs_read_err:
     return 0xFFFFFFFF;
 }
 
-/* Find a free data cluster */
+//寻找一个空的数据块
 u32 fs_next_free(u32 start, u32 *next_free) {
     u32 clus;
     u32 ClusEntryVal;
@@ -500,7 +475,7 @@ fs_next_free_err:
     return 1;
 }
 
-/* Alloc a new free data cluster */
+//分配一块新的空闲数据块
 u32 fs_alloc(u32 *new_alloc) {
     u32 clus;
     u32 next_free;
@@ -541,9 +516,10 @@ fs_alloc_err:
     return 1;
 }
 
-/* Write to file */
+//写入文件
 u32 fs_write(FILE *file, const u8 *buf, u32 count) {
-    /* If write 0 bytes */
+
+    //如果要写入的0字节的内容，则直接返回
     if (count == 0) {
         return 0;
     }
@@ -553,7 +529,7 @@ u32 fs_write(FILE *file, const u8 *buf, u32 count) {
     u32 end_clus = (file->loc + count - 1) >> fs_wa(fat_info.BPB.attr.sectors_per_cluster << 9);
     u32 end_byte = (file->loc + count - 1) & ((fat_info.BPB.attr.sectors_per_cluster << 9) - 1);
 
-    /* If file is empty, alloc a new data cluster */
+    //如果文件是空的，那么为文件分配数据块
     u32 curr_cluster = get_start_cluster(file);
     if (curr_cluster == 0) {
         if (fs_alloc(&curr_cluster) == 1) {
@@ -565,14 +541,13 @@ u32 fs_write(FILE *file, const u8 *buf, u32 count) {
             goto fs_write_err;
     }
 
-    /* Open first cluster to read */
+    //打开并读取第一个簇
     u32 next_cluster;
     for (u32 i = 0; i < start_clus; i++) {
         if (get_fat_entry_value(curr_cluster, &next_cluster) == 1)
             goto fs_write_err;
 
-        /* If this is the last cluster in file, and still need to open next
-         * cluster, just alloc a new data cluster */
+        //如果当前写入的是文件的最后一个簇，但是还需要读取下一个簇，那么为文件再分配数据块
         if (next_cluster > fat_info.total_data_clusters + 1) {
             if (fs_alloc(&next_cluster) == 1)
                 goto fs_write_err;
@@ -613,8 +588,7 @@ u32 fs_write(FILE *file, const u8 *buf, u32 count) {
             if (get_fat_entry_value(curr_cluster, &next_cluster) == 1)
                 goto fs_write_err;
 
-            /* If this is the last cluster in file, and still need to open next
-             * cluster, just alloc a new data cluster */
+            //如果当前写入的是文件的最后一个簇，但是还需要读取下一个簇，那么为文件再分配数据块
             if (next_cluster > fat_info.total_data_clusters + 1) {
                 if (fs_alloc(&next_cluster) == 1)
                     goto fs_write_err;
@@ -632,11 +606,11 @@ u32 fs_write(FILE *file, const u8 *buf, u32 count) {
 
 fs_write_end:
 
-    /* update file size */
+    //修改文件的大小
     if (file->loc + count > file->entry.attr.size)
         file->entry.attr.size = file->loc + count;
 
-    /* update location */
+    //修改当权读取的位置
     file->loc += count;
 
     return cc;
@@ -644,7 +618,7 @@ fs_write_err:
     return 0xFFFFFFFF;
 }
 
-/* lseek */
+//当前读取位置的重定位
 void fs_lseek(FILE *file, u32 new_loc) {
     u32 filesize = file->entry.attr.size;
 
@@ -707,7 +681,7 @@ fs_find_empty_entry_err:
     return 0xffffffff;
 }
 
-/* create an empty file with attr */
+//创建一个空的文件
 u32 fs_create_with_attr(u8 *filename, u8 attr) {
     u32 i;
     u32 l1 = 0;
@@ -839,87 +813,3 @@ void get_filename(u8 *entry, u8 *buf) {
             buf[i - 1] = 0;
     }
 }
-
-
-/*char *cut_front_blank(char *str) {
-    char *s = str;
-    unsigned int index = 0;
-
-    while (*s == ' ') {
-        ++s;
-        ++index;
-    }
-
-    if (!index)
-        return str;
-
-    while (*s) {
-        *(s - index) = *s;
-        ++s;
-    }
-
-    --s;
-    *s = 0;
-
-    return str;
-}*/
-
-// unsigned int strlen(unsigned char *str) {
-//     unsigned int len = 0;
-//     while (str[len])
-//         ++len;
-//     return len;
-// }
-
-// unsigned int each_param(char *para, char *word, unsigned int off, char ch) {
-//     int index = 0;
-
-//     while (para[off] && para[off] != ch) {
-//         word[index] = para[off];
-//         ++index;
-//         ++off;
-//     }
-
-//     word[index] = 0;
-
-//     return off;
-// }
-/*
-int ls(char *para) {
-    char pwd[128];
-    struct dir_entry_attr entry;
-    char name[32];
-    char *p = para;
-    unsigned int next;
-    unsigned int r;
-    unsigned int p_len;
-    FS_FAT_DIR dir;
-
-    p = cut_front_blank(p);
-    p_len = strlen(p);
-    next = each_param(p, pwd, 0, ' ');
-
-    if (fs_open_dir(&dir, pwd)) {
-        kernel_printf("open dir(%s) failed : No such directory!\n", pwd);
-        return 1;
-    }
-
-readdir:
-    r = fs_read_dir(&dir, (unsigned char *)&entry);
-    if (1 != r) {
-        if (-1 == r) {
-            kernel_printf("\n");
-        } else {
-            get_filename((unsigned char *)&entry, name);
-            if (entry.attr == 0x10)  // sub dir
-                kernel_printf("%s/", name);
-            else
-                kernel_printf("%s", name);
-            kernel_printf("\n");
-            goto readdir;
-        }
-    } else
-        return 1;
-
-    return 0;
-}*/
