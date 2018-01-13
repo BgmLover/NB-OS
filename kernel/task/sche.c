@@ -15,6 +15,8 @@
 
 list_pcb *current=NULL;
 extern list_pcb pcbs;
+
+//获取当前进程pcb
 PCB* get_current_pcb()
 {
     return current->pcb;
@@ -23,15 +25,6 @@ PCB* get_current_pcb()
 void print_0_fun()
 {
     while(1);
-        
-    // int i=0;
-    // while(1)
-    // {
-    //     i++;
-    //     if(i==200)
-    //         break;
-    //     kernel_printf(" 0 ");
-    // }
 }
 
 void print_2_fun()
@@ -46,6 +39,7 @@ void print_2_fun()
     }
 }
 
+//打印上下文
 void print_context(context* pt_context)
 {
     kernel_printf("epc:  %x\n",pt_context->epc);
@@ -70,113 +64,28 @@ void print_context(context* pt_context)
  
 }
 
-void sched_example()
-{
-    kernel_printf("example begin\n");
-    list_pcb_add_tail(current,&high_list);
-    list_pcb *pos;
-    for(pos=high_list.next;pos!=&high_list;pos=pos->next)
-        kernel_printf("pid: %d,  name:  %s",pos->pcb->asid,pos->pcb->name);
-    kernel_printf("stop\n");
-    while(1);
-    current=get_first_task(&high_list);
-
-}
-
 void test_sched()
-{
-    task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
-    task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
+{//进程调度测试
+    task_union* proc1=create_task_union();
+    task_union* proc2=create_task_union();
 
-    proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
-    clean_context(proc1->pcb.context);
     proc1->pcb.context->epc=(unsigned int)(print_0_fun);
-    proc1->pcb.context->sp=(unsigned int)proc1+PAGE_SIZE;
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    proc1->pcb.context->gp=init_gp;
-    proc1->pcb.asid=get_emptypid();
-    if(proc1->pcb.asid<0){
-        kernel_printf("failed to get right asid\n");   
-        return;
-    }
-    proc1->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
-    if(proc1->pcb.pgd==NULL)
-    {
-        kernel_printf("failed to kmalloc space for pgd\n");
-        return;
-    }
-    //初始化pgd每一�?
-    int i=0;
-    for(i=0;i<PAGE_SIZE>>2;i++)
-    {
-        (proc1->pcb.pgd)[i]=0;
-    }
-    //设置pgd属��为默认属������可�?
     kernel_strcpy(proc1->pcb.name, "print_0");
-    proc1->pcb.parent=0;//init没有父进�?
-    proc1->pcb.counter=DEFAULT_TIMESLICES;
-    proc1->pcb.state=STATE_WAITTING;
-    proc1->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
-    proc1->pcb.shm=NULL; //shared memory
-
-    INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
-    INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
-    add_task(&(proc1->pcb.process));//添加到pcb链表�?
-    proc1->pcb.state=STATE_RUNNING;
+    add_task(&(proc1->pcb.process));
 
 
-    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
-    clean_context(proc2->pcb.context);
     proc2->pcb.context->epc=(unsigned int)(ps);
-    proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    proc2->pcb.context->gp=init_gp;
-    proc2->pcb.asid=get_emptypid();
-    if(proc2->pcb.asid<0){
-        kernel_printf("failed to get right asid\n");   
-        return;
-    }
-    proc2->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
-    if(proc2->pcb.pgd==NULL)
-    {
-        kernel_printf("failed to kmalloc space for pgd\n");
-        return;
-    }
-    //初始化pgd每一�?
-    for(i=0;i<PAGE_SIZE>>2;i++)
-    {
-        (proc2->pcb.pgd)[i]=0;
-    }
-    //设置pgd属��为默认属������可�?
     kernel_strcpy(proc2->pcb.name, "ps");
-    proc2->pcb.parent=0;//init没有父进�?
-    proc2->pcb.counter=DEFAULT_TIMESLICES;
-    proc2->pcb.state=STATE_WAITTING;
-    proc2->pcb.priority=HIGH_PRIORITY;//设置优先级为朢�低优先级
-    proc2->pcb.shm=NULL; //shared memory
+    add_task(&(proc2->pcb.process));
 
-    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
-    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
-
-    add_task(&(proc2->pcb.process));//添加到pcb链表�?
-    proc2->pcb.state=STATE_RUNNING;
-
-    list_pcb_add_tail(&(proc2->pcb.sched),&high_list);
     list_pcb_add_tail(&(proc1->pcb.sched),&high_list);
-
-    list_pcb *pos;
-    for(pos=background_list.next;pos!=&background_list;pos=pos->next)
-        kernel_printf("back name :  %s\n",pos->pcb->name);
-    for(pos=high_list.next;pos!=&high_list;pos=pos->next)
-        kernel_printf("fore name :  %s\n",pos->pcb->name);
-        
+    list_pcb_add_tail(&(proc2->pcb.sched),&high_list);    
 }
 
 
 
 void init_sched()
-{//未完�?
+{
     kernel_printf("begin\n");
     //初始化各队列
     INIT_LIST_PCB(&background_list,NULL);
@@ -186,40 +95,35 @@ void init_sched()
     INIT_LIST_PCB(&below_normal_list,NULL);
     INIT_LIST_PCB(&idle_list,NULL);
 
-
-    //#ifdef SCHED_DEBUG
-    kernel_printf("List init complete!\n");
-    //#endif
-    
-    //初始情况为前台队列进�?
+    //初始情况为前台队列进
     flag=1;
     counter=FOREGROUNG_TIMESLICES;
     
     kernel_printf("Timeslices complete!\n");
      
-    //把init进程放在后台队列�?
+    //把init作为初始情况current进程
     current=&(pcbs.next->pcb->sched);
-    //add_to_background_list(current);
+    //当前进程将下次调度是会放入后台队列
     next_list=&background_list;
 
     kernel_printf("test sched begin!\n");
     test_sched();
     kernel_printf("Add process complete!\n");
-    //register_syscall(10, pc_kill_syscall);
+    //注册调度中断
     register_interrupt_handler(7, schedule);
 
+    //计时器初值
     asm volatile(
         "li $v0, 10000000\n\t"
         "mtc0 $v0, $11\n\t"
         "mtc0 $zero, $9");
 }
 
+//调度中断处理函数
 void schedule(unsigned int status, unsigned int cause, context* pt_context) {
-    // Save context
+    //保存上下文
     list_pcb *pos;
-    //kernel_printf("copy context\n");
     copy_context(pt_context, current->pcb->context);
-//    *GPIO_SEG =counter;
 
     sched();
 
@@ -230,17 +134,13 @@ void schedule(unsigned int status, unsigned int cause, context* pt_context) {
         "mtc0 %0,$10\n\t"
         :"=r"(new_Entryhi));   
     
+    //恢复上下文
     copy_context(current->pcb->context, pt_context);
-    
-    //kernel_printf("load context\n");
-    //print_context(pt_context);
- 
-    //kernel_printf("name:  %s\n",current->pcb->name);
-   asm volatile("mtc0 $zero, $9\n\t");
-    //kernel_printf("set time\n");
+    //计时器寄存器重新赋值
+    asm volatile("mtc0 $zero, $9\n\t");
 }
 
-//初始化队�?
+//初始化队列
 void init_list(list_pcb *list)
 {
     list->prev=list;
@@ -256,7 +156,7 @@ unsigned int list_is_empty(list_pcb *list)
         return 0;
 }
 
-//取队列中的第丢�个进�?并将其从队列中删�?
+//取队列中的第一个进程，并将其从队列中删除
 list_pcb *get_first_task(list_pcb *list)
 {
     list_pcb *task;
@@ -278,11 +178,13 @@ list_pcb *get_init_task(list_pcb *list)
     return task;
 }
 
+//加入到前台队列
 void add_to_foreground_list(list_pcb *task)
 {
     list_pcb_add_tail(task,&high_list);
 }
 
+//加入到后台队列
 void add_to_background_list(list_pcb *task)
 {
     list_pcb_add_tail(task,&background_list);
@@ -291,22 +193,24 @@ void add_to_background_list(list_pcb *task)
 //后台进程调度
 unsigned int background_sched()
 {
-    //kernel_printf("background sched\n");
     current=get_first_task(&background_list);
-    current->pcb->counter=BACKGROUND_PER_TIMESLICES;
-    current->pcb->state=STATE_RUNNING;
     if(current==NULL)
-    {//后台队列为空，切换到前台状��?
+    {//后台队列为空，切换到前台状
        flag==1; 
        counter=FOREGROUNG_TIMESLICES;
     }
+    else{
+        current->pcb->counter=BACKGROUND_PER_TIMESLICES;
+        current->pcb->state=STATE_RUNNING;
+    }
+
     return 0;
 }
 
 //前台进程调度
 unsigned int foreground_sched()
 {
-    //kernel_printf("foreground sched\n");
+    //从优先级最高的队列开始判断是否为空，若为空则判断下一个队列，否则在当前队列中取出队首的进程执行
     if(!list_is_empty(&high_list))
     {
         current=get_first_task(&high_list);
@@ -355,24 +259,19 @@ unsigned int foreground_sched()
         current->pcb->priority=IDLE_PRIORITY;
     }
     else
-    {//前台队列为空，转换状�?
+    {//前台队列为空，转换状态
         flag=0;
         counter=BACKGROUND_TIMESLICES;
     }
 
-    list_pcb *pos;
-    // for(pos=high_list.next;pos!=&high_list;pos=pos->next)
-    //     kernel_printf("high name :  %s\n",pos->pcb->name);
-    // for(pos=above_normal_list.next;pos!=&above_normal_list;pos=pos->next)
-    //     kernel_printf("above_normal_list name :  %s\n",pos->pcb->name);
-
     return 0;
 }
 
+//进程调度主控函数，负责判断前后台，将当前进程放入到合适的队列并且选取不同调度方案
 unsigned int sched()
 {
     if(current==NULL)
-    {
+    {//如果当前进程为空，则判断状态，使用合适的调度
         if(flag==1)
         {
             foreground_sched();
@@ -388,31 +287,31 @@ unsigned int sched()
         {//前后台状态时间片用完
             if(flag==1)
             {
-                //把current放入到��当的队列中，并且更新pcb中sched�?
+                //把current放入到适当的队列中，并且更新pcb中sched
                 list_pcb_add_tail(current,next_list);
                 current->pcb->sched=*current; 
                 current->pcb->state=STATE_READY;
                 
-                //切换状��，执行调度
+                //切换状态，执行调度
                 flag=0;
                 counter=BACKGROUND_TIMESLICES;
                 background_sched();
             }
             else
             {
-                //将当前进程放回到后台调度队列�?
+                //将当前进程放回到后台调度队列
                 list_pcb_add_tail(current,&background_list);
                 current->pcb->sched=*current;
                 current->pcb->state=STATE_READY;
                 
-                //切换状��，执行调度
+                //切换状态，执行调度
                 flag=1;
                 counter=FOREGROUNG_TIMESLICES;
                 foreground_sched();
             }
         }
         else if((--(current->pcb->counter))==0)
-        {//程序时间片用�?
+        {//程序时间片用完
             if(flag==1)
             {
                 list_pcb_add_tail(current,next_list);
@@ -431,16 +330,13 @@ unsigned int sched()
 
 }
 
+//打印进程信息
 void print_procs()
 {
     kernel_printf("pid    name    state\n");
     list_pcb *pos;
-    // for(pos=pcbs.next;pos!=&pcbs;pos=pos->next)
-    // {
-    //     kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
-    //     //while(1);
-    // }
 
+    //打印前台调度队列中的进程
     kernel_printf("foreground\n");
     if(flag==1)
     {
@@ -466,7 +362,7 @@ void print_procs()
     {
         for(pos=normal_list.next;pos!=&normal_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
             //while(1);
         }
     }
@@ -474,7 +370,7 @@ void print_procs()
     {
         for(pos=below_normal_list.next;pos!=&below_normal_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
             //while(1);
         }
     }
@@ -482,62 +378,37 @@ void print_procs()
     {
         for(pos=idle_list.next;pos!=&idle_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
             //while(1);
         }
     }
 
+    //打印后台调度队列中的进程
     kernel_printf("background\n");
     if(flag==0)
     {
-        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->counter);
+        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->state);
     }
     for(pos=background_list.next;pos!=&background_list;pos=pos->next)
     {
-        kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
-        //while(1);
+        kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
     }
 }
 
+//创建时间进程
 void creat_time()
 {
-    task_union* time_proc=( task_union*)kmalloc(PAGE_SIZE);
-    time_proc->pcb.context=(context*)((unsigned int)time_proc+sizeof(PCB));
-    clean_context(time_proc->pcb.context);
-    time_proc->pcb.context->epc=(unsigned int)(system_time_proc);
-    time_proc->pcb.context->sp=(unsigned int)time_proc+PAGE_SIZE;
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    time_proc->pcb.context->gp=init_gp;
-    time_proc->pcb.asid=get_emptypid();
-    if(time_proc->pcb.asid<0){
-        kernel_printf("failed to get right asid\n");   
-        return;
-    }
-    time_proc->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空�?
-    if(time_proc->pcb.pgd==NULL)
-    {
-        kernel_printf("failed to kmalloc space for pgd\n");
-        return;
-    }
-    //初始化pgd每一�?
-    int i=0;
-    for(i=0;i<PAGE_SIZE>>2;i++)
-    {
-        (time_proc->pcb.pgd)[i]=0;
-    }
-    //设置pgd属��为默认属������可�?
-    kernel_strcpy(time_proc->pcb.name, "time");
+    task_union* time_proc=create_task_union();
 
-    INIT_LIST_PCB(&time_proc->pcb.sched,&(time_proc->pcb));
-    INIT_LIST_PCB(&time_proc->pcb.process,&(time_proc->pcb));
-    //暂不考虑线程
-    
-    //add_task(&(proc1->pcb.process));//添加到pcb链表�?
-    time_proc->pcb.state=STATE_RUNNING;
+    time_proc->pcb.context->epc=(unsigned int)(system_time_proc);
+    kernel_strcpy(time_proc->pcb.name, "time_proc");
+    add_task(&(time_proc->pcb.process));
+
+    //加入到后台调度队列
     add_to_background_list(&(time_proc->pcb.sched));
 }
 
+//生产者函数
 void producer(){
     char data;
     unsigned int offset = 0;
@@ -559,8 +430,9 @@ void producer(){
         kernel_printf("producer write:%c\n",data);
     }
     
-    
 }
+
+//消费者函数
 void customer(){
     char data;
     unsigned int offset=0;
@@ -569,7 +441,6 @@ void customer(){
     PCB* customer_pcb = get_current_pcb();
     shm_mount(4,customer_pcb);
 
-    // kernel_printf("cus shm=%x\n",(unsigned int)(customer_pcb->shm));
 
     for(i = 0; i<30; i++){
         data = shm_read(customer_pcb, offset);
@@ -586,97 +457,21 @@ void customer(){
     
 }
 
+//生产者消费者demo
 void demo()
 {
-    task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
-    task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
+    //创建生产者和消费者
+    task_union* proc1=create_task_union();
+    task_union* proc2=create_task_union();
 
-    proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
-    clean_context(proc1->pcb.context);
     proc1->pcb.context->epc=(unsigned int)(producer);
-    proc1->pcb.context->sp=(unsigned int)proc1+PAGE_SIZE;
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    proc1->pcb.context->gp=init_gp;
-    proc1->pcb.asid=get_emptypid();
-    if(proc1->pcb.asid<0){
-        kernel_printf("failed to get right asid\n");   
-        return;
-    }
-    proc1->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//鍒嗛厤椤电洰褰曠┖闂?
-    if(proc1->pcb.pgd==NULL)
-    {
-        kernel_printf("failed to kmalloc space for pgd\n");
-        return;
-    }
-    //鍒濆鍖杙gd姣忎竴椤?
-    int i=0;
-    for(i=0;i<PAGE_SIZE>>2;i++)
-    {
-        (proc1->pcb.pgd)[i]=0;
-    }
-    //璁剧疆pgd灞炴€т负榛樿灞炴€р€斺€斿彲鍐?
     kernel_strcpy(proc1->pcb.name, "producer");
-    proc1->pcb.parent=0;//init娌℃湁鐖惰繘绋?
-    proc1->pcb.uid=0;
-    proc1->pcb.counter=DEFAULT_TIMESLICES;
-    proc1->pcb.start_time=0;//get_time();
-    proc1->pcb.state=STATE_WAITTING;
-    proc1->pcb.priority=HIGH_PRIORITY;//璁剧疆浼樺厛绾т负鏈€浣庝紭鍏堢骇
-    proc1->pcb.policy=0;//鏆傛湭瀹氫箟璋冨害绠楁硶
-    proc1->pcb.shm=NULL; //shared memory
-
-    INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
-    INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
-    //鏆備笉鑰冭檻绾跨▼
-    proc1->pcb.thread_head=NULL;
-    proc1->pcb.num_thread=0;
-    
-    //add_task(&(proc1->pcb.process));//娣诲姞鍒皃cb閾捐〃涓?
-    proc1->pcb.state=STATE_RUNNING;
+    add_task(&(proc1->pcb.process));
 
 
-    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
-    clean_context(proc2->pcb.context);
     proc2->pcb.context->epc=(unsigned int)(customer);
-    proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    proc2->pcb.context->gp=init_gp;
-    proc2->pcb.asid=get_emptypid();
-    if(proc2->pcb.asid<0){
-        kernel_printf("failed to get right asid\n");   
-        return;
-    }
-    proc2->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//鍒嗛厤椤电洰褰曠┖闂?
-    if(proc2->pcb.pgd==NULL)
-    {
-        kernel_printf("failed to kmalloc space for pgd\n");
-        return;
-    }
-    //鍒濆鍖杙gd姣忎竴椤?
-    for(i=0;i<PAGE_SIZE>>2;i++)
-    {
-        (proc2->pcb.pgd)[i]=0;
-    }
-    //璁剧疆pgd灞炴€т负榛樿灞炴€р€斺€斿彲鍐?
     kernel_strcpy(proc2->pcb.name, "customer");
-    proc2->pcb.parent=0;//init娌℃湁鐖惰繘绋?
-    proc2->pcb.uid=0;
-    proc2->pcb.counter=DEFAULT_TIMESLICES;
-    proc2->pcb.start_time=0;//get_time();
-    proc2->pcb.state=STATE_WAITTING;
-    proc2->pcb.priority=HIGH_PRIORITY;//璁剧疆浼樺厛绾т负鏈€浣庝紭鍏堢骇
-    proc2->pcb.policy=0;//鏆傛湭瀹氫箟璋冨害绠楁硶
-    proc2->pcb.shm=NULL; //shared memory
-
-    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
-    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
-    //鏆備笉鑰冭檻绾跨▼
-    proc2->pcb.thread_head=NULL;
-    proc2->pcb.num_thread=0;
-    
-    add_task(&(proc2->pcb.process));//娣诲姞鍒皃cb閾捐〃涓?
-    proc2->pcb.state=STATE_RUNNING;
+    add_task(&(proc2->pcb.process));
 
     list_pcb_add_tail(&(proc1->pcb.sched),&high_list);
     list_pcb_add_tail(&(proc2->pcb.sched),&high_list);

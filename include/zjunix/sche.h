@@ -35,18 +35,16 @@ list_pcb example_list;
 list_pcb *next_list;
 
 void test_sched();
-void sched_example();
 
+//获取当前进程
 PCB* get_current_pcb();
 //初始化调度系统
 void init_sched();
 
-//计时器
-unsigned int sched_timer();
-
+//判断队列是否为空
 unsigned int list_is_empty(list_pcb *list);
 
-//进程调度操作，选取下一个进程，切换上下文
+//进程调度主控函数，负责判断前后台，将当前进程放入到合适的队列并且选取不同调度方案
 unsigned int sched();
 
 //取就绪队列中的第一个进程
