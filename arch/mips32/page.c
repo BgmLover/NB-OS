@@ -98,6 +98,35 @@ void clean_page(unsigned int *page)
     for(i=0;i<PAGE_SIZE>>2;i++)
         page[i]=0;
 }
+/*增加页表对应物理帧的引用次数*/
+void inc_refrence_by_pte( unsigned int *pte)
+{
+	 unsigned int index;
+
+	for (index = 0; index < (PAGE_SIZE >> 2); ++index) {
+		if (is_V(&(pte[index]))) {
+			inc_ref(pages + (pte[index] >> PAGE_SHIFT), 1);
+		}
+	}
+}
+/*减少页表对应物理帧的引用次数*/
+void dec_refrence_by_pte(unsigned int *pte)
+{
+	unsigned int index;
+	for (index = 0; index < (PAGE_SIZE >> 2); ++index) {
+		if (pte[index]) {
+            //物理页地址
+            unsigned int phy_addr=pte[index]&(~OFFSET_MASK);
+            struct page *phy_page=pages+(phy_addr>>PAGE_SHIFT);
+            //引用次数--
+            dec_ref(phy_page,1);
+            //如果引用次数为0，则将该页free掉
+            if(phy_page->reference==0)
+                kfree((void*)phy_addr);
+			pte[index] = 0;
+		}
+	}
+}    
 void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index)
 {
     EntryHi entryhi;

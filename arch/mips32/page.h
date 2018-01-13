@@ -82,6 +82,8 @@ void set_default_attr(EntryLo *entry);//有效，可写
 unsigned int va2pfn(unsigned int vaddr);
 //把页表中的一项转化为EntryLo寄存器的内容
 unsigned int pt2pfn(pte_term pt);
+void inc_refrence_by_pte( unsigned int *pte);
+void dec_refrence_by_pte(unsigned int *pte);
 /*
 typedef struct{
     unsigned int G : 1;     //全局位
