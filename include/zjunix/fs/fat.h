@@ -4,7 +4,7 @@
 #include <zjunix/type.h>
 #include <zjunix/fs/fscache.h>
 
-/* 4k data buffer number in each file struct */
+//每个文件控制块中有一个4K大小的缓冲区
 #define LOCAL_DATA_BUF_NUM 4
 
 #define SECTOR_SIZE 512
@@ -12,19 +12,19 @@
 
 
 struct __attribute__((__packed__)) dir_entry_attr {
-    u8 name[8];                   /* Name */
-    u8 ext[3];                    /* Extension */
-    u8 attr;                      /* attribute bits */
-    u8 lcase;                     /* Case for base and extension */
-    u8 ctime_cs;                  /* Creation time, centiseconds (0-199) */
-    u16 ctime;                    /* Creation time */
-    u16 cdate;                    /* Creation date */
-    u16 adate;                    /* Last access date */
-    u16 starthi;                  /* Start cluster (Hight 16 bits) */
-    u16 time;                     /* Last modify time */
-    u16 date;                     /* Last modify date */
-    u16 startlow;                 /* Start cluster (Low 16 bits) */
-    u32 size;                     /* file size (in bytes) */
+    u8 name[8];                   //文件名
+    u8 ext[3];                    //文件扩展名
+    u8 attr;                      //文件属性位
+    u8 lcase;                     //保留位
+    u8 ctime_cs;                  //创建时间，精确到十分之一秒
+    u16 ctime;                    //创建时间
+    u16 cdate;                    //创建日期
+    u16 adate;                    //上次访问时间
+    u16 starthi;                  //起始簇高16位
+    u16 time;                     //上次修改时间
+    u16 date;                     //上次修改日期
+    u16 startlow;                 //其实簇低16位
+    u32 size;                     //文件大小
 };
 
 union dir_entry {
@@ -32,19 +32,19 @@ union dir_entry {
     struct dir_entry_attr attr;
 };
 
-/* file struct */
+//文件控制块
 typedef struct fat_file {
     unsigned char path[256];
-    /* Current file pointer */
+    //当前读取的文件内部指针
     unsigned long loc;
-    /* Current directory entry position */
+    //当前目录入口位置
     unsigned long dir_entry_pos;
     unsigned long dir_entry_sector;
-    /* current directory entry */
+    //当前目录入口
     union dir_entry entry;
-    /* Buffer clock head */
+    //缓存块的clock head
     unsigned long clock_head;
-    /* For normal FAT32, cluster size is 4k */
+    //文件控制块中有一个4K的buffer
     BUF_4K data_buf[LOCAL_DATA_BUF_NUM];
 } FILE;
 
