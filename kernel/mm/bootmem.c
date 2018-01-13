@@ -164,6 +164,7 @@ unsigned char *bootmem_alloc_pages(unsigned int size, unsigned int type, unsigne
 } 
 
 // return 0 means error
+// 分开mminfo块
 unsigned int bootmem_split_mminfo(unsigned int index, unsigned int split_start) {
     unsigned int start, end;
     unsigned int tmp;
@@ -186,6 +187,7 @@ unsigned int bootmem_split_mminfo(unsigned int index, unsigned int split_start) 
     return 1;
 }
 
+//设置位图
 unsigned int bootmem_set_map(unsigned int start_pfn, unsigned int end_pfn, unsigned int type){
     int i;
     if(start_pfn < 0 || end_pfn > mm.phymm >> PAGE_SHIFT - 1) return -1;
@@ -194,6 +196,7 @@ unsigned int bootmem_set_map(unsigned int start_pfn, unsigned int end_pfn, unsig
     return 0;
 }
 
+// bootmem释放内存
 unsigned int bootmem_free_pages(unsigned int start, unsigned int size){
     unsigned int index, cnt;
     size &= ~((1<<PAGE_SHIFT)-1);
@@ -215,18 +218,18 @@ unsigned int bootmem_free_pages(unsigned int start, unsigned int size){
     bootmem_set_map(start>>PAGE_SHIFT, (start>>PAGE_SHIFT)+cnt, PAGE_FREE);
 
     if(mm.info[index].start_pfn==start){
-        if(mm.info[index].end_pfn==(start+size-1)){
+        if(mm.info[index].end_pfn==(start+size-1)){//前后都相接
             bootmem_remove_mminfo(index);
         }
-        else{
+        else{//前相接，后不相接
             bootmem_set_mminfo(&mm.info[index], mm.info[index].start_pfn, start+size-1, mm.info[index].type);
         }
     }
     else{
-        if(mm.info[index].end_pfn==(start+size-1)){
+        if(mm.info[index].end_pfn==(start+size-1)){//前不相接，后相接
             bootmem_set_mminfo(&mm.info[index], start, mm.info[index].end_pfn, mm.info[index].type);
         }
-        else{
+        else{//前后都不相接
             bootmem_split_mminfo(index, start);
             bootmem_split_mminfo(index+1, start+size);
             bootmem_remove_mminfo(index+1);
