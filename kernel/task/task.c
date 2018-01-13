@@ -61,6 +61,8 @@ task_union *create_task_union(){
     new->pcb.priority=IDLE_PRIORITY;                           //设置优先级为最低优先级
     new->pcb.shm=NULL;             
     new->pcb.file=NULL;
+
+    return new;
 }
 /*init进程，主要用于初始化进程模块，创建init进程（代码中附带着相关debug代码）*/
 void init_task()
