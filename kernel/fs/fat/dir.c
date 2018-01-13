@@ -10,11 +10,12 @@ extern BUF_512 dir_data_buf[DIR_DATA_BUF_NUM];
 extern u32 dir_data_clock_head;
 extern struct fs_info fat_info;
 
-/* open directory */
+//打开文件路径
 u32 fs_open_dir(FS_FAT_DIR *dir, u8 *filename) {
     u32 index;
     u32 i;
 
+    //文件路径必须是以/开头的绝对路径
     if (filename[0] != '/')
         goto fs_open_dir_err;
 

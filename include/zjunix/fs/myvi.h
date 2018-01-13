@@ -1,8 +1,3 @@
-#ifndef _MYVI_H
-#define _MYVI_H
-
-//#define debug
-
 #define BUFFER_SIZE 4096
 #define ROW_LEN 29
 #define COLUMN_LEN 80
@@ -40,5 +35,3 @@ void do_command_mode(char key);
 void do_insert_mode(char key);
 void do_last_line_mode(char key);
 int myvi(char* filename);
-
-#endif  // _MYVI_H
