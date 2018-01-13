@@ -77,4 +77,6 @@ void print_procs();
 void creat_time();
 void producer();
 void customer();
+
+void demo();
 #endif

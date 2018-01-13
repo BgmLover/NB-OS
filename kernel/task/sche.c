@@ -4,6 +4,7 @@
 #include <zjunix/time.h>
 #include <driver/vga.h>
 #include <zjunix/slub.h>
+#include <zjunix/shm.h>
 #include <zjunix/list_pcb.h>
 #include <zjunix/syscall.h>
 #include <zjunix/utils.h>
@@ -597,4 +598,148 @@ void creat_time()
     //add_task(&(proc1->pcb.process));//添加到pcb链表�?
     time_proc->pcb.state=STATE_RUNNING;
     add_to_background_list(&(time_proc->pcb.sched));
+}
+
+void producer(){
+    char data;
+    unsigned int offset = 0;
+    struct shared_memory* shm;
+    PCB* producer_pcb = get_current_pcb();
+    kernel_printf("pid:%d\n",producer_pcb->asid);
+    kernel_printf("PCB:%x\n",(unsigned int)producer_pcb);
+    // while(1);
+
+	shm = shm_get(producer_pcb);
+    kernel_printf("shm=%x\n",(unsigned int)(producer_pcb->shm));
+
+    // write 26 letters
+    data='a';
+    
+    for(data = 'a';data<='z';data++){
+        shm_write(producer_pcb,offset,data);
+        offset++;
+        kernel_printf("producer write:%c\n",data);
+    }
+    
+    
+}
+void customer(){
+    char data;
+    unsigned int offset=0;
+    int flag;
+    int i;
+    PCB* customer_pcb = get_current_pcb();
+    shm_mount(4,customer_pcb);
+
+    // kernel_printf("cus shm=%x\n",(unsigned int)(customer_pcb->shm));
+
+    for(i = 0; i<30; i++){
+        data = shm_read(customer_pcb, offset);
+        
+        if(data!=0){
+            offset++;
+            kernel_printf("customer read:%c\n", data);
+        }
+        else{
+            kernel_printf("Shm empty!\n");
+        }
+        
+    }
+    
+}
+
+void demo()
+{
+    task_union* proc1=( task_union*)kmalloc(PAGE_SIZE);
+    task_union* proc2=( task_union*)kmalloc(PAGE_SIZE);
+
+    proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
+    clean_context(proc1->pcb.context);
+    proc1->pcb.context->epc=(unsigned int)(producer);
+    proc1->pcb.context->sp=(unsigned int)proc1+PAGE_SIZE;
+    unsigned int init_gp;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    proc1->pcb.context->gp=init_gp;
+    proc1->pcb.asid=get_emptypid();
+    if(proc1->pcb.asid<0){
+        kernel_printf("failed to get right asid\n");   
+        return;
+    }
+    proc1->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//鍒嗛厤椤电洰褰曠┖闂?
+    if(proc1->pcb.pgd==NULL)
+    {
+        kernel_printf("failed to kmalloc space for pgd\n");
+        return;
+    }
+    //鍒濆鍖杙gd姣忎竴椤?
+    int i=0;
+    for(i=0;i<PAGE_SIZE>>2;i++)
+    {
+        (proc1->pcb.pgd)[i]=0;
+    }
+    //璁剧疆pgd灞炴€т负榛樿灞炴€р€斺€斿彲鍐?
+    kernel_strcpy(proc1->pcb.name, "producer");
+    proc1->pcb.parent=0;//init娌℃湁鐖惰繘绋?
+    proc1->pcb.uid=0;
+    proc1->pcb.counter=DEFAULT_TIMESLICES;
+    proc1->pcb.start_time=0;//get_time();
+    proc1->pcb.state=STATE_WAITTING;
+    proc1->pcb.priority=HIGH_PRIORITY;//璁剧疆浼樺厛绾т负鏈€浣庝紭鍏堢骇
+    proc1->pcb.policy=0;//鏆傛湭瀹氫箟璋冨害绠楁硶
+    proc1->pcb.shm=NULL; //shared memory
+
+    INIT_LIST_PCB(&proc1->pcb.sched,&(proc1->pcb));
+    INIT_LIST_PCB(&proc1->pcb.process,&(proc1->pcb));
+    //鏆備笉鑰冭檻绾跨▼
+    proc1->pcb.thread_head=NULL;
+    proc1->pcb.num_thread=0;
+    
+    //add_task(&(proc1->pcb.process));//娣诲姞鍒皃cb閾捐〃涓?
+    proc1->pcb.state=STATE_RUNNING;
+
+
+    proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
+    clean_context(proc2->pcb.context);
+    proc2->pcb.context->epc=(unsigned int)(customer);
+    proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    proc2->pcb.context->gp=init_gp;
+    proc2->pcb.asid=get_emptypid();
+    if(proc2->pcb.asid<0){
+        kernel_printf("failed to get right asid\n");   
+        return;
+    }
+    proc2->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//鍒嗛厤椤电洰褰曠┖闂?
+    if(proc2->pcb.pgd==NULL)
+    {
+        kernel_printf("failed to kmalloc space for pgd\n");
+        return;
+    }
+    //鍒濆鍖杙gd姣忎竴椤?
+    for(i=0;i<PAGE_SIZE>>2;i++)
+    {
+        (proc2->pcb.pgd)[i]=0;
+    }
+    //璁剧疆pgd灞炴€т负榛樿灞炴€р€斺€斿彲鍐?
+    kernel_strcpy(proc2->pcb.name, "customer");
+    proc2->pcb.parent=0;//init娌℃湁鐖惰繘绋?
+    proc2->pcb.uid=0;
+    proc2->pcb.counter=DEFAULT_TIMESLICES;
+    proc2->pcb.start_time=0;//get_time();
+    proc2->pcb.state=STATE_WAITTING;
+    proc2->pcb.priority=HIGH_PRIORITY;//璁剧疆浼樺厛绾т负鏈€浣庝紭鍏堢骇
+    proc2->pcb.policy=0;//鏆傛湭瀹氫箟璋冨害绠楁硶
+    proc2->pcb.shm=NULL; //shared memory
+
+    INIT_LIST_PCB(&proc2->pcb.sched,&(proc2->pcb));
+    INIT_LIST_PCB(&proc2->pcb.process,&(proc2->pcb));
+    //鏆備笉鑰冭檻绾跨▼
+    proc2->pcb.thread_head=NULL;
+    proc2->pcb.num_thread=0;
+    
+    add_task(&(proc2->pcb.process));//娣诲姞鍒皃cb閾捐〃涓?
+    proc2->pcb.state=STATE_RUNNING;
+
+    list_pcb_add_tail(&(proc1->pcb.sched),&high_list);
+    list_pcb_add_tail(&(proc2->pcb.sched),&high_list);
 }
