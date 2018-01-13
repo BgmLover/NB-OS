@@ -1,5 +1,5 @@
 # specifications
-export PROJECT := producer
+export PROJECT := c
 export TARGET := $(PROJECT).bin
 export MAP := $(PROJECT).map
 export ELF := $(PROJECT).elf

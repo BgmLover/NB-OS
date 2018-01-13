@@ -460,13 +460,13 @@ void print_procs()
     kernel_printf("foreground\n");
     if(flag==1)
     {
-        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->counter);
+        kernel_printf("%d     %s     %d\n",current->pcb->asid,current->pcb->name,current->pcb->state);
     }
     if(!list_is_empty(&high_list))
     {
         for(pos=high_list.next;pos!=&high_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
             //while(1);
         }
     }
@@ -474,7 +474,7 @@ void print_procs()
     {
         for(pos=above_normal_list.next;pos!=&above_normal_list;pos=pos->next)
         {
-            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->counter);
+            kernel_printf("%d     %s     %d\n",pos->pcb->asid,pos->pcb->name,pos->pcb->state);
             //while(1);
         }
     }

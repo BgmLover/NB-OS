@@ -42,8 +42,6 @@ void producer(){
     struct shared_memory* shm;
     shm = c_shm_test();
     uprintf("shm:%x\n",(unsigned int)shm);
-
-
-    while(1);
+    return;
     
 }

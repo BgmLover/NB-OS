@@ -53,6 +53,7 @@ void ps() {
     ps_buffer[0] = 0;
     char buf[10];
     kernel_clear_screen(31);
+    creat_time();
     get_time(buf, sizeof(buf));
     kernel_puts("NB_OS PowerShell\n", 0xfff, 0);
     kernel_puts(buf, VGA_GREEN,VGA_BLACK);
@@ -146,7 +147,7 @@ void parse_cmd() {
         kernel_puts("sdwz\n", 0xfff, 0);
     } else if (kernel_strcmp(ps_buffer, "mminfo") == 0) {
         //bootmap_info("bootmm");
-        //buddy_info();
+        buddy_info();
     } else if (kernel_strcmp(ps_buffer, "mmtest") == 0) {
         kernel_printf("kmalloc : %x, size = 1KB\n", kmalloc(1024));
     } else if (kernel_strcmp(ps_buffer, "ps") == 0) {
@@ -155,7 +156,6 @@ void parse_cmd() {
     } else if (kernel_strcmp(ps_buffer, "kill") == 0) {
         int pid = param[0] - '0';
         kernel_printf("Killing process %d\n", pid);
-        del_task(pid);
         del_task(pid);
         kernel_printf("kill return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "time") == 0) {
@@ -201,6 +201,8 @@ void parse_cmd() {
     }else if(kernel_strcmp(ps_buffer,"mkdir") == 0){
         result = fs_makedir(param);
         kernel_printf("rm return with %d\n", result);
+    }else if(kernel_strcmp(ps_buffer,"exectest") == 0){
+        exec2(pcbs.next->pcb,"/seg.bin");   
     }else if(kernel_strcmp(ps_buffer,"cd") == 0){
         if(*param=='~')
         {

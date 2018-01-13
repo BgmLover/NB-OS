@@ -305,7 +305,6 @@ PCB *get_pcb_by_pid(unsigned int pid){
             return task;
         }
     }
-    return NULL;
 }
 //把一个进程加到进程队列末尾
 void add_task(list_pcb* process)
@@ -585,8 +584,8 @@ unsigned int del_task(unsigned int pid)
     int index=0;
     list_pcb *pos;
     PCB * task_to_del=get_pcb_by_pid(pid);
-    if(task_to_del==0){
-        kernel_printf("process not found,pid %d",pid);
+    if(task_to_del==NULL){
+        kernel_printf("process not found,pid %d\n",pid);
         return 1;
     }
     kfree(task_to_del->context);//删去上下文
@@ -617,7 +616,6 @@ int exec1(char* filename) {
     unsigned int i = 0;
     unsigned int j = 0;
     unsigned int ENTRY = (unsigned int)kmalloc(4096);
-    kernel_printf("yes");
 
 
 
@@ -649,7 +647,7 @@ int exec1(char* filename) {
     kernel_printf("Exec load at: 0x%x\n", ENTRY);
 #endif  // ! EXEC_DEBUG
     unsigned int s1=*(unsigned int*)0;
-    // kernel_printf("s1=%x\n",s1);
+     kernel_printf("The first instruction =%x\n",s1);
     // while(1);
     
     //kernel_printf("s2=%x\n",s2);
@@ -760,7 +758,7 @@ int exec2(PCB *task,char* filename){
     kernel_printf("The first instruction is %x\n",s1);
 #endif  // ! EXEC_DEBUG
 
-    int r = f();
+    //int r = f();
     //存入到pte中
     set_V(&pte[0]);
     set_W(&pte[0]);
