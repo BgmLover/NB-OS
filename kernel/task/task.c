@@ -97,50 +97,45 @@ void init_code(){
     while(1)
     kernel_printf("                                              I'm init!\n");
 }
+/*
+void producer(){
+    char data;
+    unsigned int offset = 0;
+    struct shared_memory* shm;
+    PCB* producer_pcb = get_current_pcb();
+    kernel_printf("pid:%d\n",producer_pcb->asid);
+    // while(1);
 
-// void producer(){
-//     char data;
-//     unsigned int offset = 0;
-//     struct shared_memory* shm;
-//     PCB* producer_pcb = get_current_pcb();
-//     kernel_printf("pid:%d\n",producer_pcb->asid);
-//     // while(1);
+	shm = shm_get(producer_pcb);
+    kernel_printf("shm=%x\n",(unsigned int)shm);
 
-// 	shm = shm_get(producer_pcb);
-//     kernel_printf("shm=%x\n",(unsigned int)shm);
-
-//     // write 26 letters
-//     data='a';
+    // write 26 letters
+    data='a';
     
-//     for(data = 'a';data<='d';data++){
-//         shm_write(producer_pcb,offset,data);
-//         offset++;
-//         kernel_printf("producer write:%c\n",data);
-//     }
+    for(data = 'a';data<='d';data++){
+        shm_write(producer_pcb,offset,data);
+        offset++;
+        kernel_printf("producer write:%c\n",data);
+    }
+    while(1);
     
-// }
-// void customer(){
-//     char data;
-//     int offset=0;
-//     int flag;
-//     int i;
-//     PCB* customer_pcb = get_current_pcb();
-//     shm_mount(1,customer_pcb);
+}
+void customer(){
+    char data;
+    unsigned int offset=0;
+    int flag;
+    int i;
+    PCB* customer_pcb = get_current_pcb();
+    shm_mount(1,customer_pcb);
 
-//     for(i = 0; i<4; i++){
-//         data = shm_read(customer_pcb, offset);
-//         offset++;
-//         kernel_printf("customer read:%c\n", data);
-//     }
+    kernel_printf("cus shm=%x\n",(unsigned int)(customer_pcb->shm));
 
-// //     int co=do_fork(init->context,init);
-// //     PCB *customer=get_pcb_by_pid(co);
-// //     customer->context->epc=(unsigned int)customer;
-// //     customer->context->sp=(unsigned int)customer+PAGE_SIZE;
-// //     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-// //     customer->context->gp=init_gp;
-
-
+    for(i = 0; i<4; i++){
+        data = shm_read(customer_pcb, offset);
+        offset++;
+        kernel_printf("customer read:%c\n", data);
+    }
+    while(1);
 //     int co=do_fork(init->context,init);
 //     PCB *customer=get_pcb_by_pid(co);
 //     customer->context->epc=(unsigned int)customer;
@@ -148,7 +143,43 @@ void init_code(){
 //     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
 //     customer->context->gp=init_gp;
 
+<<<<<<< HEAD
 // }
+=======
+
+    // int co=do_fork(init->context,init);
+    // PCB *customer=get_pcb_by_pid(co);
+    // customer->context->epc=(unsigned int)customer;
+    // customer->context->sp=(unsigned int)customer+PAGE_SIZE;
+    // asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    // customer->context->gp=init_gp;
+
+}
+void create_demo(){
+    PCB* init=pcbs.next->pcb;
+
+    int pr=do_fork(init->context,init);
+    PCB *producer=get_pcb_by_pid(pr);
+    producer->context->epc=(unsigned int)producer;
+    producer->context->sp=(unsigned int)producer+PAGE_SIZE;
+    unsigned int init_gp;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    producer->context->gp=init_gp;
+
+
+
+    /*
+int co=do_fork(init->context,init);
+    PCB *customer=get_pcb_by_pid(co);
+    customer->context->epc=(unsigned int)customer;
+    customer->context->sp=(unsigned int)customer+PAGE_SIZE;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    customer->context->gp=init_gp;
+
+
+}
+*/
+>>>>>>> 1808a68fc4df79f6ce6d56142db82b115754ef72
 void init_task()
 {
     int i=0;
@@ -700,11 +731,13 @@ int exec1(char* filename) {
     kernel_printf("Exec load at: 0x%x\n", ENTRY);
 #endif  // ! EXEC_DEBUG
     unsigned int s1=*(unsigned int*)0;
-    //unsigned int s2=*(unsigned int*);
-    kernel_printf("s1=%x\n",s1);
+    // kernel_printf("s1=%x\n",s1);
+    // while(1);
+    
     //kernel_printf("s2=%x\n",s2);
     int r = f();
     kernel_printf("run the program over\n");
+    // while(1);
     kfree((void*)ENTRY);
     return 0;
 }
@@ -741,6 +774,7 @@ int exec2(PCB *task,char* filename){
 
     // fopen操作
     int result = fs_open(task->file, filename);
+    kernel_printf("result=%d\n",result);
     if (result != 0) {
         kfree(task->file);
         delete_pagetables(task);

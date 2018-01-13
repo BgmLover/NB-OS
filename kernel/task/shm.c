@@ -21,6 +21,8 @@ void shm_init(){
 		shm_setsignal(&shm[i]);
 		shm[i].allocated=0;
 		// shm[i].page=0;
+		shm[i].writep=-1;
+		shm[i].readp=-1;
 		for(j=0;j<4096; j++){
 			shm[i].page[j]=0;
 		}
@@ -48,7 +50,10 @@ struct shared_memory* shm_get(struct task_struct* PCB){
 	} 
 	shm[i].allocated = 1;
 	shm[i].pid = PCB->asid;
+	// kernel_printf("test pid=%x\n",shm[i].pid);
 	shm_setsignal(&shm[i]);
+
+	PCB->shm=&shm[i];
 
 	return &shm[i];
 	/*
@@ -139,7 +144,16 @@ void shm_write(PCB* task, unsigned int offset, char p){
 	}
 	task->shm->signal = 0;
 	kernel_printf("process%d:lock write\n", (unsigned int)task->asid);
-	*((task->shm->page)+offset)=p;
+	if((int)offset>task->shm->writep){
+		*((task->shm->page)+offset)=p;
+		task->shm->writep++;
+	}
+	else if(offset>=4096){
+		kernel_printf("Shm used up!\n");
+	}
+	else{
+		kernel_printf("Shm write pointer error!\n");
+	}
 	// *(task->shm->page+offset)=p;
 	task->shm->signal = 1;
 	kernel_printf("process%d:unlock write\n", (unsigned int)task->asid);
@@ -160,7 +174,27 @@ char shm_read(PCB* task, unsigned int offset){
 	}
 	shm->signal = 0;
 	kernel_printf("process%d:lock read\n", (unsigned int)task->asid);
-	res = *((task->shm->page)+offset);
+	if(task->shm->readp < task->shm->writep){
+		task->shm->readp++;
+		res = *((task->shm->page)+(task->shm->readp));
+	}
+	else{
+		res = 0;
+	}
+	/*
+	if(offset>task->shm->readp && offset<= task->shm->writep){
+		res = *((task->shm->page)+offset);
+		task->shm->readp++;
+	}
+	else if(offset>=4096){
+		kernel_printf("Shm used up!\n");
+		return 0;
+	}
+	else{
+		kernel_printf("Shm empty!\n");
+		res=0;
+	}
+	*/
 	shm->signal = 1;
 	kernel_printf("process%d:unlock read\n", (unsigned int)task->asid);
 	return res;

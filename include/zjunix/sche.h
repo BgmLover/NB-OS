@@ -10,10 +10,10 @@
 //不同队列的时间片
 #define BACKGROUND_PER_TIMESLICES 4
 #define HIGH_TIMESLICES 2
-#define ABOVE_NORMAL_TIMESLICES 4
-#define NORMAL_TIMESLICES 8
-#define BELOW_NORMAL_TIMESLICES 12
-#define IDLE_TIMESLICES 16
+#define ABOVE_NORMAL_TIMESLICES 2
+#define NORMAL_TIMESLICES 2
+#define BELOW_NORMAL_TIMESLICES 2
+#define IDLE_TIMESLICES 2
 
 typedef struct list_head list_head;
 extern list_pcb *current;
@@ -75,5 +75,6 @@ void schedule(unsigned int status, unsigned int cause, context* pt_context);
 void print_procs();
 
 void creat_time();
-
+void producer();
+void customer();
 #endif

@@ -79,18 +79,12 @@ void init_kernel() {
     log(LOG_OK, "Slab.");
 
 //test memory
-    // addr=kmalloc(4096*5);
-    // kernel_printf("%x\n", (unsigned int)addr);
-    // //buddy_info();    
-    // addr=kmalloc(4096*5);
-    // kernel_printf("%x\n", (unsigned int)addr);
     
-    // //kfree(addr);
-    // // addr=kmalloc(4096*5);
-    // // kernel_printf("%x\n", (unsigned int)addr);
-    // addr=kmalloc(4096*3);
-    // kernel_printf("%x\n", (unsigned int)addr);
-    // buddy_info();
+    // addr = kmalloc(100);
+    // kernel_printf("addr=%x\n",(unsigned int)addr);
+    // kfree(addr);
+    // addr = kmalloc(100);
+    // kernel_printf("addr=%x\n",(unsigned int)addr);
 
 
     /*end test memory*/
@@ -111,18 +105,24 @@ void init_kernel() {
     //init_pc();
     init_task();
 
+<<<<<<< HEAD
     print_tasks();
     //exec1("/seg.bin");
    // exec("/seg.bin","seg_proc");
 
     //create_demo();
 
+=======
+    // create_demo();
+kernel_printf("ok\n");
+>>>>>>> 1808a68fc4df79f6ce6d56142db82b115754ef72
 
 // exec1("/producer.bin");
 
+
     //create_startup_process();
-    //task_test();
-    //exec2(pcbs.next->pcb,"/seg.bin");
+    task_test();
+    exec2(pcbs.next->pcb,"/producer.bin");
     //exec("/seg.bin","789");
     //exec1("/seg.bin");
     // log(LOG_END, "Process Control Module.");\

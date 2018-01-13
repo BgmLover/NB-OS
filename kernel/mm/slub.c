@@ -195,11 +195,14 @@ void slub_free(struct kmem_cache* cache, void* obj){
 
     ptr = (unsigned int*)((unsigned char*)obj+cache->offset);
     
-    *ptr = *((unsigned int*)(s_head->end_ptr));
     kernel_printf("11");
+    *ptr = *((unsigned int*)(s_head->end_ptr));
+    --(s_head->nr_objs);
     *((unsigned int*)(s_head->end_ptr)) = (unsigned int)obj;
     
-    --(s_head->nr_objs);
+    
+    
+    
 
 
 
