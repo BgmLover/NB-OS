@@ -10,25 +10,28 @@
 #define PAGE_SHIFT 12
 #define MAX_BUDDY_ORDER 4
 
+// 页结构
 struct page{
-    unsigned int flag;
+    unsigned int flag;//状态
     unsigned int reference;
-    struct list_head list;
-    void* virtual;
+    struct list_head list;空闲链表
+    void* virtual;//指向自己所在的cache
     unsigned int private; // 
     unsigned int bplevel; // = order
 };
 
+// 空闲链表
 struct freelist{
     unsigned int nr_free; //number of elements
-    struct list_head free_head;
+    struct list_head free_head;// 左右指针
 };
 
+// buddy结构
 struct buddy_sys{
-    unsigned int buddy_start_pfn, buddy_end_pfn;
+    unsigned int buddy_start_pfn, buddy_end_pfn;//起始、末尾页框地址
     struct page* start_page;
     struct lock_t lock;
-    struct freelist freelist[MAX_BUDDY_ORDER];
+    struct freelist freelist[MAX_BUDDY_ORDER];// 5个空闲链表
 };
 
 #define _is_same_bpgroup(page, bage) (((*(page)).bplevel == (*(bage)).bplevel))
