@@ -14,7 +14,7 @@
 struct page{
     unsigned int flag;//状态
     unsigned int reference;
-    struct list_head list;空闲链表
+    struct list_head list;//空闲链表
     void* virtual;//指向自己所在的cache
     unsigned int private; // 
     unsigned int bplevel; // = order
