@@ -13,172 +13,75 @@
 #include <debug.h>
 #include <page.h>
 
-extern struct page *pages;
-list_pcb pcbs;//进程队列
-unsigned char idmap[32];//设置256个进程id
+extern struct page *pages;      
+list_pcb pcbs;                  //进程队列，连接所有PCB
+unsigned char idmap[32];        //设置256个进程id
 unsigned char bits_map[8]={1,2,4,8,16,32,64,128};
-int flag=0;
-int first=1;
-int count=0;
-void task_schedule(unsigned int status, unsigned int cause, context* pt_context) {
-    PCB * task1,*task2;
-    
-    if(first)
-    {
-        task1=get_pcb_by_pid(1);//init
-        kernel_printf("task name:%s\n",task1->name);
-        kernel_printf("epc:%x\n",task1->context->epc);
-        copy_context(task1->context,pt_context);//把init的内容覆盖当前上下文
-        first=0;
-    }
-    else{
-        if(flag==0)
-        {
-            //kernel_printf("flag=0\n");
-            task1=get_pcb_by_pid(1);//init
-            task2=get_pcb_by_pid(2);//fork 后的进程
-            // kernel_printf("task1=%x,context=%x\n",task1,task1->context);
-            // kernel_printf("task2=%x,context=%x\n",task2,task2->context);
-            //print_tasks();           
-            copy_context(pt_context,task1->context);
-            kernel_printf("task1 epc=%x\n",task1->context->epc);
-            count++;
-            if(count==5)
-            while(1);
-            //kernel_printf("conpy over\n");
-            flag=1;
-            //kernel_printf("epc=%x\n",task2->context->epc);
-            //copy_context(task2->context,pt_context);
-            //kernel_printf("copy context over\n");
-        }
-        else{
-            //kernel_printf("flag=1\n");
-            task1=get_pcb_by_pid(2);//fork 后的进程
-            task2=get_pcb_by_pid(1);//init
-            //copy_context(pt_context, task1->context);
-            flag=0;
-            // kernel_printf("task1=%x,context=%x\n",task1,task1->context);
-            // kernel_printf("task2=%x,context=%x\n",task2,task2->context);
-            //die();
-            kernel_printf("task1 epc=%x\n",task2->context->epc);
-             count++;
-            if(count==5)
-            while(1);
-            copy_context(task2->context,pt_context);
-            //kernel_printf("copy context over\n");
-        }
 
-    }
-    asm volatile("mtc0 $zero, $9\n\t");
-}
-void task_test(){
-    PCB *init=get_pcb_by_pid(1);
-    char childfilename[]="/seg.bin";
-    char childtaskname[]="t1234";
-    unsigned int child_pid=do_fork(init->context,init);
-    PCB *child=get_pcb_by_pid(child_pid);
-    kernel_memcpy(child->name,childtaskname,sizeof(char)*32);
-    
-    if(exec2(child,childfilename)!=0)
-    {
-        kernel_printf("error! failed to do_fork\n");
-    }
-    
-    kernel_printf("child task name:%s\n",child->name);
-    print_tasks();
-    register_interrupt_handler(7, task_schedule);
-    asm volatile(
-        "li $v0, 1000000\n\t"
-        "mtc0 $v0, $11\n\t"
-        "mtc0 $zero, $9");
-    return ;
-}
+
+/*该函数为init进程指定执行主体*/
 void init_code(){
-    while(1)
-    kernel_printf("                                              I'm init!\n");
+    while(1);
 }
 
+/*用于创建一个task_union并对其进行基本的初始化*/
+task_union *create_task_union(){
+    task_union *new=(task_union*)kmalloc(PAGE_SIZE);            //分配空间
+    if(!new){
+        kernel_printf("failed to get space for init\n");
+        return NULL;
+    }
+    /*初始化上下文*/
+    new->pcb.context=(context*)((unsigned int)new+sizeof(PCB)); //把context放到PCB上
+    clean_context(new->pcb.context);                            //初始化context
+    new->pcb.context->sp=(unsigned int)new+PAGE_SIZE;           //设置栈指针
+    unsigned int init_gp;
+    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+    new->pcb.context->gp=init_gp;                               //设置全局指针
+    new->pcb.asid=get_emptypid();                               //分配进程号
+    if(new->pcb.asid<0){
+        kernel_printf("failed to get right asid\n");   
+        return NULL;
+    }
+    new->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);                 //分配页目录空间
+    if(new->pcb.pgd==NULL)
+    {
+        kernel_printf("failed to kmalloc space for pgd\n");
+        return NULL;
+    }
+    clean_page(new->pcb.pgd);                                   //初始化页目录
+    /*初始化PCB链表节点和调度队列节点*/
+    INIT_LIST_PCB(&new->pcb.sched,&(new->pcb));
+    INIT_LIST_PCB(&new->pcb.process,&(new->pcb));
+
+    /*对其它属性的初始化*/
+    new->pcb.parent=0;
+    new->pcb.counter=DEFAULT_TIMESLICES;
+    new->pcb.state=STATE_WAITTING;
+    new->pcb.priority=IDLE_PRIORITY;                           //设置优先级为最低优先级
+    new->pcb.shm=NULL;             
+    new->pcb.file=NULL;
+}
+/*init进程，主要用于初始化进程模块，创建init进程（代码中附带着相关debug代码）*/
 void init_task()
 {
-    int i=0;
-    INIT_LIST_PCB(&pcbs,NULL);  
-    
-    kernel_memset(idmap,0,32*sizeof(unsigned char));//初始化进程位图
-    idmap[0]|=1;//把idmap的 0号位置给强行填住
-    task_union *init;
+    INIT_LIST_PCB(&pcbs,NULL);                          //初始化pcbs双向链表表头
+    kernel_memset(idmap,0,32*sizeof(unsigned char));    //初始化进程位图
+    idmap[0]|=1;                                        //进程不使用idmap的 0号id
     #ifdef TASK_DEBUG_INIT
     kernel_printf("task_union get start\n");
     #endif
-    init=(task_union*)kmalloc(PAGE_SIZE);//init进程的地址
-    if(!init){
-        kernel_printf("failed to get space for init\n");
-        return;
-    }
-    #ifdef TASK_DEBUG_INIT
-    kernel_printf("task_union get\n");
-    #endif
 
-    //初始化上下文
-    init->pcb.context=(context*)((unsigned int)init+sizeof(PCB));
-    clean_context(init->pcb.context);
-    init->pcb.context->epc=(unsigned int)init_code;
-    init->pcb.context->sp=(unsigned int)init+PAGE_SIZE;
-    unsigned int init_gp;
-    asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-    init->pcb.context->gp=init_gp;
-    // kernel_printf("address of init:%x\n",init);
-    // kernel_printf("size of PCB:%x\n",sizeof(PCB));
-    // kernel_printf("address of context:%x\n",init->pcb.context);
-    //init->pcb.context->at=15;
-    //init分配进程号为0
-    init->pcb.asid=get_emptypid();
-    if(init->pcb.asid<0){
-        kernel_printf("failed to get right asid\n");   
-        return;
-    }
+    task_union *init=create_task_union();               //创建init进程的task_union
+
     #ifdef TASK_DEBUG_INIT
     kernel_printf("pid number %x get\n",init->pcb.asid);
-    #endif
-    init->pcb.pgd=(pgd_term*)kmalloc(PAGE_SIZE);//分配页目录空间
-    if(init->pcb.pgd==NULL)
-    {
-        kernel_printf("failed to kmalloc space for pgd\n");
-        return;
-    }
-    //初始化pgd每一项
-    clean_page(init->pcb.pgd);
-    //设置pgd属性为默认属性——可写
-    //set_pgd_attr(init->pcb.pgd,Default_attr);
-    #ifdef TASK_DEBUG_INIT
     kernel_printf("pgd address:%x\n",init->pcb.pgd);
     #endif
-    kernel_strcpy(init->pcb.name, "init");
-    init->pcb.parent=0;//init没有父进程
-    init->pcb.uid=0;
-    init->pcb.counter=DEFAULT_TIMESLICES;
-    init->pcb.start_time=0;//get_time();
-    init->pcb.state=STATE_WAITTING;
-    init->pcb.priority=IDLE_PRIORITY;//设置优先级为最低优先级
-    init->pcb.policy=0;//暂未定义调度算法
-    init->pcb.shm=NULL; //shared memory
-    init->pcb.file=NULL;
 
+    kernel_strcpy(init->pcb.name, "init");    
+    add_task(&(init->pcb.process));                     //添加到PCB链表中
 
-    INIT_LIST_PCB(&init->pcb.sched,&(init->pcb));
-    INIT_LIST_PCB(&init->pcb.process,&(init->pcb));
-    //暂不考虑线程
-   #ifdef TASK_DEBUG_INIT
-    kernel_printf("init_list_pcb over\n");
-   #endif
-    init->pcb.thread_head=NULL;
-    init->pcb.num_thread=0;
-    
-    add_task(&(init->pcb.process));//添加到pcb链表中
-    /*
-    注册中断和系统调用
-    
-    */
-    
     #ifdef TASK_DEBUG_INIT
     kernel_printf("init_proc created successfully\n");
     kernel_printf("Proc name:%s\n",init->pcb.name);
@@ -187,6 +90,7 @@ void init_task()
     #endif
 }
 
+/*复制上下文*/
 void copy_context(context* src, context* dest) 
 {
     dest->epc = src->epc;
@@ -222,6 +126,7 @@ void copy_context(context* src, context* dest)
     dest->fp = src->fp;
     dest->ra = src->ra;
 }
+/*清空上下文*/
 void clean_context(context* dest)
 {
     dest->epc = 0;
@@ -257,7 +162,7 @@ void clean_context(context* dest)
     dest->fp = 0;
     dest->ra = 0;
 }
-
+/*获得一个未被使用的最小的pid*/
 unsigned char get_emptypid()
 {
     unsigned char number=0;
@@ -281,12 +186,14 @@ unsigned char get_emptypid()
 
     return number;
 }
+/*进程在被删除后需要把其占有的pid号释放出来*/
 void free_pid(unsigned int pid)
 {
     unsigned int index=pid/8;
     unsigned int bit_index=pid%8;
     idmap[index]&=(~bits_map[bit_index]);
 }
+/*遍历PCB链表，如果pid匹配，则返回PCB指针*/
 PCB *get_pcb_by_pid(unsigned int pid){
     int index=0;
     list_pcb *pos;
@@ -306,30 +213,29 @@ PCB *get_pcb_by_pid(unsigned int pid){
         }
     }
 }
-//把一个进程加到进程队列末尾
+/*将一个PCB链表节点加入到PCB链表最末尾*/
 void add_task(list_pcb* process)
 {
     list_pcb_add_tail(process,&pcbs);
 }
-
-
-
+/*fork，子进程复制父进程的相关属性信息*/
 int do_fork(context* args,PCB*parent)
 {
     #ifdef DO_FORK_DEBUG
     kernel_printf("begin to fork\n");
     #endif
 
-    task_union *new;
-    new=(task_union*)kmalloc(sizeof(task_union));
-    if(new==NULL)
-    {
+    task_union *new=(task_union*)kmalloc(sizeof(task_union));           //分配空间
+
+    if(new==NULL){
         kernel_printf("error : failed to allocate space for task_union\n");
         goto error1;
     }
+
     #ifdef DO_FORK_DEBUG
     kernel_printf("address of new task_union %x\n",new);
     #endif
+
     //复制上下文
     new->pcb.context=(context*)((unsigned int)new+sizeof(PCB));
     copy_context(args,new->pcb.context);
@@ -355,51 +261,47 @@ int do_fork(context* args,PCB*parent)
     #ifdef DO_FORK_DEBUG
     kernel_printf("copy name over\n");
     #endif   
-    new->pcb.asid=get_emptypid();
+
+    new->pcb.asid=get_emptypid();           //申请新的pid
     if(new->pcb.asid>255)
     {
         kernel_printf("error : no more pid to allocate\n");
         goto error3;
     }
     //复制文件信息
-    // if(parent->file==NULL)
-    //     new->pcb.file=NULL;
-    // else{
-    //     new->pcb.file=(FILE*)kmalloc(sizeof(FILE));
-    //     if(new==NULL){
-    //         kernel_printf("error in do_fork:failed to malloc for FILE\n");
-    //         goto error4;
-    //     }
-    //     kernel_memcpy(new->pcb.file,parent->file,sizeof(FILE));
-    // }
-    new->pcb.file=NULL;
+    if(parent->file==NULL)
+        new->pcb.file=NULL;
+    else{
+        new->pcb.file=(FILE*)kmalloc(sizeof(FILE));
+        if(new==NULL){
+            kernel_printf("error in do_fork:failed to malloc for FILE\n");
+            goto error4;
+        }
+        kernel_memcpy(new->pcb.file,parent->file,sizeof(FILE));
+    }
+    
     new->pcb.parent=parent->asid;
-    new->pcb.uid=parent->uid;
     new->pcb.counter=parent->counter;
-    new->pcb.start_time=0;//这里记得去完善time函数
     new->pcb.priority=parent->priority;
-    new->pcb.policy=parent->priority;
 
+    //初始化节点
     INIT_LIST_PCB(&(new->pcb.sched),&new->pcb);
     INIT_LIST_PCB(&(new->pcb.process),&new->pcb);
 
-    new->pcb.thread_head=NULL;
-    new->pcb.num_thread=0;
-    new->pcb.shm=NULL; // shared memory
+    new->pcb.shm=NULL; 
 
-
-    new->pcb.state=STATE_READY;
+    
     //添加到进程队列中
     add_task(&(new->pcb.process));
-    /*
-    加入调度队列
-    */
+    add_to_foreground_list(&(new->pcb.sched));
+    new->pcb.state=STATE_READY;
+    
     #ifdef DO_FORK_DEBUG
     kernel_printf("child 's name:%s\n",new->pcb.name);
     kernel_printf("child 's pid : %x\n",new->pcb.asid);
     #endif
-    //返回新进程的进程号
-    return new->pcb.asid;
+    
+    return new->pcb.asid;       //返回子进程的进程号
     
 
     error1:
