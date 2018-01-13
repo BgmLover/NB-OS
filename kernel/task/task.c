@@ -641,30 +641,26 @@ int exec(char *filename,char* taskname)
         kernel_printf("error :filename or taskname is not initialized!\n");
         return -1;
     }
-    PCB *current=get_current_pcb();         //获得当前正在运行的PCB
+    PCB *current=get_current_pcb();                         //获得当前正在运行的PCB
 
     unsigned int child_pid=do_fork(current->context,current);
     PCB *child=get_pcb_by_pid(child_pid);
+
     kernel_printf("old name:%s\n",child->name);
-    kernel_memcpy(child->name,taskname,sizeof(char)*32);
+    kernel_memcpy(child->name,taskname,sizeof(char)*32);    //给子进程赋予进程名
     kernel_printf("new name:%s\n",child->name);
     if(child_pid<0){
         kernel_printf("error! failed to do_fork\n");
         return -1;
     }
-    
     //从文件中读取数据并替换
-    if(exec1(filename)!=0){
+    if(exec2(child,filename)!=0){
         kernel_printf("error! failed to exec\n");
         return -1;
     }
-    // exec2(child,filename);
-    //加入到前台队列
-
-    add_to_foreground_list(&(child->sched));
     return child->asid;
 }
-
+/*遍历PCB链表并打印每个进程的相关信息*/
 void print_tasks(){
     int i=1;
     while(1)
@@ -687,5 +683,3 @@ void print_tasks(){
         }
     }
 }
-
-
