@@ -129,6 +129,8 @@ void init_kernel() {
     // // // Interrupts
     // log(LOG_START, "Enable Interrupts.");
     init_interrupts();
+    // exec("/seg.bin","123");
+    // exec("/demo.bin","demo");
     // //show_status();
     // log(LOG_END, "Enable Interrupts.");
     // // Init finished
