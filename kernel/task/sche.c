@@ -135,7 +135,7 @@ void test_sched()
 
     proc1->pcb.context=(context*)((unsigned int)proc1+sizeof(PCB));
     clean_context(proc1->pcb.context);
-    proc1->pcb.context->epc=(unsigned int)(producer);
+    proc1->pcb.context->epc=(unsigned int)(print_0_fun);
     proc1->pcb.context->sp=(unsigned int)proc1+PAGE_SIZE;
     unsigned int init_gp;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
@@ -180,7 +180,7 @@ void test_sched()
 
     proc2->pcb.context=(context*)((unsigned int)proc2+sizeof(PCB));
     clean_context(proc2->pcb.context);
-    proc2->pcb.context->epc=(unsigned int)(customer);
+    proc2->pcb.context->epc=(unsigned int)(ps);
     proc2->pcb.context->sp=(unsigned int)proc2+PAGE_SIZE;
     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
     proc2->pcb.context->gp=init_gp;

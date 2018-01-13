@@ -143,7 +143,7 @@ void parse_cmd() {
     } else if (kernel_strcmp(ps_buffer, "kill") == 0) {
         int pid = param[0] - '0';
         kernel_printf("Killing process %d\n", pid);
-        //result = pc_kill(pid);
+        result=del_task(pid);
         kernel_printf("kill return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "time") == 0) {
         creat_time();
@@ -185,7 +185,7 @@ void parse_cmd() {
         kernel_printf("rm return with %d\n", result);
     }else if(kernel_strcmp(ps_buffer,"mkdir") == 0){
         result = fs_makedir(param);
-        kernel_printf("rm return with %d\n", result);
+        kernel_printf("rm return with %d\n", result);     
     }else if(kernel_strcmp(ps_buffer,"cd") == 0){
         if(*param=='~')
         {

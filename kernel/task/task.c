@@ -593,9 +593,9 @@ unsigned int del_task(unsigned int pid)
     delete_pagetables(task_to_del);  //删去页表
     kfree(task_to_del->file);      //删去文件信息
     free_pid(task_to_del->asid);      //释放进程号
+    list_pcb_del_init(&(task_to_del->process));
+    list_pcb_del_init(&(task_to_del->sched));
     kfree((task_union*)task_to_del);//删去整个task_union
-    list_pcb_del_init(pos);
-    //在调度队列中删去它
     return 0;
     
 }
