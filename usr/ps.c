@@ -7,12 +7,11 @@
 #include <zjunix/fs/fat.h>
 #include <zjunix/slub.h>
 #include <zjunix/time.h>
-#include <zjunix/sche.h>
 #include <zjunix/utils.h>
 #include <zjunix/sche.h>
 #include "../usr/ls.h"
 #include "myvi.h"
-
+#include "exec.h"
 
 char ps_buffer[64];
 int ps_buffer_index;
@@ -52,9 +51,14 @@ void ps() {
     char c;
     ps_buffer_index = 0;
     ps_buffer[0] = 0;
+    char buf[10];
     kernel_clear_screen(31);
-    kernel_puts("PowerShell\n", 0xfff, 0);
-    kernel_puts("PS>", 0xfff, 0);
+    get_time(buf, sizeof(buf));
+    kernel_puts("NB_OS PowerShell\n", 0xfff, 0);
+    kernel_puts(buf, VGA_GREEN,VGA_BLACK);
+    kernel_printf(" ");
+    kernel_puts("NB_PS ", 0xfff, 0);
+    kernel_puts("~$ ",VGA_GREEN,VGA_BLACK);
     kernel_memset(newdir,0,64*sizeof(char));
     kernel_memset(nowdir,0,64*sizeof(char));
     while (1) {
@@ -68,9 +72,17 @@ void ps() {
             } else
                 parse_cmd();
             ps_buffer_index = 0;
-            kernel_puts("PS>", 0xfff, 0);
+            get_time(buf, sizeof(buf));
+            kernel_puts(buf, VGA_GREEN,VGA_BLACK);
+            kernel_printf(" ");
+            kernel_puts("NB_PS ", 0xfff, 0);
             if(nowdir[0]!= 0 )
-                kernel_printf("%s ", nowdir);
+            {
+                kernel_puts(nowdir,VGA_BLUE,VGA_BLACK);
+                kernel_printf(" ");
+            }
+            kernel_puts("~$ ",VGA_GREEN,VGA_BLACK);
+
         } else if (c == 0x08) {
             if (ps_buffer_index) {
                 ps_buffer_index--;
@@ -143,12 +155,16 @@ void parse_cmd() {
     } else if (kernel_strcmp(ps_buffer, "kill") == 0) {
         int pid = param[0] - '0';
         kernel_printf("Killing process %d\n", pid);
-        result=del_task(pid);
+        //result = pc_kill(pid);
+        del_task(pid);
         kernel_printf("kill return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "time") == 0) {
+        unsigned int init_gp;
+        //asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
+        //pc_create(2, system_time_proc, (unsigned int)kmalloc(4096), init_gp, "time");
         creat_time();
     } else if (kernel_strcmp(ps_buffer, "proc") == 0) {
-        //result = proc_demo_create();
+        demo();
         kernel_printf("proc return with %d\n", result);
     } else if (kernel_strcmp(ps_buffer, "cat") == 0) {
         append_dir(nowdir,newdir,param);
@@ -162,17 +178,7 @@ void parse_cmd() {
         result = myvi(param);
         kernel_printf("vi return with %d\n", result);
      } else if (kernel_strcmp(ps_buffer, "exec") == 0) {
-         char *filename,*taskname;
-         for (i = 0; i < 63; i++) {
-            if (param[i] == ' ') {
-            param[i] = 0;
-            filename=param;
-            taskname=param+i+1;
-            break;
-        }
-    }
-         result = exec(filename,taskname);
-        //  exec2(pcbs.next->pcb,"/seg.bin");
+         //result = exec2(param);
          kernel_printf("exec return with %d\n", result);
      } 
     else if(kernel_strcmp(ps_buffer,"touch") == 0){
@@ -185,12 +191,16 @@ void parse_cmd() {
         kernel_printf("rm return with %d\n", result);
     }else if(kernel_strcmp(ps_buffer,"mkdir") == 0){
         result = fs_makedir(param);
-        kernel_printf("rm return with %d\n", result);     
+        kernel_printf("rm return with %d\n", result);
     }else if(kernel_strcmp(ps_buffer,"cd") == 0){
         if(*param=='~')
         {
             kernel_memset(newdir,0,64*sizeof(char));
             kernel_memset(nowdir,0,64*sizeof(char));
+        }
+        else if(kernel_strcmp(param,"..")==0)
+        {
+            fs_prev_dir(nowdir);
         }
         else
         {
@@ -200,11 +210,13 @@ void parse_cmd() {
         // kernel_printf("now dir is %s\n", nowdir);
         kernel_printf("cd return with %d\n", result);
     }else if(kernel_strcmp(ps_buffer,"pwd") == 0){
-        kernel_printf("current dir %s\n",nowdir);
+        if(nowdir[0]==0)
+        {
+            kernel_printf("current dir /root\n");
+        }
+        else 
+            kernel_printf("current dir %s\n",nowdir);
         //kernel_printf("rm return with %d\n", result);
-    }else if(kernel_strcmp(ps_buffer,"pts") == 0){
-        print_tasks();
-        //kernel_printf("rm return with %d\n", result);        
     }else{
         kernel_puts(ps_buffer, 0xfff, 0);
         kernel_puts(": command not found\n", 0xfff, 0);
