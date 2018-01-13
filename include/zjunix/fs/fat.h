@@ -4,27 +4,27 @@
 #include <zjunix/type.h>
 #include <zjunix/fs/fscache.h>
 
-//每个文件中有4k的缓冲区
+/* 4k data buffer number in each file struct */
 #define LOCAL_DATA_BUF_NUM 4
 
 #define SECTOR_SIZE 512
 #define CLUSTER_SIZE 4096
 
-//文件短目录项
+
 struct __attribute__((__packed__)) dir_entry_attr {
-    u8 name[8];                   //文件名
-    u8 ext[3];                    //文件扩展名
-    u8 attr;                      //文件属性位
+    u8 name[8];                   /* Name */
+    u8 ext[3];                    /* Extension */
+    u8 attr;                      /* attribute bits */
     u8 lcase;                     /* Case for base and extension */
-    u8 ctime_cs;                  //创建时间，厘秒为单位
-    u16 ctime;                    //创建时间
-    u16 cdate;                    //创建日期
-    u16 adate;                    //上次访问时间
-    u16 starthi;                  //起始扇区高16位
-    u16 time;                     //上次修改的时间
-    u16 date;                     //上次修改的日期
-    u16 startlow;                 //起始扇区低16位
-    u32 size;                     //文件的大小
+    u8 ctime_cs;                  /* Creation time, centiseconds (0-199) */
+    u16 ctime;                    /* Creation time */
+    u16 cdate;                    /* Creation date */
+    u16 adate;                    /* Last access date */
+    u16 starthi;                  /* Start cluster (Hight 16 bits) */
+    u16 time;                     /* Last modify time */
+    u16 date;                     /* Last modify date */
+    u16 startlow;                 /* Start cluster (Low 16 bits) */
+    u32 size;                     /* file size (in bytes) */
 };
 
 union dir_entry {
@@ -32,19 +32,19 @@ union dir_entry {
     struct dir_entry_attr attr;
 };
 
-//文件控制块
+/* file struct */
 typedef struct fat_file {
     unsigned char path[256];
-    //文件内部指针，指向当前读到的位置
+    /* Current file pointer */
     unsigned long loc;
-    //当前目录项的位置
+    /* Current directory entry position */
     unsigned long dir_entry_pos;
     unsigned long dir_entry_sector;
-    //当前目录项
+    /* current directory entry */
     union dir_entry entry;
-    //缓冲的clock head
+    /* Buffer clock head */
     unsigned long clock_head;
-    //每个文件控制块中包含一个4K大小的buffer
+    /* For normal FAT32, cluster size is 4k */
     BUF_4K data_buf[LOCAL_DATA_BUF_NUM];
 } FILE;
 
@@ -97,20 +97,13 @@ union BPB_info {
     struct BPB_attr attr;
 };
 
-//保存文件的相关信息
 struct fs_info {
-    //文件的基地址
     u32 base_addr;
-    //每个目录项的簇数量
     u32 sectors_per_fat;
-    //总簇数
     u32 total_sectors;
-    //总的数据扇区数
     u32 total_data_clusters;
-    //总的数据簇数
     u32 total_data_sectors;
-    //第一个数据簇
-    u32 first_data_sector; 
+    u32 first_data_sector;
     union BPB_info BPB;
     u8 fat_fs_info[SECTOR_SIZE];
 };
@@ -157,22 +150,16 @@ u32 get_entry_filesize(u8 *entry);
 
 u32 get_entry_attr(u8 *entry);
 
-//在当前路径之后追加param组成新路径
 void append_dir(char *nowdir,char *newdir,char *param);
 
-//创建文件，使用绝对路径
 u32 fs_touch(u8 *filename);
     
-//创建文件夹，绝对路径
 u32 fs_makedir(u8 *filename);
 
-//删除文件
 u32 fs_remove(u8 *filename);
     
-//改变路径
 u32 fs_changedir(u8 *newdir,u8 *nowdir,u8 *param);
 
-//返回当前文件夹的上一个文件夹
 u32 fs_prev_dir(u8 *nowdir);
 
 #endif  // !_ZJUNIX_FS_FAT_H

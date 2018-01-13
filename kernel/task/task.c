@@ -61,6 +61,8 @@ task_union *create_task_union(){
     new->pcb.priority=IDLE_PRIORITY;                           //设置优先级为最低优先级
     new->pcb.shm=NULL;             
     new->pcb.file=NULL;
+
+    return new;
 }
 /*init进程，主要用于初始化进程模块，创建init进程（代码中附带着相关debug代码）*/
 void init_task()
@@ -295,7 +297,7 @@ int do_fork(context* args,PCB*parent)
     add_task(&(new->pcb.process));
     add_to_foreground_list(&(new->pcb.sched));
     new->pcb.state=STATE_READY;
-    
+
     #ifdef DO_FORK_DEBUG
     kernel_printf("child 's name:%s\n",new->pcb.name);
     kernel_printf("child 's pid : %x\n",new->pcb.asid);
@@ -319,61 +321,33 @@ int do_fork(context* args,PCB*parent)
         free_pid(new->pcb.asid);
         return -4;
 }
- 
 
-
-void inc_refrence_by_pte( unsigned int *pte)
-{
-	 unsigned int index;
-
-	for (index = 0; index < (PAGE_SIZE >> 2); ++index) {
-		if (is_V(&(pte[index]))) {
-			inc_ref(pages + (pte[index] >> PAGE_SHIFT), 1);
-		}
-	}
-}
-
-void dec_refrence_by_pte(unsigned int *pte)
-{
-	unsigned int index;
-	for (index = 0; index < (PAGE_SIZE >> 2); ++index) {
-		if (pte[index]) {
-            //物理页地址
-            unsigned int phy_addr=pte[index]&(~OFFSET_MASK);
-            struct page *phy_page=pages+(phy_addr>>PAGE_SHIFT);
-            //引用次数--
-            dec_ref(phy_page,1);
-            //如果引用次数为0，则将该页free掉
-            if(phy_page->reference==0)
-                kfree((void*)phy_addr);
-			pte[index] = 0;
-		}
-	}
-}
-
+/*复制页表*/
 pgd_term *copy_pagetables(PCB* child,PCB* parent)
 {
     pgd_term* old_pgd;
     pgd_term* new_pgd=NULL;
     pte_term* temp_pte;
     pte_term* old_pte;
-    unsigned int index,ip;//索引
-    unsigned int count=0;//记录pgd中已经成功分配的页数
+    unsigned int index,ip;                      //索引
+    unsigned int count=0;                       //记录pgd中已经成功分配的页数
 
-    //分配一张新的页作为页目录
     old_pgd=parent->pgd;
-    new_pgd=(pgd_term*)kmalloc(PAGE_SIZE);
+    new_pgd=(pgd_term*)kmalloc(PAGE_SIZE);      //分配一张新的页作为页目录
+
     #ifdef COPY_PAGE_DEBUG
     kernel_printf("new pgd address:%x\n",new_pgd);
     #endif
-    if(new_pgd==NULL)
-    {
+
+    if(new_pgd==NULL){
         kernel_printf("copy_pagetables failed : failed to malloc for pgd\n");
         goto error1;
     }
-    kernel_memcpy(new_pgd,old_pgd,PAGE_SIZE);
-    for(index=0;index<KERNEL_ENTRY>>PGD_SHIFT;index++)
-    {
+
+    kernel_memcpy(new_pgd,old_pgd,PAGE_SIZE);   //pgd的复制
+
+    /*下面是针对父进程每一个存在的pte的复制*/
+    for(index=0;index<KERNEL_ENTRY>>PGD_SHIFT;index++){
     #ifdef COPY_PAGE_DEBUG
     kernel_printf("pgd index:%x\n",index);
     #endif
@@ -407,17 +381,16 @@ pgd_term *copy_pagetables(PCB* child,PCB* parent)
     #ifdef COPY_PAGE_DEBUG
     kernel_printf("ip:%x\n",ip);
     #endif
-                if(temp_pte[ip])
-                {
+                if(temp_pte[ip]){
                     unsigned int va;
                     va=index<<PGD_SHIFT;
                     va|=(ip<<PTE_SHIFT);
-                    //新老页表现在都不能往这个地址上写
+                    /*新老页表现在都不能往这个地址上写*/
                     clean_W(&(old_pte[ip]));
                     clean_W(&(temp_pte[ip]));
                     tlbp(va,parent->asid);
                     unsigned int tlb_index=get_tlb_index();
-                    if(tlb_index&(1<<31)==0)//在TLB里存在这项内容，需要将其修改
+                    if(tlb_index&(1<<31)==0)        //在TLB里存在这项内容，需要将其修改
                     tlbwi(va,parent->asid,old_pte[ip],tlb_index);
                 }
             }
@@ -428,8 +401,7 @@ pgd_term *copy_pagetables(PCB* child,PCB* parent)
     kernel_printf("copy pgd and pte over\n");
     #endif
     for(index=0;index<KERNEL_ENTRY>>PGD_SHIFT;index++){
-        if(new_pgd[index])
-        {
+        if(new_pgd[index]){
             //在物理内容中对应的页里增加引用次数
             inc_refrence_by_pte((pte_term*) (new_pgd[index]&(~OFFSET_MASK)));
         }
@@ -457,8 +429,7 @@ pgd_term *copy_pagetables(PCB* child,PCB* parent)
         kfree(new_pgd);
         return NULL;
 }
-
-
+/*删除进程的页表，保留pgd*/
 void delete_pages(PCB *task)
 {
 	pgd_term *pgd = task->pgd;
@@ -475,12 +446,14 @@ void delete_pages(PCB *task)
 	}
 }
 
+/*包含pgd，删除进程的全部页表内容*/
 void delete_pagetables(PCB *task)
 {
 	delete_pages(task);
 	kfree(task->pgd);
 }
-//把一个进程从进程队列中删去
+
+/*把一个进程从进程队列中删去*/
 unsigned int del_task(unsigned int pid)
 {
     int index=0;
@@ -490,25 +463,28 @@ unsigned int del_task(unsigned int pid)
         kernel_printf("process not found,pid %d\n",pid);
         return 1;
     }
-    kfree(task_to_del->context);//删去上下文
-    delete_pagetables(task_to_del);  //删去页表
-    kfree(task_to_del->file);      //删去文件信息
-    free_pid(task_to_del->asid);      //释放进程号
-    list_pcb_del_init(&(task_to_del->process));
-    list_pcb_del_init(&(task_to_del->sched));
-    kfree((task_union*)task_to_del);//删去整个task_union
+    kfree(task_to_del->context);                    //删去上下文
+    delete_pagetables(task_to_del);                 //删去页表
+    kfree(task_to_del->file);                       //删去文件信息
+    free_pid(task_to_del->asid);                    //释放进程号
+    list_pcb_del_init(&(task_to_del->process));     //PCB链表中删除
+    list_pcb_del_init(&(task_to_del->sched));       //调度队列中删除
+    kfree((task_union*)task_to_del);                //删去整个task_union
     return 0;
     
 }
+/*最简单的外部加载函数，主要用于测试*/
 int exec1(char* filename) {
+    /*基本的设置*/
     FILE file;
     const unsigned int CACHE_BLOCK_SIZE = 64;
+    unsigned char buffer[512];
     #ifdef EXEC_DEBUG
     kernel_printf("begin to exec\n");
     kernel_printf("filename:%s\n",filename);
     #endif
-    unsigned char buffer[512];
-    int result = fs_open(&file, filename);
+    
+    int result = fs_open(&file, filename);          //打开文件
     if (result != 0) {
         kernel_printf("File %s not exist\n", filename);
         return 1;
@@ -517,18 +493,14 @@ int exec1(char* filename) {
     unsigned int n = size / CACHE_BLOCK_SIZE + 1;
     unsigned int i = 0;
     unsigned int j = 0;
-    unsigned int ENTRY = (unsigned int)kmalloc(4096);
-
-
-
+    unsigned int ENTRY = (unsigned int)kmalloc(4096);//申请页来保存文件内容
+    /*文件内容读取*/
     for (j = 0; j < n; j++) {
         fs_read(&file, buffer, CACHE_BLOCK_SIZE);
         kernel_memcpy((void*)(ENTRY + j * CACHE_BLOCK_SIZE), buffer, CACHE_BLOCK_SIZE);
         kernel_cache(ENTRY + j * CACHE_BLOCK_SIZE);
     }
-
-//  kernel_printf("yes");
-
+    /*根据申请的页地址来写TLB*/
     unsigned int cp0EntryLo0 = ((ENTRY >> 6) & 0x01ffffc0) | 0x1e;
     asm volatile(
         "li $t0, 1\n\t"
@@ -543,23 +515,22 @@ int exec1(char* filename) {
         "tlbwi"
         :
         : "r"(cp0EntryLo0));
-
-    int (*f)() = (int (*)())(0);
+    
+    int (*f)() = (int (*)())(0);            //设置函数指针，使这个函数从地址0开始执行
 #ifdef EXEC_DEBUG
     kernel_printf("Exec load at: 0x%x\n", ENTRY);
 #endif  // ! EXEC_DEBUG
     unsigned int s1=*(unsigned int*)0;
-     kernel_printf("The first instruction =%x\n",s1);
-    // while(1);
-    
-    //kernel_printf("s2=%x\n",s2);
-    int r = f();
+    kernel_printf("The first instruction =%x\n",s1);
+
+    int r = f();                            //具体运行这个函数
     kernel_printf("run the program over\n");
     // while(1);
-    kfree((void*)ENTRY);
+    kfree((void*)ENTRY);                    //释放空间
     return 0;
 }
 
+/*结合进程部分使用的外部加载程序*/
 int exec2(PCB *task,char* filename){
     #ifdef EXEC_DEBUG
     kernel_printf("begin to exec\n");
@@ -575,7 +546,7 @@ int exec2(PCB *task,char* filename){
     pte_term*pte=(pte_term*)kmalloc(PAGE_SIZE);
     pgd[0]|=(unsigned int)pte;
     
-    //申请 文件控制块的大小
+    //申请文件控制块的大小
     if(task->file==NULL)
         task->file=(FILE*)kmalloc(sizeof(FILE));
     else{
@@ -583,7 +554,6 @@ int exec2(PCB *task,char* filename){
         task->file=(FILE*)kmalloc(sizeof(FILE));
     }
     
-
     #ifdef EXEC_DEBUG
     kernel_printf("filename:%s\n",filename);
     kernel_printf("address of task:%x\n",task);
@@ -623,7 +593,6 @@ int exec2(PCB *task,char* filename){
         task->context->sp=(unsigned int)task+PAGE_SIZE;
         unsigned int init_gp;
         asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
-        //kernel_printf("s1=%x\n",task->context->epc);
         task->context->gp=init_gp;
     }
     else{
@@ -637,10 +606,10 @@ int exec2(PCB *task,char* filename){
     kernel_printf("epc=%x\n",task->context->epc);
     kernel_printf("pid=%x\n",task->asid);
     #endif
+
     //物理地址转化为EntryLo0的值
     unsigned int cp0EntryLo0=va2pfn(phy_addr);
-   
-
+    /*向TLB中写入对应项*/
     unsigned int asid=task->asid;
     asm volatile(
         "mtc0 %0, $10\n\t"
@@ -660,94 +629,40 @@ int exec2(PCB *task,char* filename){
     kernel_printf("The first instruction is %x\n",s1);
 #endif  // ! EXEC_DEBUG
 
-    //int r = f();
-    //存入到pte中
+    /*把刚申请到的物理帧地址存入到pte中*/
     set_V(&pte[0]);
     set_W(&pte[0]);
     pte[0]|=phy_addr;
-    kernel_printf("run the program over\n");
-    //kfree((void*)ph);
     return 0;
-    //TLB中随机写入这一项
-//     asm volatile(
-//         "mtc0 %0, $10\n\t"
-//         "mtc0 $zero, $5\n\t"
-//         "mtc0 %1, $2\n\t"
-//         "mtc0 $zero, $3\n\t"
-//         "nop\n\t"
-//         "nop\n\t"
-//         "tlbwr"
-//         :
-//         : "r"(asid),"r"(cp0EntryLo0));
-//     int (*f)() = (int (*)())(0);
-
-//     unsigned int s1=*(unsigned int*)0;
-//     //unsigned int s2=*(unsigned int*);
-//     kernel_printf("s1=%x\n",s1);
-//     //kernel_printf("s2=%x\n",s2);
-//     int r = f();
-//     //存入到pte中
-//     set_V(&pte[0]);
-//     set_W(&pte[0]);
-//     pte[0]|=phy_addr;
-
-//     kernel_printf("exec over\n");
-    
-// #ifdef EXEC_DEBUG
-//     kernel_printf("Exec load at: 0x%x\n", phy_addr);
-//     unsigned int hi,e0;
-//     asm volatile(
-//          "mfc0 %0,$10\n\t"
-//          "mfc0 %1,$2\n\t"
-//          "nop\n\t"
-//          "nop\n\t"
-//          :"=r"(hi),"=r"(e0));
-//     kernel_printf("entryhi=%x\n",hi);
-//     kernel_printf("entry0=%x\n",e0);
-    
-//     kernel_printf("s1=%x\n",s1);
-
-//     kernel_printf("exec over\n");
-   
-// #endif  // ! EXEC_DEBUG
-//     return 0;
 }
 
+/*完整的一个外部加载函数，包含了fork和exec两部分*/
 int exec(char *filename,char* taskname)
 {
-    //PCB *current=get_current_pcb();
-    if(filename==NULL||taskname==NULL)
-    {
+    if(filename==NULL||taskname==NULL){
         kernel_printf("error :filename or taskname is not initialized!\n");
         return -1;
     }
-    PCB *current=pcbs.next->pcb;
-    //do fork
-    unsigned int child_pid=do_fork(current->context,current);
-    
+    PCB *current=get_current_pcb();                         //获得当前正在运行的PCB
 
+    unsigned int child_pid=do_fork(current->context,current);
     PCB *child=get_pcb_by_pid(child_pid);
-    //child=pcbs.next->next->next->next->pcb;
+
     kernel_printf("old name:%s\n",child->name);
-    kernel_memcpy(child->name,taskname,sizeof(char)*32);
+    kernel_memcpy(child->name,taskname,sizeof(char)*32);    //给子进程赋予进程名
     kernel_printf("new name:%s\n",child->name);
     if(child_pid<0){
         kernel_printf("error! failed to do_fork\n");
         return -1;
     }
-    
     //从文件中读取数据并替换
-    if(exec1(filename)!=0){
+    if(exec2(child,filename)!=0){
         kernel_printf("error! failed to exec\n");
         return -1;
     }
-    // exec2(child,filename);
-    //加入到前台队列
-
-    add_to_foreground_list(&(child->sched));
     return child->asid;
 }
-
+/*遍历PCB链表并打印每个进程的相关信息*/
 void print_tasks(){
     int i=1;
     while(1)
@@ -770,5 +685,3 @@ void print_tasks(){
         }
     }
 }
-
-

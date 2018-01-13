@@ -18,17 +18,19 @@ enum mm_usage{
     _MM_COUNT
 };
 
+// info结构体，管理分配的空间
 struct bootmem_info{
     unsigned int start_pfn, end_pfn, type;
 };
 
+// bootmem结构体
 struct bootmem{
     unsigned int phymm;
     unsigned int max_pfn;
-    unsigned char* s_map, *e_map;
-    unsigned int last_alloc;
+    unsigned char* s_map, *e_map;//位图起始、末尾指针
+    unsigned int last_alloc;//最近一次分配的地址
     unsigned int cnt_infos;
-    struct bootmem_info info[MAX_INFO];
+    struct bootmem_info info[MAX_INFO];//info数组
 };
 
 extern struct bootmem mm;

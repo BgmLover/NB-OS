@@ -9,6 +9,7 @@ struct page* pages;
 struct buddy_sys buddy;
 unsigned int kernel_start_pfn, kernel_end_pfn;
 
+// 页初始化
 void buddy_init_pages(unsigned int start_pfn, unsigned int end_pfn) {
     unsigned int i;
     for (i = start_pfn; i < end_pfn; i++) {
@@ -23,6 +24,7 @@ void buddy_init_pages(unsigned int start_pfn, unsigned int end_pfn) {
     }
 }
 
+//输出buddy里5个链表的信息，用于debug
 void buddy_info() {
     unsigned int index;
     kernel_printf("Buddy-system :\n");
@@ -33,11 +35,13 @@ void buddy_info() {
     }
 }
 
+//初始化
 void buddy_init_buddy(){
     unsigned int size=sizeof(struct page);
     unsigned char* addr;
     int i;
 
+    //从bootmem里取没用到的页。
     addr=bootmem_alloc_pages(size*mm.max_pfn, _MM_KERNEL, 1<<PAGE_SHIFT);
     if(!addr){
         // fail to allocate memory
@@ -58,10 +62,12 @@ void buddy_init_buddy(){
     }
     kernel_end_pfn >>= PAGE_SHIFT;
 
+//计算buddy的起始、结束页框号
     buddy.buddy_start_pfn = (kernel_end_pfn + (1 << MAX_BUDDY_ORDER) - 1) &
                             ~((1 << MAX_BUDDY_ORDER) - 1);              // the pages that bootmm using cannot be merged into buddy_sys
     buddy.buddy_end_pfn = mm.max_pfn & ~((1 << MAX_BUDDY_ORDER) - 1); //2 pages for IO
 
+//初始化链表
     for (i = 0; i < MAX_BUDDY_ORDER + 1; i++) {
         buddy.freelist[i].nr_free = 0;
         INIT_LIST_HEAD(&(buddy.freelist[i].free_head));
@@ -70,6 +76,7 @@ void buddy_init_buddy(){
     buddy.start_page=pages+buddy.buddy_start_pfn;
     init_lock(&(buddy.lock));
 
+//把每个order=0的块压入链表
     for (i = buddy.buddy_start_pfn; i < buddy.buddy_end_pfn; ++i) {
         buddy_free_pages(pages + i, 0);
     }
@@ -77,6 +84,7 @@ void buddy_init_buddy(){
     buddy_info();
 }
 
+// 释放一个空闲块，压入链表
 void buddy_free_pages(struct page* page, unsigned int order){
     unsigned int page_idx, buddy_idx;
     unsigned int combined_idx;
