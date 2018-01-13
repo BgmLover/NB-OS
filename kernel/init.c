@@ -105,17 +105,12 @@ void init_kernel() {
     //init_pc();
     init_task();
 
-<<<<<<< HEAD
     print_tasks();
     //exec1("/seg.bin");
    // exec("/seg.bin","seg_proc");
 
     //create_demo();
 
-=======
-    // create_demo();
-kernel_printf("ok\n");
->>>>>>> 1808a68fc4df79f6ce6d56142db82b115754ef72
 
 // exec1("/producer.bin");
 

@@ -143,9 +143,6 @@ void customer(){
 //     asm volatile("la %0, _gp\n\t" : "=r"(init_gp));
 //     customer->context->gp=init_gp;
 
-<<<<<<< HEAD
-// }
-=======
 
     // int co=do_fork(init->context,init);
     // PCB *customer=get_pcb_by_pid(co);
@@ -179,7 +176,6 @@ int co=do_fork(init->context,init);
 
 }
 */
->>>>>>> 1808a68fc4df79f6ce6d56142db82b115754ef72
 void init_task()
 {
     int i=0;
