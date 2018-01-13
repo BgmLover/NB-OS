@@ -115,15 +115,15 @@ void init_kernel() {
 // exec1("/producer.bin");
 
 
-    //create_startup_process();
+    // create_startup_process();
     // task_test();
     // exec2(pcbs.next->pcb,"/producer.bin");
     //exec("/seg.bin","789");
     //exec1("/seg.bin");
-    // log(LOG_END, "Process Control Module.");\
+    log(LOG_END, "Process Control Module.");\
     // // //shced
     // log(LOG_START, "Sched.");
-    init_sched();
+    // init_sched();
     // //create_proc();
     // log(LOG_END, "Sched.");
     // // // Interrupts

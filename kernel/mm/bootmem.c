@@ -3,21 +3,23 @@
 #include <zjunix/bootmem.h>
 #include <zjunix/utils.h>
 
-struct bootmem mm;
-unsigned char bootmem_map[MACHINE_MMSIZE >> PAGE_SHIFT];
+struct bootmem mm;//bootmem主体
+unsigned char bootmem_map[MACHINE_MMSIZE >> PAGE_SHIFT];//位图
 char *mem_msg[] = {"Kernel code/data", "Mm Bitmap", "Vga Buffer", "Kernel page directory", "Kernel page table", "Dynamic", "Reserved"};
 
 
-
+//设置bootmem中的某一块已分配的内存
 void bootmem_set_mminfo(struct bootmem_info *info, unsigned int start, unsigned int end, unsigned int type){
     info->start_pfn = start;
     info->end_pfn = end;
     info->type = type;
 }
 
+//向info数组中加入一块
 void bootmem_insert_mminfo(unsigned int start, unsigned int end, unsigned int type){
     unsigned int index;
 
+    //找可以合并的另一个块
     for(index = 0; index < mm.cnt_infos; index++){
         if(mm.info[index].type != type) continue;
         if(mm.info[index].end_pfn == start-1){
@@ -37,10 +39,12 @@ void bootmem_insert_mminfo(unsigned int start, unsigned int end, unsigned int ty
     }
     bootmem_set_mminfo(mm.info+mm.cnt_infos, start, end, type);
     ++(mm.cnt_infos);
+    kernel_printf("++cnt infos!\n");
 
 
 }
 
+// 删除info数组中的一个块，后面的块往前移动
 void bootmem_remove_mminfo(unsigned int index){
     unsigned int tmp;
 
@@ -51,23 +55,25 @@ void bootmem_remove_mminfo(unsigned int index){
     --(mm.cnt_infos);
 }
 
+//初始化bootmem
 void bootmem_init(){
     // unsigned int index;
     unsigned char* t_map;
     unsigned int end = 16*1024*1024; // 16mb kernel memory
     unsigned int i;
 
-    mm.phymm = get_phymm_size();
-    mm.max_pfn = mm.phymm >> PAGE_SHIFT;
+    mm.phymm = get_phymm_size();//获得物理内存
+    mm.max_pfn = mm.phymm >> PAGE_SHIFT;//计算最大页框数
     mm.s_map = bootmem_map;
-    mm.e_map = bootmem_map + sizeof(bootmem_map);
+    mm.e_map = bootmem_map + sizeof(bootmem_map);//位图指针指向应该的区域
     mm.cnt_infos = 0;
     for(i=0; i<sizeof(bootmem_map); i++){
         bootmem_map[i]=PAGE_FREE;
     } 
-    bootmem_insert_mminfo(0, (unsigned int)(end-1), _MM_KERNEL);
+    bootmem_insert_mminfo(0, (unsigned int)(end-1), _MM_KERNEL);//分配16mb内存作为内核空间
     mm.last_alloc = (((unsigned int)(end)>>PAGE_SHIFT)-1);
 
+    //设置为已被占用
     for(i = 0; i < end>>PAGE_SHIFT; i++){
         mm.s_map[i] = PAGE_USED;
     }
@@ -78,6 +84,7 @@ void bootmem_init(){
     /*end debug*/
 }
 
+//输出info数组的信息
 void bootmem_bootmap_info(unsigned char *msg) {
     unsigned int index;
     kernel_printf("%s :\n", msg);
@@ -86,7 +93,7 @@ void bootmem_bootmap_info(unsigned char *msg) {
     }
 }
 
-
+//设置位图某些位被占用
 void bootmem_set_maps(unsigned int s_pfn, unsigned int cnt, unsigned char value) {
     while (cnt) {
         mm.s_map[s_pfn] = value;
@@ -95,6 +102,7 @@ void bootmem_set_maps(unsigned int s_pfn, unsigned int cnt, unsigned char value)
     }
 }
 
+//找到空闲页，用于分配
 unsigned char* bootmem_find_pages(unsigned int count, unsigned int s_pfn, unsigned int e_pfn, unsigned int align_pfn){
     unsigned int index, tmp;
     unsigned int cnt;
@@ -102,6 +110,7 @@ unsigned char* bootmem_find_pages(unsigned int count, unsigned int s_pfn, unsign
     s_pfn += (align_pfn - 1);
     s_pfn &= ~(align_pfn - 1);
 
+    //遍历位图，找到能分配的空闲页
     for(index = s_pfn; index < e_pfn;){
         if(mm.s_map[index]){
             ++index;
@@ -129,6 +138,7 @@ unsigned char* bootmem_find_pages(unsigned int count, unsigned int s_pfn, unsign
 
 
 // return 0 means error
+//bootmem分配空间
 unsigned char *bootmem_alloc_pages(unsigned int size, unsigned int type, unsigned int align) {
     unsigned int cnt;
     unsigned char *res;
@@ -137,12 +147,14 @@ unsigned char *bootmem_alloc_pages(unsigned int size, unsigned int type, unsigne
     size &= PAGE_ALIGN;
     cnt = size >> PAGE_SHIFT;
 
+    // 从当前位置往后找，一般能找到空闲页
     res = bootmem_find_pages(cnt, mm.last_alloc + 1, mm.max_pfn, align >> PAGE_SHIFT);
     if (res) {
         bootmem_insert_mminfo((unsigned int)res, (unsigned int)res + size - 1, type);
         return res;
     }
 
+    // 从开始位置找到当前位置，一般不需要这么做
     res = bootmem_find_pages(cnt, 0, mm.last_alloc, align >> PAGE_SHIFT);
     if (res) {
         bootmem_insert_mminfo((unsigned int)res, (unsigned int)res + size - 1, type);
