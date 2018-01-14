@@ -7,28 +7,31 @@ struct kmem_cache kmalloc_caches[PAGE_SHIFT];
 
 static unsigned int size_kmem_cache[PAGE_SHIFT] = {96, 192, 8, 16, 32, 64, 128, 256, 512, 1024, 1536, 2048};
 
+//初始化node链表
 void slub_init_kmem_node(struct kmem_cache_node* knode){
     INIT_LIST_HEAD(&(knode->full));
     INIT_LIST_HEAD(&(knode->partial));
 }
 
+// 初始化cpu链表
 void slub_init_kmem_cpu(struct kmem_cache_cpu* kcpu){
     kcpu->page = 0;
     kcpu->freeobj = 0;
 }
 
+// 初始化每个cache页面
 void slub_init_each_slub(struct kmem_cache* cache, unsigned int size){
     cache->objsize = size;
-    cache->objsize += (SIZE_INT - 1); // align by 0x100
+    cache->objsize += (SIZE_INT - 1); // align by 0x100 按int类型对齐
     cache->objsize &= ~(SIZE_INT - 1);
     
-    cache->size = cache->objsize + sizeof(void*);
-    cache->offset = cache->size;
+    cache->size = cache->objsize + sizeof(void*);//size加上指针大小
+    cache->offset = cache->size;// offset和size大小一样
     slub_init_kmem_cpu(&(cache->cpu));
     slub_init_kmem_node(&(cache->node));
 }
 
-
+//初始化函数
 void slub_init(){
     unsigned int order;
     // init caches
@@ -48,6 +51,7 @@ void slub_init(){
     kernel_printf("\n");
 }
 
+//设置slub页面
 void slub_format_slubpage(struct kmem_cache* cache, struct page* page){
     unsigned char* m = (unsigned char*)(((page-pages)<<PAGE_SHIFT)|0x80000000); // physical addr
     struct slub_head *s_head = (struct slub_head*)m;

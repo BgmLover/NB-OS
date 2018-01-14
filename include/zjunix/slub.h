@@ -9,21 +9,25 @@
 #define SLAB_AVAILABLE 0x0
 #define SLAB_USED 0xff
 
+// slub内存页表的头部
 struct slub_head{
     void* end_ptr;
     unsigned int nr_objs;
 };
 
+
 struct kmem_cache_node{
-    struct list_head partial;
-    struct list_head full;
+    struct list_head partial;//部分分配的slub页面
+    struct list_head full;//全部分配的slub页面
 };
 
+// 正在被分配的cache页面
 struct kmem_cache_cpu{
     void** freeobj;
     struct page* page;
 };
 
+// 一个cache信息，一共分了12种不同大小的cache
 struct kmem_cache{
     unsigned int size;
     unsigned int objsize;

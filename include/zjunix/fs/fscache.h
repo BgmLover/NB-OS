@@ -3,17 +3,23 @@
 
 #include <zjunix/type.h>
 
-/* 4k byte buffer */
+//4K缓存块
 typedef struct buf_4k {
+    //用于存储数据
     unsigned char buf[4096];
+    //当前块对应当前磁盘上的第几个sector
     unsigned long cur;
+    //reference位和dirty位
     unsigned long state;
 } BUF_4K;
 
-/* 512 byte buffer */
+//512缓存块
 typedef struct buf_512 {
+    //用于存储数据
     unsigned char buf[512];
+    //当前块对应当前磁盘上的第几个sector
     unsigned long cur;
+    //reference位和dirty位
     unsigned long state;
 } BUF_512;
 
