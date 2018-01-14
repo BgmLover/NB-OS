@@ -84,6 +84,22 @@ unsigned int va2pfn(unsigned int vaddr);
 unsigned int pt2pfn(pte_term pt);
 void inc_refrence_by_pte( unsigned int *pte);
 void dec_refrence_by_pte(unsigned int *pte);
+
+void init_pgtable();
+void set_pgd_attr(pgd_term *pgd,unsigned int attr);
+void set_pte_attr(pte_term *pte,unsigned int attr);
+//分配一张页的空间，并把物理页与虚拟页做一次映射
+unsigned int do_one_mapping(pgd_term*pgd,unsigned int va,unsigned int pa,unsigned int attr);
+void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index);
+void tlbwr(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con);
+void tlbp(unsigned int virtual_addr,unsigned int asid );
+unsigned int get_tlb_index();
+//申请一个物理页的空间，从指定位置从文件读取连续内容，直到满一个页大小，返回页地址
+unsigned int read_file_to_page(FILE*file,unsigned int start);
+void clean_page(unsigned int *page);
+
+
+
 /*
 typedef struct{
     unsigned int G : 1;     //全局位
@@ -105,20 +121,4 @@ typedef struct{
     unsigned int pte_addr :20;   //二级页表物理帧号
 } pgd_term;
 */
-void init_pgtable();
-void set_pgd_attr(pgd_term *pgd,unsigned int attr);
-void set_pte_attr(pte_term *pte,unsigned int attr);
-//分配一张页的空间，并把物理页与虚拟页做一次映射
-unsigned int do_one_mapping(pgd_term*pgd,unsigned int va,unsigned int pa,unsigned int attr);
-void tlbwi(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con,unsigned int index);
-void tlbwr(unsigned int virtual_addr,unsigned int asid,unsigned int pte_con);
-void tlbp(unsigned int virtual_addr,unsigned int asid );
-unsigned int get_tlb_index();
-//申请一个物理页的空间，从指定位置从文件读取连续内容，直到满一个页大小，返回页地址
-unsigned int read_file_to_page(FILE*file,unsigned int start);
-void clean_page(unsigned int *page);
-
-
-
-
 #endif
