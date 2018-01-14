@@ -4,15 +4,13 @@
 #include "task.h"
 #include <driver/vga.h>
 #include <debug.h>
-static inline void INIT_LIST_PCB(struct list_pcb *list,PCB*tpcb)
-{
+static inline void INIT_LIST_PCB(struct list_pcb *list,PCB*tpcb){
     #ifdef LIST_PCB_DEBUG
     kernel_printf("address of list:%x\n",list);
     #endif
     list->prev=list;
     list->next=list;
-    list->pcb=tpcb;
-   
+    list->pcb=tpcb; 
 }
 static inline void __list_pcb_add(list_pcb *new, list_pcb *prev, list_pcb *next) {
     new->next = next;

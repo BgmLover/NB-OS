@@ -30,7 +30,6 @@ void init_syscall() {
     register_syscall(31,syscall_fork_31);
     register_syscall(32,syscall_exec_32);
     register_syscall(33,syscall_kill_33);
-    register_syscall(34,syscall_exit_34);
     register_syscall(35,syscall_print_tasks_35);
 
     register_syscall(36, syscall_shm_get_36);
@@ -271,10 +270,7 @@ void syscall_kill_33(unsigned int status, unsigned int cause, context* pt_contex
     unsigned int asid=pt_context->a0;
     del_task(asid);
 }
-void syscall_exit_34(unsigned int status, unsigned int cause, context* pt_context)
-{
 
-}
 void syscall_print_tasks_35(unsigned int status, unsigned int cause, context* pt_context)
 {
     print_tasks();

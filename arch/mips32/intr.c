@@ -40,12 +40,7 @@ int disable_interrupts() {
         : "=r"(old));
     return old;
 }
-void print_0(){
-    while(1)
-    {
-        kernel_printf("0\n");
-    }
-}
+
 void do_interrupts(unsigned int status, unsigned int cause, context* pt_context) {
     int i;
     int index = cause >> 8;
